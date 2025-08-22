@@ -1,0 +1,15 @@
+# Plugin directories
+plugged/
+pack/
+
+# Lazy.nvim plugin directory (will be in data directory, but in case)
+lazy/
+
+# Lock files (these change frequently with plugin updates)
+lazy-lock.json
+
+# Temporary and backup files
+*.tmp
+*.bak
+*~
+.DS_Store

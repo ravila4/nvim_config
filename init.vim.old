@@ -1,0 +1,410 @@
+" Configuration file for Neovim
+" =============================
+
+" Line Numbers
+set number
+"set number relativenumber
+" augroup numbertoggle
+"  autocmd!
+"  autocmd BufEnter,FocusGained,InsertLeave * set relativenumber
+"  autocmd BufLeave,FocusLost,InsertEnter   * set norelativenumber
+"augroup END
+
+" Highlight current line
+set cursorline
+
+" Tabbing
+set tabstop=8
+set softtabstop=0
+set expandtab
+set shiftwidth=4
+set smarttab
+
+" Search
+set incsearch
+set hlsearch
+set ignorecase
+set smartcase
+
+" Misc
+set encoding=utf8                       " Encoding
+set scrolloff=4				" Keep some context around cursor
+set wildmenu wildmode=list		" Completion
+set mouse=a				" Enable mouse for all modes
+
+" GUI
+set nomousehide			        " Don't hide mouse while typing
+set mousemodel=popup			" Right-click pops up menu
+set guioptions-=T			" Turn off GUI toolbar
+set guioptions-=r			" Turn off GUI right scrollbar
+set guioptions-=L			" Turn off GUI left scrollbar
+
+" Code Folding
+set foldmethod=indent                   " Fold code using tabs
+set foldlevel=99                        " Keep code unfolded by default
+
+set conceallevel=2                      " Hide markdown formatting
+
+" Source Abbreviations
+so ~/.config/nvim/abbrev.vim
+
+" Insert date string in format YYYY-MM-DD
+map <F3> :r!date "+\%F" <CR>
+
+" Copy to clipboard in Mac
+set clipboard=unnamed
+
+" Copy yanked text in Windows
+if system('uname -r') =~ "Microsoft"
+  nnoremap = :r !powershell.exe -Command "& {Get-Clipboard}"<enter>
+  augroup Yank
+    autocmd!
+    autocmd TextYankPost * :call system('clip.exe ',@")
+  augroup END
+endif
+
+" Highlight trailing spaces
+augroup TrailingSpace
+  au!
+  au VimEnter,WinEnter * highlight link TrailingSpaces Error
+  au VimEnter,WinEnter * match TrailingSpaces /\s\+$/
+  au FileType defx highlight clear TrailingSpaces
+augroup END
+
+
+" Plugins
+" =======
+" Mofigul/adwaita.nvim - theme
+" github/copilot.vim - code completion from GitHub Copilot
+" glacambre/firenvim - edit textareas in Firefox with Neovim
+" goerz/jupytext.vim - Jupyter notebook support
+" hrsh7th/nvim-cmp - autocompletion
+" hrsh7th/cmp-buffer - buffer source for nvim-cmp
+" hrsh7th/cmp-nvim-lsp - LSP source for nvim-cmp
+" iamcco/markdown-preview.nvim - preview markdown files
+" nvim-lualine/lualine.nvim - status line
+" jalvesaq/Nvim-R - R language support
+" jpalardy/vim-slime - send code to a REPL using C-c C-c
+" lewis6991/gitsigns.nvim - git signs for added, modified, and removed lines
+" MunifTanjim/nui.nvim - UI components for Neovim
+" Plenary.nvim - utility functions for Neovim
+" neovim/nvim-lspconfig - language server protocol
+" nvie/vim-flake8 - syntax checking for Python
+" nvim-tree/nvim-tree.lua - file explorer
+" nvim-tree/nvim-web-devicons - icons for nvim-tree
+" nvim-treesitter/nvim-treesitter - syntax highlighting
+" windwp/nvim-autopairs - auto-closing pairs such as quotes and parentheses
+" chrisbra/Colorizer - colorize hex codes and color names
+" epwalsh/obsidian.nvim - Obsidian notes support
+" nvim-telescope/telescope.nvim - fuzzy finder
+" jmbuhr/otter.nvim - Provide LSP completion in embedded code blocks
+" quarto-dev/quarto-vim - Quarto support
+"
+
+call plug#begin('~/.config/nvim/plugged')
+
+Plug 'Mofiqul/adwaita.nvim'
+Plug 'github/copilot.vim'
+Plug 'glacambre/firenvim', { 'do': { _ -> firenvim#install(0) } }
+Plug 'goerz/jupytext.vim'
+Plug 'hrsh7th/nvim-cmp'
+Plug 'hrsh7th/cmp-buffer'
+Plug 'hrsh7th/cmp-nvim-lsp'
+Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app && yarn install' }
+Plug 'nvim-lualine/lualine.nvim'
+Plug 'jalvesaq/Nvim-R'
+Plug 'jpalardy/vim-slime'
+Plug 'lewis6991/gitsigns.nvim'
+Plug 'MunifTanjim/nui.nvim'
+Plug 'nvim-lua/plenary.nvim'
+Plug 'neovim/nvim-lspconfig'
+Plug 'nvie/vim-flake8'
+Plug 'nvim-tree/nvim-tree.lua'
+Plug 'nvim-tree/nvim-web-devicons'
+Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate' }
+Plug 'windwp/nvim-autopairs'
+Plug 'chrisbra/Colorizer'
+Plug 'epwalsh/obsidian.nvim'
+Plug 'nvim-telescope/telescope.nvim'
+Plug 'jmbuhr/otter.nvim'
+Plug 'quarto-dev/quarto-nvim'
+Plug 'coder/claudecode.nvim'
+call plug#end()
+
+" Adwaita theme
+let g:adwaita_darker = v:true
+let g:adwaita_disable_cursorline = v:true
+let g:adwaita_transparent = v:true
+colorscheme adwaita
+
+" Lualine setup
+lua << EOF
+require('lualine').setup({
+    options = { theme = 'adwaita' },
+})
+EOF
+
+" Firenvim setup
+let g:firenvim_config = {
+    \ 'globalSettings': {
+        \ 'alt': 'all',
+    \  },
+    \ 'localSettings': {
+        \ '.*': {
+            \ 'cmdline': 'neovim',
+            \ 'content': 'text',
+            \ 'priority': 0,
+            \ 'selector': 'textarea',
+            \ 'takeover': 'never',
+        \ },
+    \ }
+\ }
+
+function! OnUIEnter(event) abort
+    set guifont=AndaleMono:h9
+    nnoremap <space> :set lines=28 columns=110 <CR>
+
+    let s:fontsize = 9
+    function! AdjustFontSizeF(amount)
+      let s:fontsize = s:fontsize+a:amount
+      execute "set guifont=AndaleMono:h" . s:fontsize
+      call rpcnotify(0, 'Gui', 'WindowMaximized', 1)
+    endfunction
+
+    noremap  <C-=> :call AdjustFontSizeF(1)<CR>
+    noremap  <C--> :call AdjustFontSizeF(-1)<CR>
+    inoremap <C-=> :call AdjustFontSizeF(1)<CR>
+    inoremap <C--> :call AdjustFontSizeF(-1)<CR>
+endfunction
+autocmd UIEnter * call OnUIEnter(deepcopy(v:event))
+
+
+" NvimTree setup
+lua << EOF
+-- disable netrw at the very start of your init.lua (strongly advised)
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
+-- set termguicolors to enable highlight groups
+vim.opt.termguicolors = true
+
+-- empty setup using defaults
+require("nvim-tree").setup()
+
+-- OR setup with some options
+require("nvim-tree").setup({
+  sort_by = "case_sensitive",
+  renderer = {
+    group_empty = true,
+  },
+  filters = {
+    dotfiles = true,
+  },
+})
+EOF
+" NvimTree keybindings
+map <C-n> :NvimTreeToggle<CR>
+
+
+" NeoVim Treesitter setup
+lua << EOF
+require("nvim-treesitter.configs").setup({
+    ensure_installed = { "javascript", "typescript", "python", "vim", "json", "html", "bash", "css", "r"},
+    sync_install = false,
+    auto_install = true,
+    highlight = {
+        enable = true,
+    },
+})
+EOF
+
+" configure nvcode-color-schemes
+let g:nvcode_termcolors=256
+syntax on
+
+" check if terminal has 24-bit color support
+if (has("termguicolors"))
+    set termguicolors
+    hi LineNr ctermbg=NONE guibg=NONE
+endif
+
+
+" Initialize Python LSP
+autocmd FileType python lua require('lsp').setup_python()
+
+" LSP settings
+lua << EOF
+require'lspconfig'.pyright.setup{
+    settings = {
+        python = {
+            analysis = {
+                autoSearchPaths = true,
+                useLibraryCodeForTypes = true,
+                extraPaths = (vim.env.CONDA_PREFIX ~= nil or vim.env.VIRTUAL_ENV ~= nil)
+                    and vim.tbl_map(function(path)
+                        return vim.fn.expand(path)
+                    end, vim.fn.glob(vim.fn.expand((vim.env.CONDA_PREFIX or vim.env.VIRTUAL_ENV) .. '/lib/python*/site-packages'), true, true))
+                    or {},
+            },
+        },
+    },
+}
+
+require'lspconfig'.r_language_server.setup{
+  settings = {
+    r = {
+      linting = {
+        enable = true,
+        delay = 500,
+        options = {
+          linters = "default",
+          exclude = {},
+        },
+      },
+      diagnostics = {
+        enable = true,
+        delay = 500,
+        options = {
+          diagnostics = "default",
+          exclude = {},
+        },
+      },
+      formatting = {
+        enable = true,
+      },
+    },
+  },
+}
+
+EOF
+
+
+" nvim-cmp setup
+lua << EOF
+local cmp = require('cmp')
+cmp.setup({
+  snippet = {
+    expand = function(args)
+      vim.fn["vsnip#anonymous"](args.body)
+    end,
+  },
+  mapping = {
+    ['<C-p>'] = cmp.mapping.select_prev_item(),
+    ['<C-n>'] = cmp.mapping.select_next_item(),
+    ['<C-d>'] = cmp.mapping.scroll_docs(-4),
+    ['<C-f>'] = cmp.mapping.scroll_docs(4),
+    ['<CR>'] = cmp.mapping.confirm({ select = true }),
+  },
+  sources = {
+    { name = 'nvim_lsp' },
+    { name = 'buffer' },
+  },
+})
+EOF
+
+" Set completeopt to have a better completion experience
+set completeopt=menuone,noinsert,noselect
+
+" Avoid showing message extra message when using completion
+set shortmess+=c
+
+" GitSigns setup
+lua << EOF
+require('gitsigns').setup()
+EOF
+
+" Nvim Autopairs setup
+lua << EOF
+require("nvim-autopairs").setup {}
+EOF
+
+" vim-flake8 configuration
+let g:flake8_show_in_gutter=110
+
+" markdown-preview
+let g:mkdp_auto_start = 0
+let g:mkdp_auto_close = 1
+
+" vim-slime
+let g:slime_target = "tmux"
+let g:slime_paste_file = expand("$HOME/.slime_paste")
+let g:slime_default_config = {"socket_name": "default", "target_pane": "{last}"}
+
+" Obsidian setup
+lua << EOF
+require("obsidian").setup({
+  dir = "~/Documents/Obsidian-Notes",
+  completion = {
+    nvim_cmp = true,  -- enable nvim-cmp completion
+  },
+})
+
+vim.keymap.set("n", "gf", function()
+  if require("obsidian").util.cursor_on_markdown_link() then
+    return "<cmd>ObsidianFollowLink<CR>"
+  else
+    return "gf"
+  end
+end, { noremap = false, expr = true })
+EOF
+
+" Otter setup
+lua << EOF
+require("otter").setup({
+  lsp = {
+    hover = {
+      border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+    },
+  },
+  buffers = {
+    set_filetype = true,
+  },
+  handle_leading_whitespace = true,
+})
+EOF
+
+" Quarto setup
+lua << EOF
+require("quarto").setup({
+  debug = false,
+  closePreviewOnExit = true,
+  lspFeatures = {
+    enabled = true,
+    chunks = "curly",
+    languages = { "r", "python", "julia", "bash", "html" },
+    diagnostics = {
+      enabled = true,
+      triggers = { "BufWritePost" },
+    },
+    completion = {
+      enabled = true,
+    },
+  },
+  codeRunner = {
+    enabled = true,
+    default_method = "slime", -- "molten", "slime", "iron" or <function>
+    ft_runners = {}, -- filetype to runner, ie. `{ python = "molten" }`.
+    -- Takes precedence over `default_method`
+    never_run = { 'yaml' }, -- filetypes which are never sent to a code runner
+  },
+})
+EOF
+
+" claudecode.nvim configuration
+lua << EOF
+require('claudecode').setup({
+  terminal = {
+    split_side = 'right',  -- Can be 'left' or 'right'
+    split_width_percentage = 0.4,
+    provider = 'auto',  -- Options: 'auto', 'snacks', or 'native'
+    auto_close = true
+  }
+})
+
+-- claudecode.nvim keymaps
+vim.keymap.set('n', '<leader>cc', '<cmd>ClaudeCode<cr>', { desc = 'Toggle Claude Code' })
+vim.keymap.set('n', '<leader>cf', '<cmd>ClaudeCodeFocus<cr>', { desc = 'Focus Claude Code' })
+vim.keymap.set('v', '<leader>cs', '<cmd>ClaudeCodeSend<cr>', { desc = 'Send selection to Claude' })
+vim.keymap.set('n', '<leader>ca', '<cmd>ClaudeCodeDiffAccept<cr>', { desc = 'Accept diff' })
+vim.keymap.set('n', '<leader>cd', '<cmd>ClaudeCodeDiffDeny<cr>', { desc = 'Deny diff' })
+EOF
