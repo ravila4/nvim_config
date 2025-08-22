@@ -86,7 +86,7 @@
 - Where: `ui.lua` (Telescope already handled), `completion.lua`, `layout.lua` (neo-tree popups), toggleterm floats
 - Acceptance:
   - Borders are rounded and share the same blue fg across all popups.
-- Approach: Apply same border chars and `Telescope*Border` color logic to `FloatBorder`/`CmpBorder`/neo-tree popups.
+- Approach: Apply same border chars and neutral gray (`#d0d0d0` light / `#404040` dark) to `FloatBorder`/`CmpBorder`/neo-tree popups; set toggleterm float to rounded gray border.
 - Docs: State unified border style in `FEATURES.md`.
 
 ### T8 — Edgy collapse/pin/toggle both left panels

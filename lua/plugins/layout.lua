@@ -11,7 +11,7 @@ return {
         cps = 120,
       },
       wo = {
-        winhighlight = "Normal:EdgyNormal,NormalNC:EdgyNormalNC,WinBar:EdgyWinBar,WinBarNC:EdgyWinBar",
+        winhighlight = "Normal:EdgyNormal,NormalNC:EdgyNormalNC,WinBar:EdgyWinBar,WinBarNC:EdgyWinBar,FloatBorder:EdgyBorder",
         signcolumn = "no",
       },
       keys = {
@@ -138,8 +138,8 @@ return {
         start_in_insert = true,
         shell = vim.o.shell,
         float_opts = {
-          border = "curved",
-          winblend = 10,
+          border = "rounded",
+          winblend = 0,
         },
       })
     end,
