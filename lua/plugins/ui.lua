@@ -127,48 +127,32 @@ return {
       "nvim-lua/plenary.nvim",
     },
     config = function()
-      -- Setup telescope borders highlight
+      -- Setup telescope borders & selection highlight
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function()
           local is_dark = vim.o.background == "dark"
-          vim.api.nvim_set_hl(0, "TelescopeBorder", {
-            fg = is_dark and "#569cd6" or "#1c71d8",
-            bg = "NONE"
-          })
-          vim.api.nvim_set_hl(0, "TelescopePromptBorder", {
-            fg = is_dark and "#569cd6" or "#1c71d8",
-            bg = "NONE"
-          })
-          vim.api.nvim_set_hl(0, "TelescopeResultsBorder", {
-            fg = is_dark and "#569cd6" or "#1c71d8",
-            bg = "NONE"
-          })
-          vim.api.nvim_set_hl(0, "TelescopePreviewBorder", {
-            fg = is_dark and "#569cd6" or "#1c71d8",
-            bg = "NONE"
-          })
+          local border = is_dark and "#404040" or "#d0d0d0"
+          local sel_bg = is_dark and "#37373d" or "#f1f0ef"
+          vim.api.nvim_set_hl(0, "TelescopeBorder", { fg = border, bg = "NONE" })
+          vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = border, bg = "NONE" })
+          vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { fg = border, bg = "NONE" })
+          vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { fg = border, bg = "NONE" })
+          vim.api.nvim_set_hl(0, "TelescopeSelection", { bg = sel_bg, fg = "NONE" })
+          vim.api.nvim_set_hl(0, "TelescopeSelectionCaret", { bg = sel_bg, fg = is_dark and "#cccccc" or "#2e3436" })
         end,
       })
 
       -- Apply highlights immediately
       vim.defer_fn(function()
         local is_dark = vim.o.background == "dark"
-        vim.api.nvim_set_hl(0, "TelescopeBorder", {
-          fg = is_dark and "#569cd6" or "#1c71d8",
-          bg = "NONE"
-        })
-        vim.api.nvim_set_hl(0, "TelescopePromptBorder", {
-          fg = is_dark and "#569cd6" or "#1c71d8",
-          bg = "NONE"
-        })
-        vim.api.nvim_set_hl(0, "TelescopeResultsBorder", {
-          fg = is_dark and "#569cd6" or "#1c71d8",
-          bg = "NONE"
-        })
-        vim.api.nvim_set_hl(0, "TelescopePreviewBorder", {
-          fg = is_dark and "#569cd6" or "#1c71d8",
-          bg = "NONE"
-        })
+        local border = is_dark and "#404040" or "#d0d0d0"
+        local sel_bg = is_dark and "#37373d" or "#f1f0ef"
+        vim.api.nvim_set_hl(0, "TelescopeBorder", { fg = border, bg = "NONE" })
+        vim.api.nvim_set_hl(0, "TelescopePromptBorder", { fg = border, bg = "NONE" })
+        vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { fg = border, bg = "NONE" })
+        vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { fg = border, bg = "NONE" })
+        vim.api.nvim_set_hl(0, "TelescopeSelection", { bg = sel_bg, fg = "NONE" })
+        vim.api.nvim_set_hl(0, "TelescopeSelectionCaret", { bg = sel_bg, fg = is_dark and "#cccccc" or "#2e3436" })
       end, 100)
 
       require("telescope").setup({

@@ -11,6 +11,7 @@
 | T5 | Shortcut + menu: Neo-tree float git_status (git_base=main) | Medium | DONE |
 | T6 | Colorscheme parity light/dark: cursorline, floats, transparency | High | TODO |
 | T7 | Consistent borders across Telescope/Lazy/Neo-tree/term/cmp | Medium | TODO |
+| T11 | Diffview colors: pastel add/remove for light theme | Medium | TODO |
 | T8 | Edgy controls: collapse/pin/toggle both left panels | Medium | TODO |
 | T9 | Neo-tree preview/floating preview mode | Low | TODO |
 | T10| Custom diagnostic icons | Medium | TODO |
