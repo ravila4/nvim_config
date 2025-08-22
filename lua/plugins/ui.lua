@@ -163,6 +163,8 @@ return {
           results_title = "",
           prompt_title = "",
           preview_title = "",
+          -- Subtly darken header text for readability
+          hl_result_eol = true,
           layout_config = {
             horizontal = {
               prompt_position = "top",

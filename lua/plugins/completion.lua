@@ -17,21 +17,22 @@ return {
 
       local function set_cmp_hl()
         local is_dark = vim.o.background == "dark"
+        local border = is_dark and "#404040" or "#d0d0d0"
         if is_dark then
           vim.api.nvim_set_hl(0, "Pmenu", { bg = "#2d2d30", fg = "#cccccc" })
           vim.api.nvim_set_hl(0, "PmenuSel", { bg = "#37373d", fg = "#ffffff" })
           vim.api.nvim_set_hl(0, "PmenuSbar", { bg = "#2d2d30" })
           vim.api.nvim_set_hl(0, "PmenuThumb", { bg = "#37373d" })
-          vim.api.nvim_set_hl(0, "CmpBorder", { fg = "#569cd6", bg = "NONE" })
-          vim.api.nvim_set_hl(0, "FloatBorder", { fg = "#569cd6", bg = "NONE" })
+          vim.api.nvim_set_hl(0, "CmpBorder", { fg = border, bg = "NONE" })
+          vim.api.nvim_set_hl(0, "FloatBorder", { fg = border, bg = "NONE" })
           vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#2d2d30" })
         else
           vim.api.nvim_set_hl(0, "Pmenu", { bg = "#ffffff", fg = "#2e3436" })
           vim.api.nvim_set_hl(0, "PmenuSel", { bg = "#f1f0ef", fg = "#2e3436" })
           vim.api.nvim_set_hl(0, "PmenuSbar", { bg = "#ffffff" })
           vim.api.nvim_set_hl(0, "PmenuThumb", { bg = "#f1f0ef" })
-          vim.api.nvim_set_hl(0, "CmpBorder", { fg = "#1c71d8", bg = "NONE" })
-          vim.api.nvim_set_hl(0, "FloatBorder", { fg = "#1c71d8", bg = "NONE" })
+          vim.api.nvim_set_hl(0, "CmpBorder", { fg = border, bg = "NONE" })
+          vim.api.nvim_set_hl(0, "FloatBorder", { fg = border, bg = "NONE" })
           vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#ffffff" })
         end
       end
@@ -69,8 +70,29 @@ return {
           { name = "buffer" },
         }),
         formatting = {
-          fields = { "abbr", "menu" },
+          fields = { "kind", "abbr", "menu" },
+          format = function(entry, vim_item)
+            local kind_icons = {
+              Text = "", Method = "m", Function = "", Constructor = "",
+              Field = "ﰠ", Variable = "", Class = "ﴯ", Interface = "",
+              Module = "", Property = "", Unit = "塞", Value = "",
+              Enum = "", Keyword = "", Snippet = "", Color = "",
+              File = "", Reference = "", Folder = "", EnumMember = "",
+              Constant = "", Struct = "פּ", Event = "", Operator = "",
+              TypeParameter = "",
+            }
+            vim_item.kind = string.format("%s", kind_icons[vim_item.kind] or " ")
+            local menu = {
+              nvim_lsp = "LSP",
+              buffer = "Buf",
+              path = "Path",
+              luasnip = "Snip",
+            }
+            vim_item.menu = menu[entry.source.name] or ""
+            return vim_item
+          end,
         },
+        experimental = { ghost_text = false },
       })
     end,
   },
