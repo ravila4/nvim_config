@@ -746,6 +746,9 @@ return {
 
       -- Right-click context menu with copy/paste + IDE entries
       vim.api.nvim_create_user_command("RightClickMenu", function()
+        if vim.bo.filetype == 'snacks_dashboard' or vim.bo.filetype == 'dashboard' then
+          return
+        end
         local mode = vim.fn.mode()
         local has_selection = mode == 'v' or mode == 'V' or mode == '\22'
         local right_click_menu = {
@@ -769,8 +772,14 @@ return {
       end, {})
     end,
     keys = {
-      { "<C-t>", "<cmd>ContextMenu<cr>", desc = "Open Context Menu" },
-      { "<leader>m", "<cmd>ContextMenu<cr>", desc = "Open Context Menu" },
+      { "<C-t>", function()
+          if vim.bo.filetype == 'snacks_dashboard' or vim.bo.filetype == 'dashboard' then return end
+          vim.cmd('ContextMenu')
+        end, desc = "Open Context Menu" },
+      { "<leader>m", function()
+          if vim.bo.filetype == 'snacks_dashboard' or vim.bo.filetype == 'dashboard' then return end
+          vim.cmd('ContextMenu')
+        end, desc = "Open Context Menu" },
       { "<leader>mb", "<cmd>BufferMenu<cr>", desc = "Buffer Menu" },
       { "<leader>ml", "<cmd>LspMenu<cr>", desc = "LSP Menu" },
       { "<leader>mg", "<cmd>GitMenu<cr>", desc = "Git Menu" },
@@ -780,7 +789,10 @@ return {
       { "<leader>md", "<cmd>DebugMenu<cr>", desc = "Debug Menu" },
       
       -- Right-click context menu support
-      { "<RightMouse>", "<cmd>RightClickMenu<cr>", desc = "Right-click Context Menu", mode = { "n", "v" } },
+      { "<RightMouse>", function()
+          if vim.bo.filetype == 'snacks_dashboard' or vim.bo.filetype == 'dashboard' then return end
+          vim.cmd('RightClickMenu')
+        end, desc = "Right-click Context Menu", mode = { "n", "v" } },
     },
   },
 }
