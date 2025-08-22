@@ -8,7 +8,7 @@ This Neovim configuration transforms your editor into a modern bioinformatics ID
 
 ### Panel Organization
 - **Left Panel**: File explorer (neo-tree) + Code outline/symbols
-- **Bottom Panel**: Terminal/REPL (like RStudio console)  
+- **Bottom Panel**: Terminal/REPL (like RStudio console)
 - **Right Panel**: Git status, database UI
 - **Center**: Your code with beautiful syntax highlighting
 
@@ -39,7 +39,7 @@ This Neovim configuration transforms your editor into a modern bioinformatics ID
 ### Session Management
 - **Auto-save**: Sessions automatically saved on exit
 - **Dashboard Integration**: Restore sessions directly from dashboard
-  - `s` - Restore current directory session  
+  - `s` - Restore current directory session
   - `S` - Select from available sessions
   - `l` - Restore last session
 - **Manual Control**: Use `<leader>q` + `s/S/l/d` for session operations
@@ -59,7 +59,7 @@ This Neovim configuration transforms your editor into a modern bioinformatics ID
 
 ### Dashboard Session Actions
 - `s` - Restore current directory session
-- `S` - Select from available sessions  
+- `S` - Select from available sessions
 - `l` - Restore last session
 - `x` - Close current session (keep dashboard)
 - `n` - **Save named session** (custom name)
@@ -79,6 +79,8 @@ This Neovim configuration transforms your editor into a modern bioinformatics ID
 - **Context Awareness**: Copy option adapts based on whether text is selected
 - **IDE Functionality**: Quick access to all IDE menus and operations
 - **System Clipboard**: Uses `"+` register for system clipboard integration
+
+All menu items are clickable with mouse and mapped to actual commands; items that call Ex-commands are executed reliably.
 
 ### Menu Categories
 | Key | Menu | Actions |
@@ -212,6 +214,14 @@ This Neovim configuration transforms your editor into a modern bioinformatics ID
 - **Colorscheme**: Adwaita with transparency
 - **Accent Color**: Custom teal (`#228787`)
 - **Dashboard**: Rotating bioinformatics-themed headers
+
+### Statusline (Lualine)
+- Time segment adapts to mode with theme-aware colors:
+  - Normal: teal `#228787`
+  - Insert: orange `#f57c00`
+  - Visual/Command: blue (Adwaita) — dark `#569cd6`, light `#1c71d8`
+  - Replace: red — dark `#f48771`, light `#a51d2d`
+  - Terminal: green — dark `#4ec9b0`, light `#26a269`
 
 ### Trailing Whitespace
 - Automatically highlights trailing spaces

@@ -82,6 +82,9 @@ map("n", "<leader>lc", function()
   require("edgy").close()
 end, { desc = "Close all panels" })
 
+-- Git: Neo-tree git status (float, base=main)
+map("n", "<leader>gS", ":Neotree float git_status git_base=main<CR>", { desc = "Git status (float, main)" })
+
 -- Session management keymaps
 map("n", "<leader>qc", function()
   -- Close all buffers except current one

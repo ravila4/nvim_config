@@ -52,11 +52,34 @@ return {
           lualine_y = {
             {
               function()
-                -- Show current time
                 return os.date("%H:%M")
               end,
               icon = "",
-              color = { fg = "#9cdcfe" },
+              color = function()
+                local mode = vim.fn.mode()
+                local is_dark = vim.o.background == "dark"
+                local palette = {
+                  teal = "#228787",
+                  orange = "#f57c00",
+                  blue = is_dark and "#569cd6" or "#1c71d8",
+                  red = is_dark and "#f48771" or "#a51d2d",
+                  green = is_dark and "#4ec9b0" or "#26a269",
+                }
+
+                if mode:match("i") then
+                  return { fg = palette.orange }
+                elseif mode == "v" or mode == "V" or mode == "\22" then
+                  return { fg = palette.blue }
+                elseif mode:match("R") or mode:match("r") then
+                  return { fg = palette.red }
+                elseif mode == "t" then
+                  return { fg = palette.green }
+                elseif mode == "c" then
+                  return { fg = palette.blue }
+                else
+                  return { fg = palette.teal }
+                end
+              end,
             }
           },
           lualine_z = { "location", "progress" }
@@ -576,6 +599,36 @@ return {
     dependencies = { "nvzone/volt" },
     config = function()
       local menu = require("menu")
+
+      local function normalize_menu(items)
+        local normalized = {}
+        for _, it in ipairs(items) do
+          if it.name == "separator" then
+            table.insert(normalized, it)
+          else
+            local action
+            if type(it.cmd) == "function" then
+              local fn = it.cmd
+              action = function()
+                vim.schedule(function()
+                  pcall(fn)
+                end)
+              end
+            elseif type(it.cmd) == "string" and it.cmd ~= "" then
+              local cmdstr = it.cmd
+              action = function()
+                vim.schedule(function()
+                  pcall(vim.cmd, cmdstr)
+                end)
+              end
+            else
+              action = function() end
+            end
+            table.insert(normalized, { name = it.name, cmd = action, rtxt = it.rtxt })
+          end
+        end
+        return normalized
+      end
       
       -- Store menu configurations globally for access
       _G.ide_menus = {
@@ -588,8 +641,8 @@ return {
           { name = "󰤼 Split Horizontal", cmd = "split", rtxt = "" },
           { name = "󰤻 Split Vertical", cmd = "vsplit", rtxt = "" },
           { name = "separator" },
-          { name = "󰌪 Pin Tab", cmd = "BufferPin", rtxt = "" },
-          { name = "󰘬 Pick Buffer", cmd = "BufferPick", rtxt = "" },
+          { name = "󰌪 Pin Tab", cmd = "BufferLineTogglePin", rtxt = "" },
+          { name = "󰘬 Pick Buffer", cmd = "BufferLinePick", rtxt = "" },
         },
 
         lsp_menu = {
@@ -608,6 +661,7 @@ return {
 
         git_menu = {
           { name = "󰊢 Git Status", cmd = "Neotree git_status", rtxt = "" },
+          { name = "󰊢 Git Status (float, main)", cmd = "Neotree float git_status git_base=main", rtxt = "gS" },
           { name = "󰊢 Open Diffview", cmd = "DiffviewOpen", rtxt = "gd" },
           { name = "󰊢 File History", cmd = "DiffviewFileHistory %", rtxt = "gh" },
           { name = "󰊢 Diff Last Commit", cmd = "DiffviewOpen HEAD~1", rtxt = "gD" },
@@ -678,14 +732,41 @@ return {
       }
 
       -- Create user commands  
-      vim.api.nvim_create_user_command("BufferMenu", function() menu.open(_G.ide_menus.buffer_menu, { mouse = true }) end, {})
-      vim.api.nvim_create_user_command("LspMenu", function() menu.open(_G.ide_menus.lsp_menu, { mouse = true }) end, {})
-      vim.api.nvim_create_user_command("GitMenu", function() menu.open(_G.ide_menus.git_menu, { mouse = true }) end, {})
-      vim.api.nvim_create_user_command("TerminalMenu", function() menu.open(_G.ide_menus.terminal_menu, { mouse = true }) end, {})
-      vim.api.nvim_create_user_command("FileMenu", function() menu.open(_G.ide_menus.file_menu, { mouse = true }) end, {})
-      vim.api.nvim_create_user_command("LayoutMenu", function() menu.open(_G.ide_menus.layout_menu, { mouse = true }) end, {})
-      vim.api.nvim_create_user_command("DebugMenu", function() menu.open(_G.ide_menus.debug_menu, { mouse = true }) end, {})
-      vim.api.nvim_create_user_command("ContextMenu", function() menu.open(_G.ide_menus.context_menu, { mouse = true }) end, {})
+      local function menu_opts()
+        return { mouse = true, border = 'rounded', winblend = 0 }
+      end
+      vim.api.nvim_create_user_command("BufferMenu", function() menu.open(normalize_menu(_G.ide_menus.buffer_menu), menu_opts()) end, {})
+      vim.api.nvim_create_user_command("LspMenu", function() menu.open(normalize_menu(_G.ide_menus.lsp_menu), menu_opts()) end, {})
+      vim.api.nvim_create_user_command("GitMenu", function() menu.open(normalize_menu(_G.ide_menus.git_menu), menu_opts()) end, {})
+      vim.api.nvim_create_user_command("TerminalMenu", function() menu.open(normalize_menu(_G.ide_menus.terminal_menu), menu_opts()) end, {})
+      vim.api.nvim_create_user_command("FileMenu", function() menu.open(normalize_menu(_G.ide_menus.file_menu), menu_opts()) end, {})
+      vim.api.nvim_create_user_command("LayoutMenu", function() menu.open(normalize_menu(_G.ide_menus.layout_menu), menu_opts()) end, {})
+      vim.api.nvim_create_user_command("DebugMenu", function() menu.open(normalize_menu(_G.ide_menus.debug_menu), menu_opts()) end, {})
+      vim.api.nvim_create_user_command("ContextMenu", function() menu.open(normalize_menu(_G.ide_menus.context_menu), menu_opts()) end, {})
+
+      -- Right-click context menu with copy/paste + IDE entries
+      vim.api.nvim_create_user_command("RightClickMenu", function()
+        local mode = vim.fn.mode()
+        local has_selection = mode == 'v' or mode == 'V' or mode == '\22'
+        local right_click_menu = {
+          { name = "📋 Copy", cmd = has_selection and '"+y' or 'echo "No text selected"', rtxt = "y" },
+          { name = "📄 Paste", cmd = '"+p', rtxt = "p" },
+          { name = "📄 Paste Before", cmd = '"+P', rtxt = "P" },
+          { name = "separator" },
+          { name = "🔤 Select All", cmd = "normal! ggVG", rtxt = "ggVG" },
+          { name = "🔤 Select Line", cmd = "normal! V", rtxt = "V" },
+          { name = "separator" },
+          { name = "📁 File Operations", cmd = "FileMenu", rtxt = "mf" },
+          { name = "📋 Buffer Actions", cmd = "BufferMenu", rtxt = "mb" },
+          { name = "🔧 LSP Actions", cmd = "LspMenu", rtxt = "ml" },
+          { name = "separator" },
+          { name = "📟 Terminal/REPL", cmd = "TerminalMenu", rtxt = "mt" },
+          { name = "󰊢 Git Operations", cmd = "GitMenu", rtxt = "mg" },
+          { name = "📐 Layout Control", cmd = "LayoutMenu", rtxt = "mp" },
+          { name = "🔍 Debug Tools", cmd = "DebugMenu", rtxt = "md" },
+        }
+        menu.open(normalize_menu(right_click_menu), menu_opts())
+      end, {})
     end,
     keys = {
       { "<C-t>", "<cmd>ContextMenu<cr>", desc = "Open Context Menu" },
@@ -699,37 +780,7 @@ return {
       { "<leader>md", "<cmd>DebugMenu<cr>", desc = "Debug Menu" },
       
       -- Right-click context menu support
-      { "<RightMouse>", function()
-        local menu = require('menu')
-        require('menu.utils').delete_old_menus()
-        
-        -- Check if we're in visual mode (text selected)
-        local mode = vim.fn.mode()
-        local has_selection = mode == 'v' or mode == 'V' or mode == '\22' -- \22 is visual block mode
-        
-        local right_click_menu = {
-          -- Copy/Paste options at the top
-          { name = "📋 Copy", cmd = has_selection and '"+y' or 'echo "No text selected"', rtxt = "y" },
-          { name = "📄 Paste", cmd = '"+p', rtxt = "p" },
-          { name = "📄 Paste Before", cmd = '"+P', rtxt = "P" },
-          { name = "separator" },
-          -- Selection options
-          { name = "🔤 Select All", cmd = "normal! ggVG", rtxt = "ggVG" },
-          { name = "🔤 Select Line", cmd = "normal! V", rtxt = "V" },
-          { name = "separator" },
-          -- IDE functionality
-          { name = "📁 File Operations", cmd = "FileMenu", rtxt = "mf" },
-          { name = "📋 Buffer Actions", cmd = "BufferMenu", rtxt = "mb" },
-          { name = "🔧 LSP Actions", cmd = "LspMenu", rtxt = "ml" },
-          { name = "separator" },
-          { name = "📟 Terminal/REPL", cmd = "TerminalMenu", rtxt = "mt" },
-          { name = "󰊢 Git Operations", cmd = "GitMenu", rtxt = "mg" },
-          { name = "📐 Layout Control", cmd = "LayoutMenu", rtxt = "mp" },
-          { name = "🔍 Debug Tools", cmd = "DebugMenu", rtxt = "md" },
-        }
-        
-        menu.open(right_click_menu, { mouse = true })
-      end, desc = "Right-click Context Menu", mode = { "n", "v" } },
+      { "<RightMouse>", "<cmd>RightClickMenu<cr>", desc = "Right-click Context Menu", mode = { "n", "v" } },
     },
   },
 }
