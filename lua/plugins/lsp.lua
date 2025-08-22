@@ -1,4 +1,15 @@
 return {
+  -- Enhanced diagnostic display with virtual lines
+  {
+    "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
+    event = "LspAttach",
+    config = function()
+      require("lsp_lines").setup()
+      -- Toggle between virtual lines and virtual text
+      vim.keymap.set("n", "<Leader>ld", require("lsp_lines").toggle, { desc = "Toggle lsp_lines" })
+    end,
+  },
+
   {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
@@ -55,6 +66,23 @@ return {
               enable = true,
             },
           },
+        },
+      })
+
+      -- Configure diagnostics to work well with lsp_lines
+      vim.diagnostic.config({
+        -- Disable virtual_text since we're using lsp_lines
+        virtual_text = false,
+        -- Keep other diagnostic features
+        signs = true,
+        underline = true,
+        update_in_insert = false,
+        severity_sort = true,
+        float = {
+          border = "rounded",
+          source = "always",
+          header = "",
+          prefix = "",
         },
       })
 

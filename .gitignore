@@ -12,3 +12,8 @@ lazy-lock.json
 *.bak
 *~
 .DS_Store
+
+# AI Agent documentation (project-specific, not shared)
+AGENTS.md
+CLAUDE.md
+TODO.md

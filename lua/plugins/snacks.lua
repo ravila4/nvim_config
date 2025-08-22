@@ -33,7 +33,55 @@ return {
             { icon = " ", key = "g", desc = "Find Text", action = ":lua Snacks.dashboard.pick('live_grep')" },
             { icon = " ", key = "r", desc = "Recent Files", action = ":lua Snacks.dashboard.pick('oldfiles')" },
             { icon = " ", key = "c", desc = "Config", action = ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})" },
-            { icon = " ", key = "s", desc = "Restore Session", section = "session" },
+            { icon = " ", key = "s", desc = "Restore Session", action = function() require("persistence").load() end },
+            { icon = " ", key = "S", desc = "Select Session", action = function() require("persistence").select() end },
+            { icon = " ", key = "l", desc = "Last Session", action = function() require("persistence").load({ last = true }) end },
+            { icon = "󰅖 ", key = "x", desc = "Close Session", action = function()
+              local current = vim.api.nvim_get_current_buf()
+              local buffers = vim.api.nvim_list_bufs()
+              for _, buf in ipairs(buffers) do
+                if buf ~= current and vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].buftype == "" then
+                  vim.api.nvim_buf_delete(buf, { force = false })
+                end
+              end
+              vim.notify("Session closed - keeping dashboard")
+            end },
+            { icon = " ", key = "n", desc = "Save Named Session", action = function()
+              vim.ui.input({ prompt = "Session name: " }, function(name)
+                if name and name ~= "" then
+                  local session_dir = vim.fn.expand(vim.fn.stdpath("state") .. "/sessions/")
+                  local session_file = session_dir .. name .. ".vim"
+                  vim.cmd("mksession! " .. vim.fn.fnameescape(session_file))
+                  vim.notify("Session '" .. name .. "' saved!")
+                end
+              end)
+            end },
+            { icon = " ", key = "R", desc = "Restore Named Session", action = function()
+              local session_dir = vim.fn.expand(vim.fn.stdpath("state") .. "/sessions/")
+              local sessions = {}
+              
+              for name, type in vim.fs.dir(session_dir) do
+                if type == "file" and name:match("%.vim$") then
+                  local session_name = name:gsub("%.vim$", "")
+                  if not session_name:match("^[a-f0-9-]+$") then
+                    table.insert(sessions, session_name)
+                  end
+                end
+              end
+              
+              if #sessions == 0 then
+                vim.notify("No named sessions found")
+                return
+              end
+              
+              vim.ui.select(sessions, { prompt = "Select session:" }, function(choice)
+                if choice then
+                  local session_file = session_dir .. choice .. ".vim"
+                  vim.cmd("source " .. vim.fn.fnameescape(session_file))
+                  vim.notify("Session '" .. choice .. "' restored!")
+                end
+              end)
+            end },
             { icon = "󰒲 ", key = "L", desc = "Lazy", action = ":Lazy", enabled = package.loaded.lazy ~= nil },
             { icon = " ", key = "q", desc = "Quit", action = ":qa" },
           },
@@ -159,6 +207,55 @@ return {
         refresh = 50,
       },
 
+      -- Snacks explorer (disabled - using neo-tree instead)
+      explorer = {
+        enabled = false,
+        width = 35,
+        position = "left",
+        follow = true,
+        sort = "name",
+        show_hidden = false,
+        show_icons = true,
+        -- Better styling to match your theme
+        style = {
+          border = "rounded",
+          title = "Files",
+          title_pos = "center",
+        },
+        icons = {
+          folder_closed = "",
+          folder_open = "",
+          file = "",
+          git_add = "",
+          git_change = "",
+          git_delete = "",
+          git_ignore = "",
+          git_rename = "",
+          git_stage = "",
+          git_unstage = "",
+          git_untrack = "",
+        },
+        keys = {
+          ["<cr>"] = "open",
+          ["o"] = "open",
+          ["<bs>"] = "parent",
+          ["K"] = "parent",
+          ["-"] = "parent",
+          ["H"] = "toggle_hidden",
+          ["R"] = "refresh",
+          ["a"] = "create",
+          ["d"] = "delete",
+          ["r"] = "rename",
+          ["y"] = "copy",
+          ["x"] = "cut",
+          ["p"] = "paste",
+          ["q"] = "close",
+          ["<esc>"] = "close",
+          ["/"] = "search",
+          ["?"] = "help",
+        },
+      },
+
       -- Scope highlighting
       scope = {
         enabled = true,
@@ -174,6 +271,27 @@ return {
         underline = false,
         only_current = false,
         hl = "SnacksScope",
+      },
+
+      -- Big file handling for better performance
+      bigfile = {
+        enabled = true,
+        notify = true, -- Show notification when big file detected
+        size = 1.5 * 1024 * 1024, -- 1.5MB threshold
+        -- Features to disable for big files
+        setup = function(ctx)
+          vim.cmd("syntax clear")
+          vim.opt_local.foldmethod = "manual"
+          vim.opt_local.spell = false
+          vim.opt_local.swapfile = false
+          vim.opt_local.undofile = false
+          vim.opt_local.breakindent = false
+          vim.opt_local.colorcolumn = ""
+          vim.opt_local.statuscolumn = ""
+          vim.opt_local.signcolumn = "no"
+          vim.opt_local.foldcolumn = "0"
+          vim.opt_local.winbar = ""
+        end,
       },
     },
     keys = {
@@ -226,6 +344,36 @@ return {
           vim.api.nvim_set_hl(0, "SnacksDashboardTitle", { fg = "#228787" })   -- Your lualine teal
           vim.api.nvim_set_hl(0, "SnacksDashboardFile", { fg = "#2aa3a3" })    -- Lighter variant
           vim.api.nvim_set_hl(0, "SnacksDashboardDir", { fg = "#1a6b6b" })     -- Darker variant
+          
+          -- Fix word highlighting for both light and dark themes
+          local function set_word_highlights()
+            if vim.o.background == "light" then
+              -- Light theme: very subtle light background with teal underline
+              vim.api.nvim_set_hl(0, "SnacksWords", { bg = "#f0f8ff", fg = "NONE", underline = true, sp = "#228787" })
+              -- Try other possible highlight groups that might be used
+              vim.api.nvim_set_hl(0, "LspReferenceText", { bg = "#f0f8ff", fg = "NONE", underline = true, sp = "#228787" })
+              vim.api.nvim_set_hl(0, "LspReferenceRead", { bg = "#f0f8ff", fg = "NONE", underline = true, sp = "#228787" })
+              vim.api.nvim_set_hl(0, "LspReferenceWrite", { bg = "#f0f8ff", fg = "NONE", underline = true, sp = "#228787" })
+              vim.api.nvim_set_hl(0, "CursorWord", { bg = "#f0f8ff", fg = "NONE", underline = true, sp = "#228787" })
+              vim.api.nvim_set_hl(0, "MatchParen", { bg = "#f0f8ff", fg = "NONE", underline = true, sp = "#228787" })
+            else
+              -- Dark theme: subtle dark background with teal underline  
+              vim.api.nvim_set_hl(0, "SnacksWords", { bg = "#1a3a3a", fg = "NONE", underline = true, sp = "#228787" })
+              vim.api.nvim_set_hl(0, "LspReferenceText", { bg = "#1a3a3a", fg = "NONE", underline = true, sp = "#228787" })
+              vim.api.nvim_set_hl(0, "LspReferenceRead", { bg = "#1a3a3a", fg = "NONE", underline = true, sp = "#228787" })
+              vim.api.nvim_set_hl(0, "LspReferenceWrite", { bg = "#1a3a3a", fg = "NONE", underline = true, sp = "#228787" })
+              vim.api.nvim_set_hl(0, "CursorWord", { bg = "#1a3a3a", fg = "NONE", underline = true, sp = "#228787" })
+              vim.api.nvim_set_hl(0, "MatchParen", { bg = "#1a3a3a", fg = "NONE", underline = true, sp = "#228787" })
+            end
+          end
+          
+          -- Set highlights initially
+          set_word_highlights()
+          
+          -- Update highlights when colorscheme changes
+          vim.api.nvim_create_autocmd("ColorScheme", {
+            callback = set_word_highlights,
+          })
         end,
       })
     end,

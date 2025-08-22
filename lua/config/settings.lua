@@ -91,13 +91,13 @@ vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
     vim.defer_fn(function()
       local buftype = vim.bo.buftype
       local filetype = vim.bo.filetype
-      
+
       -- Skip special buffers and floating windows
       local skip_filetypes = {
         "lazy", "mason", "neo-tree", "telescope", "dashboard", "snacks_dashboard",
         "help", "terminal", "qf", "trouble", "fugitive", "defx", ""
       }
-      
+ 
       if buftype == "" and not vim.tbl_contains(skip_filetypes, filetype) and filetype ~= "" then
         -- Clear any existing matches first
         vim.fn.clearmatches()
@@ -124,6 +124,50 @@ vim.defer_fn(function()
     fg = vim.o.background == "dark" and "#ff6b6b" or "#cc0000"
   })
 end, 200)
+
+-- Session persistence and layout management
+vim.api.nvim_create_augroup("SessionLayout", { clear = true })
+
+-- Auto-save session before exit
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  group = "SessionLayout",
+  callback = function()
+    if vim.fn.argc() == 0 and not vim.bo.readonly then
+      -- Close special buffers before saving
+      local bufs = vim.api.nvim_list_bufs()
+      for _, buf in ipairs(bufs) do
+        local bufname = vim.api.nvim_buf_get_name(buf)
+        local buftype = vim.bo[buf].buftype
+        if buftype ~= "" or 
+           bufname:match("OUTLINE") or 
+           bufname:match("neo%-tree") or
+           bufname:match("snacks_explorer") or
+           bufname:match("Outline") then
+          pcall(vim.api.nvim_buf_delete, buf, {force = true})
+        end
+      end
+      require("persistence").save()
+    end
+  end,
+})
+
+-- Clean up outline buffers after session restore
+vim.api.nvim_create_autocmd("User", {
+  pattern = "PersistenceLoadPost",
+  group = "SessionLayout",
+  callback = function()
+    -- Clean up any outline buffers that might have been restored
+    vim.defer_fn(function()
+      local bufs = vim.api.nvim_list_bufs()
+      for _, buf in ipairs(bufs) do
+        local bufname = vim.api.nvim_buf_get_name(buf)
+        if bufname:match("OUTLINE") or bufname:match("Outline") then
+          pcall(vim.api.nvim_buf_delete, buf, {force = true})
+        end
+      end
+    end, 100)
+  end,
+})
 
 -- Check if running in VSCode or ordinary Neovim
 if vim.g.vscode then
