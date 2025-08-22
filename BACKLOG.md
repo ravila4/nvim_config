@@ -7,13 +7,14 @@
 | T1 | Lualine time color by mode/theme | High | DONE |
 | T2 | Completion menu border/background mismatch | High | TODO |
 | T3 | nvzone/menu clicks not executing | High | DONE |
-| T4 | Neo-tree folder/file colors (blue folders, monochrome files) | Medium | TODO |
+| T4 | Neo-tree folder/file colors (blue folders, monochrome files) | Medium | DONE |
 | T5 | Shortcut + menu: Neo-tree float git_status (git_base=main) | Medium | DONE |
 | T6 | Colorscheme parity light/dark: cursorline, floats, transparency | High | TODO |
 | T7 | Consistent borders across Telescope/Lazy/Neo-tree/term/cmp | Medium | TODO |
 | T8 | Edgy controls: collapse/pin/toggle both left panels | Medium | TODO |
 | T9 | Neo-tree preview/floating preview mode | Low | TODO |
 | T10| Custom diagnostic icons | Medium | TODO |
+| T11| Disable move in dashboard | Low | TODO |
 
 ---
 
@@ -122,9 +123,9 @@ vim.diagnostic.config({
 
 Notes: Neo-tree configuration details are in `:h neo-tree-configuration` (online: `neo-tree.txt`).
 
+### T11 - Disable move in dashboard
+Use option:
+> disable_move       -- default is false disable move keymap for hyper
+
 ---
 
-## Ideas
-
-1. An nvim-managed local per-project issue/feature tracker (kanban-style). Could leverage Snacks dashboard + simple markdown DB or explore Obsidian’s bases via plugin.
-2. A nice process tracker (htop alternative in nvim?)

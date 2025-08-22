@@ -259,6 +259,10 @@ All menu items are clickable with mouse and mapped to actual commands; items tha
 | `<leader>e` | Toggle explorer | Alternative toggle |
 | `<leader>E` | Focus explorer | Jump to file tree |
 
+Visual styling:
+- Folders use Adwaita blue (theme-aware).
+- Files are monochrome; diagnostics are conveyed via icons, not filename color.
+
 #### Within Neo-tree
 | Key | Action | Description |
 |-----|--------|-------------|

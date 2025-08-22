@@ -167,6 +167,9 @@ return {
         enable_diagnostics = true,
         use_popups_for_input = false,
         default_component_configs = {
+          name = {
+            use_git_status_colors = false,
+          },
           container = {
             enable_character_fade = true,
           },
@@ -220,6 +223,28 @@ return {
             },
           },
         },
+      })
+
+      -- Theme-aware folder/file name colors
+      local function set_neotree_highlights()
+        local is_dark = vim.o.background == "dark"
+        vim.api.nvim_set_hl(0, "NeoTreeDirectoryName", {
+          fg = is_dark and "#569cd6" or "#1c71d8",
+          bg = "NONE",
+        })
+        vim.api.nvim_set_hl(0, "NeoTreeFileName", {
+          fg = is_dark and "#ffffff" or "#2e3436",
+          bg = "NONE",
+        })
+        vim.api.nvim_set_hl(0, "NeoTreeFileNameOpened", {
+          fg = is_dark and "#ffffff" or "#2e3436",
+          bg = "NONE",
+        })
+      end
+
+      set_neotree_highlights()
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = set_neotree_highlights,
       })
     end,
   },
