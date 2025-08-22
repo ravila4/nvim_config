@@ -1,5 +1,4 @@
 # Plugin directories
-plugged/
 pack/
 
 # Lazy.nvim plugin directory (will be in data directory, but in case)
