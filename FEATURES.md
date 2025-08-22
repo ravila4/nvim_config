@@ -179,6 +179,9 @@ All menu items are clickable with mouse and mapped to actual commands; items tha
     - Blue lines for information
     - Full message text visible without truncation
 - **Completion**: Intelligent autocomplete with nvim-cmp
+  - Popup uses rounded borders with Adwaita blue border
+  - Backgrounds are theme-aware and match editor (light: white, dark: #2d2d30)
+  - Selection row uses subtle highlight (light: #f1f0ef, dark: #37373d)
 - **Syntax Highlighting**: Treesitter for all major languages
 - **Code Outline**: Function and class navigation
 

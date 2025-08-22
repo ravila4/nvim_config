@@ -20,12 +20,16 @@ return {
         if is_dark then
           vim.api.nvim_set_hl(0, "Pmenu", { bg = "#2d2d30", fg = "#cccccc" })
           vim.api.nvim_set_hl(0, "PmenuSel", { bg = "#37373d", fg = "#ffffff" })
+          vim.api.nvim_set_hl(0, "PmenuSbar", { bg = "#2d2d30" })
+          vim.api.nvim_set_hl(0, "PmenuThumb", { bg = "#37373d" })
           vim.api.nvim_set_hl(0, "CmpBorder", { fg = "#569cd6", bg = "NONE" })
           vim.api.nvim_set_hl(0, "FloatBorder", { fg = "#569cd6", bg = "NONE" })
           vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#2d2d30" })
         else
           vim.api.nvim_set_hl(0, "Pmenu", { bg = "#ffffff", fg = "#2e3436" })
           vim.api.nvim_set_hl(0, "PmenuSel", { bg = "#f1f0ef", fg = "#2e3436" })
+          vim.api.nvim_set_hl(0, "PmenuSbar", { bg = "#ffffff" })
+          vim.api.nvim_set_hl(0, "PmenuThumb", { bg = "#f1f0ef" })
           vim.api.nvim_set_hl(0, "CmpBorder", { fg = "#1c71d8", bg = "NONE" })
           vim.api.nvim_set_hl(0, "FloatBorder", { fg = "#1c71d8", bg = "NONE" })
           vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#ffffff" })
