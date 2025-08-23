@@ -5,6 +5,11 @@ return {
   },
 
   {
+    "hrsh7th/cmp-nvim-lsp",
+    enabled = false,
+  },
+
+  {
     "saghen/blink.cmp",
     event = { "InsertEnter", "CmdlineEnter" },
     dependencies = { "L3MON4D3/LuaSnip" },
