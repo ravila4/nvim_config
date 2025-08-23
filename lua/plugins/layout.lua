@@ -427,14 +427,29 @@ return {
         },
         hooks = {
           diff_buf_win_enter = function(bufnr, winid, ctx)
-            -- Custom theming for diffview - background coloring instead of foreground
-            if ctx.layout_name:match("diff2") then
-              -- Subtle background colors that preserve syntax highlighting
-              vim.api.nvim_set_hl(0, "DiffAdd", { bg = "#144212", fg = "NONE" })
-              vim.api.nvim_set_hl(0, "DiffDelete", { bg = "#441414", fg = "NONE" })
-              vim.api.nvim_set_hl(0, "DiffChange", { bg = "#1a3a5c", fg = "NONE" })
-              vim.api.nvim_set_hl(0, "DiffText", { bg = "#2a4a7c", fg = "NONE" })
+            -- Theme-aware background-based diff colors that preserve syntax highlighting
+            local is_dark = vim.o.background == "dark"
+            local colors
+            if is_dark then
+              colors = {
+                add = "#144212",     -- dark green bg
+                del = "#441414",     -- dark red bg
+                change = "#1a3a5c",  -- dark blue bg
+                text = "#2a4a7c",    -- medium blue bg
+              }
+            else
+              colors = {
+                add = "#e7f6e7",     -- light pastel green
+                del = "#fde8e8",     -- light pastel red
+                change = "#e6f0fa",  -- light pastel blue
+                text = "#d6e6ff",    -- slightly stronger blue for changed text
+              }
             end
+
+            vim.api.nvim_set_hl(0, "DiffAdd", { bg = colors.add, fg = "NONE" })
+            vim.api.nvim_set_hl(0, "DiffDelete", { bg = colors.del, fg = "NONE" })
+            vim.api.nvim_set_hl(0, "DiffChange", { bg = colors.change, fg = "NONE" })
+            vim.api.nvim_set_hl(0, "DiffText", { bg = colors.text, fg = "NONE" })
           end,
           diff_buf_read = function(bufnr)
             -- Change local options in diff buffers

@@ -12,7 +12,7 @@
 | T6 | Colorscheme parity light/dark: cursorline, floats, transparency | High | TODO |
 | T7 | Consistent borders across Telescope/Lazy/Neo-tree/term/cmp | Medium | IN_PROGRESS |
 | T12 | Evaluate completions: nvim-cmp vs blink.cmp; IDE-like kinds | High | TODO |
-| T11 | Diffview colors: pastel add/remove for light theme | Medium | TODO |
+| T11 | Diffview colors: pastel add/remove for light theme | Medium | DONE |
 | T8 | Edgy controls: collapse/pin/toggle both left panels | Medium | TODO |
 | T9 | Neo-tree preview/floating preview mode | Low | TODO |
 | T10| Custom diagnostic icons | Medium | TODO |
