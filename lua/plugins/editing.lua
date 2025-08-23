@@ -5,11 +5,7 @@ return {
     event = "InsertEnter",
     config = function()
       require("nvim-autopairs").setup({})
-      
-      -- Integration with nvim-cmp
-      local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-      local cmp = require("cmp")
-      cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+      -- nvim-cmp integration disabled; blink.cmp has built-in bracket handling
     end,
   },
 
