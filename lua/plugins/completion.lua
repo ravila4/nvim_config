@@ -1,99 +1,54 @@
 return {
   {
     "hrsh7th/nvim-cmp",
+    enabled = false,
+  },
+
+  {
+    "saghen/blink.cmp",
     event = { "InsertEnter", "CmdlineEnter" },
-    dependencies = {
-      "hrsh7th/cmp-nvim-lsp",
-      "hrsh7th/cmp-buffer",
-      "hrsh7th/cmp-path",
-      "L3MON4D3/LuaSnip",
-      "saadparwaiz1/cmp_luasnip",
+    dependencies = { "L3MON4D3/LuaSnip" },
+    version = "*",
+    opts = {
+      keymap = {
+        preset = "default",
+        ['<CR>'] = { 'accept', 'fallback' },
+        ['<C-e>'] = { 'hide', 'fallback' },
+      },
+      appearance = {
+        use_nvim_cmp_as_default = false,
+        nerd_font_variant = "normal",
+        kind_icons = true,
+      },
+      completion = {
+        keyword = { range = "full" },
+        menu = { border = "rounded" },
+        documentation = { window = { border = "rounded" } },
+        list = { selection = { auto_insert = false }, max_height = 15 },
+        trigger = { show_on_insert = true },
+      },
+      sources = { default = { 'lsp', 'path', 'snippets', 'buffer' } },
+      signature = { enabled = true },
+      snippets = { preset = 'luasnip' },
+      performance = { filter_on_keystroke = true, debounce = 0, throttle = 0 },
     },
-    config = function()
-      local ok, cmp = pcall(require, "cmp")
+    config = function(_, opts)
+      local ok, blink = pcall(require, 'blink.cmp')
       if not ok then return end
+      blink.setup(opts)
 
-      local has_luasnip, luasnip = pcall(require, "luasnip")
-
-      local function set_cmp_hl()
-        local is_dark = vim.o.background == "dark"
-        local border = is_dark and "#404040" or "#d0d0d0"
-        if is_dark then
-          vim.api.nvim_set_hl(0, "Pmenu", { bg = "#2d2d30", fg = "#cccccc" })
-          vim.api.nvim_set_hl(0, "PmenuSel", { bg = "#37373d", fg = "#ffffff" })
-          vim.api.nvim_set_hl(0, "PmenuSbar", { bg = "#2d2d30" })
-          vim.api.nvim_set_hl(0, "PmenuThumb", { bg = "#37373d" })
-          vim.api.nvim_set_hl(0, "CmpBorder", { fg = border, bg = "NONE" })
-          vim.api.nvim_set_hl(0, "FloatBorder", { fg = border, bg = "NONE" })
-          vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#2d2d30" })
-        else
-          vim.api.nvim_set_hl(0, "Pmenu", { bg = "#ffffff", fg = "#2e3436" })
-          vim.api.nvim_set_hl(0, "PmenuSel", { bg = "#f1f0ef", fg = "#2e3436" })
-          vim.api.nvim_set_hl(0, "PmenuSbar", { bg = "#ffffff" })
-          vim.api.nvim_set_hl(0, "PmenuThumb", { bg = "#f1f0ef" })
-          vim.api.nvim_set_hl(0, "CmpBorder", { fg = border, bg = "NONE" })
-          vim.api.nvim_set_hl(0, "FloatBorder", { fg = border, bg = "NONE" })
-          vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#ffffff" })
-        end
+      local function set_blink_hl()
+        local is_dark = vim.o.background == 'dark'
+        local border = is_dark and '#404040' or '#d0d0d0'
+        local sel_bg = is_dark and '#37373d' or '#f1f0ef'
+        vim.api.nvim_set_hl(0, 'BlinkCmpBorder', { fg = border, bg = 'NONE' })
+        vim.api.nvim_set_hl(0, 'BlinkCmpMenu', { bg = is_dark and '#2d2d30' or '#ffffff', fg = is_dark and '#cccccc' or '#2e3436' })
+        vim.api.nvim_set_hl(0, 'BlinkCmpMenuSelection', { bg = sel_bg, fg = 'NONE' })
       end
+      set_blink_hl()
+      vim.api.nvim_create_autocmd('ColorScheme', { callback = set_blink_hl })
 
-      set_cmp_hl()
-      vim.api.nvim_create_autocmd("ColorScheme", { callback = set_cmp_hl })
-
-      cmp.setup({
-        snippet = {
-          expand = function(args)
-            if has_luasnip then luasnip.lsp_expand(args.body) end
-          end,
-        },
-        window = {
-          completion = cmp.config.window.bordered({
-            border = "rounded",
-            winhighlight = "Normal:Pmenu,FloatBorder:CmpBorder,CursorLine:PmenuSel,Search:None",
-          }),
-          documentation = cmp.config.window.bordered({
-            border = "rounded",
-            winhighlight = "Normal:NormalFloat,FloatBorder:CmpBorder,Search:None",
-          }),
-        },
-        mapping = cmp.mapping.preset.insert({
-          ["<C-n>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Select }),
-          ["<C-p>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Select }),
-          ["<CR>"] = cmp.mapping.confirm({ select = true }),
-          ["<C-e>"] = cmp.mapping.abort(),
-        }),
-        sources = cmp.config.sources({
-          { name = "nvim_lsp" },
-          { name = "luasnip" },
-          { name = "path" },
-        }, {
-          { name = "buffer" },
-        }),
-        formatting = {
-          fields = { "kind", "abbr", "menu" },
-          format = function(entry, vim_item)
-            local kind_icons = {
-              Text = "", Method = "m", Function = "", Constructor = "",
-              Field = "ﰠ", Variable = "", Class = "ﴯ", Interface = "",
-              Module = "", Property = "", Unit = "塞", Value = "",
-              Enum = "", Keyword = "", Snippet = "", Color = "",
-              File = "", Reference = "", Folder = "", EnumMember = "",
-              Constant = "", Struct = "פּ", Event = "", Operator = "",
-              TypeParameter = "",
-            }
-            vim_item.kind = string.format("%s", kind_icons[vim_item.kind] or " ")
-            local menu = {
-              nvim_lsp = "LSP",
-              buffer = "Buf",
-              path = "Path",
-              luasnip = "Snip",
-            }
-            vim_item.menu = menu[entry.source.name] or ""
-            return vim_item
-          end,
-        },
-        experimental = { ghost_text = false },
-      })
+      vim.g.blink_cmp_enable_auto_brackets = true
     end,
   },
 }
