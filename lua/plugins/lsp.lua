@@ -89,6 +89,15 @@ return {
         },
       })
 
+      -- Hover keymap and handler for VSCode-like doc popups
+      vim.api.nvim_create_autocmd('LspAttach', {
+        callback = function(args)
+          vim.keymap.set('n', 'K', function()
+            vim.lsp.buf.hover({ border = 'rounded', focusable = false })
+          end, { desc = 'LSP Hover', buffer = args.buf })
+        end,
+      })
+
       -- Auto-command for Python LSP
       vim.api.nvim_create_autocmd("FileType", {
         pattern = "python",
