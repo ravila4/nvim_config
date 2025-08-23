@@ -21,9 +21,16 @@ return {
         ['<C-e>'] = { 'hide', 'fallback' },
       },
       appearance = {
-        use_nvim_cmp_as_default = false,
         nerd_font_variant = "normal",
-        kind_icons = true,
+        kind_icons = {
+          Text = "", Method = "", Function = "", Constructor = "",
+          Field = "ﰠ", Variable = "", Class = "ﴯ", Interface = "",
+          Module = "", Property = "", Unit = "塞", Value = "",
+          Enum = "", Keyword = "", Snippet = "", Color = "",
+          File = "", Reference = "", Folder = "", EnumMember = "",
+          Constant = "", Struct = "פּ", Event = "", Operator = "",
+          TypeParameter = "",
+        },
       },
       completion = {
         keyword = { range = "full" },
