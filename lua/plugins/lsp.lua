@@ -14,14 +14,17 @@ return {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
     dependencies = {
-      "hrsh7th/cmp-nvim-lsp",
+      -- use blink.cmp to advertise capabilities instead of cmp-nvim-lsp
     },
     config = function()
       local lspconfig = require("lspconfig")
-      local cmp_nvim_lsp = require("cmp_nvim_lsp")
-
-      -- Capabilities
-      local capabilities = cmp_nvim_lsp.default_capabilities()
+      local capabilities = vim.lsp.protocol.make_client_capabilities()
+      pcall(function()
+        local ok, blink = pcall(require, 'blink.cmp')
+        if ok and blink and blink.get_lsp_capabilities then
+          capabilities = blink.get_lsp_capabilities(capabilities)
+        end
+      end)
 
       -- Python LSP
       lspconfig.pyright.setup({
