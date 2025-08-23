@@ -24,7 +24,8 @@ return {
   -- Firefox integration
   {
     "glacambre/firenvim",
-    lazy = false,
+    -- Disable lazy when using Firenvim
+    -- lazy = false,
     build = function()
       vim.fn["firenvim#install"](0)
     end,
