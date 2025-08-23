@@ -178,10 +178,9 @@ All menu items are clickable with mouse and mapped to actual commands; items tha
     - Yellow/orange lines for warnings
     - Blue lines for information
     - Full message text visible without truncation
-- **Completion**: Intelligent autocomplete with nvim-cmp
-  - Popup uses rounded borders with Adwaita blue border
-  - Backgrounds are theme-aware and match editor (light: white, dark: #2d2d30)
-  - Selection row uses subtle highlight (light: #f1f0ef, dark: #37373d)
+- **Completion**: Fast autocomplete with blink.cmp (LSP, path, snippets, buffer)
+  - Selection: Tab/Shift-Tab; Enter inserts newline
+  - Signature help and auto-brackets enabled; neutral gray borders
 - **Syntax Highlighting**: Treesitter for all major languages
 - **Code Outline**: Function and class navigation
 
@@ -230,6 +229,16 @@ All menu items are clickable with mouse and mapped to actual commands; items tha
 - Automatically highlights trailing spaces
 - Excludes special buffers (dashboard, telescope, etc.)
 - Prevents visual artifacts in floating windows
+
+## AI Assistance
+
+- **Inline suggestions (Copilot)**: inline ghost text with safe keymaps that do not conflict with completion
+  - Accept: Alt-l; Accept word: Alt-w; Accept line: Alt-;
+  - Next/Prev: Alt-]/Alt-[; Dismiss: Ctrl-]
+  - Auto-trigger enabled; subtle neutral gray suggestion color
+- **Completion engine**: blink.cmp (fast, LSP-backed)
+  - Sources: LSP, path, snippets, buffer
+  - Selection: Tab/Shift-Tab; Enter inserts newline
 
 ## Key Mappings Reference
 
