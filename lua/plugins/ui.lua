@@ -113,10 +113,31 @@ return {
     end,
   },
 
-  -- Color highlighter
+  -- Color highlighter (fast): catgoose/nvim-colorizer.lua
   {
-    "chrisbra/Colorizer",
-    cmd = { "ColorHighlight", "ColorClear", "ColorToggle" },
+    "catgoose/nvim-colorizer.lua",
+    event = { "BufReadPost", "BufNewFile" },
+    opts = {
+      filetypes = { "*", "!neo-tree", "!TelescopePrompt", "!snacks_dashboard" },
+      user_default_options = {
+        RGB = true,          -- #RGB hex
+        RRGGBB = true,       -- #RRGGBB hex
+        names = true,        -- Named CSS colors
+        RRGGBBAA = true,     -- #RRGGBBAA hex
+        AARRGGBB = true,     -- 0xAARRGGBB
+        rgb_fn = true,       -- rgb()/rgba()
+        hsl_fn = true,       -- hsl()/hsla()
+        css = true,          -- Enable all CSS features: rgb_fn, hsl_fn, names, etc
+        css_fn = true,       -- Enable all CSS functions: rgb_fn, hsl_fn
+        mode = "background", -- Render mode: background|foreground|virtual
+        tailwind = true,     -- Recognize Tailwind colors
+        always_update = true,
+      },
+      buftypes = {},
+    },
+    config = function(_, opts)
+      require("colorizer").setup(opts)
+    end,
   },
 
   -- Fuzzy finder
