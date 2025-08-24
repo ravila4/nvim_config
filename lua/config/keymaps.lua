@@ -106,3 +106,33 @@ map("n", "<leader>qC", function()
   vim.cmd("bufdo bdelete")
   vim.notify("All buffers closed")
 end, { desc = "Close all buffers" })
+
+-- Context menus (using nvzone/menu)
+map("n", "<C-t>", ":ContextMenu<CR>", { desc = "Open context menu" })
+map("n", "<leader>mf", ":FileMenu<CR>", { desc = "File menu" })
+map("n", "<leader>mb", ":BufferMenu<CR>", { desc = "Buffer menu" })
+map("n", "<leader>ml", ":LspMenu<CR>", { desc = "LSP menu" })
+map("n", "<leader>mg", ":GitMenu<CR>", { desc = "Git menu" })
+map("n", "<leader>mt", ":TerminalMenu<CR>", { desc = "Terminal menu" })
+map("n", "<leader>mp", ":LayoutMenu<CR>", { desc = "Layout menu" })
+map("n", "<leader>md", ":DebugMenu<CR>", { desc = "Debug menu" })
+map("n", "<leader>mk", ":TestMenu<CR>", { desc = "Test menu" })
+
+-- Test panel toggle (safe loading)
+map("n", "<leader>t", function()
+  -- Use vim.schedule to ensure proper loading
+  vim.schedule(function()
+    local neotest = require("neotest")
+    neotest.summary.toggle()
+  end)
+end, { desc = "Toggle test panel" })
+
+-- Force refresh test discovery
+map("n", "<leader>tR", function()
+  -- Clear the cache and refresh
+  vim.cmd("lua package.loaded['neotest'] = nil")
+  require("neotest")
+  require("neotest").summary.toggle()
+  require("neotest").summary.toggle()
+  vim.notify("Tests refreshed!")
+end, { desc = "Refresh test discovery" })

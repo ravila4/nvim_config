@@ -13,6 +13,7 @@ return {
       wo = {
         winhighlight = "Normal:EdgyNormal,NormalNC:EdgyNormalNC,WinBar:EdgyWinBar,WinBarNC:EdgyWinBar,FloatBorder:EdgyBorder",
         signcolumn = "no",
+        fillchars = "eob: ", -- Remove ugly ~ markers at end of buffer
       },
       keys = {
         -- Close all edgy windows
@@ -61,16 +62,31 @@ return {
           filter = function(buf)
             return vim.b[buf].neo_tree_source == "filesystem"
           end,
-          size = { height = 0.6 },
+          size = { height = 0.4 },
+          wo = {
+            fillchars = "eob: ", -- Clean appearance
+          },
         },
         -- Outline/symbols (like RStudio environment panel)
         {
           title = "Outline",
           ft = "Outline",
-          size = { height = 0.4 },
+          size = { height = 0.3 },
           filter = function(buf, win)
             return vim.bo[buf].filetype == "Outline"
           end,
+          wo = {
+            fillchars = "eob: ", -- Clean appearance
+          },
+        },
+        -- Test runner panel (like RStudio test panel)
+        {
+          title = "Tests",
+          ft = "neotest-summary",
+          size = { height = 0.3 },
+          wo = {
+            fillchars = "eob: ", -- Clean appearance
+          },
         },
       },
       right = {

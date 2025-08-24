@@ -10,6 +10,7 @@ return {
         -- Python
         "pyright",
         "ruff",
+        "debugpy",
         -- Web development
         "prettier",
         "eslint_d",

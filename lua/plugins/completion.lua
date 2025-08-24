@@ -56,7 +56,6 @@ return {
       },
       signature = { enabled = true },
       snippets = { preset = 'luasnip' },
-      performance = { filter_on_keystroke = true, debounce = 0, throttle = 0 },
     },
     config = function(_, opts)
       local ok, blink = pcall(require, 'blink.cmp')

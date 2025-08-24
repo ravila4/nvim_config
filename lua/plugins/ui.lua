@@ -143,6 +143,118 @@ return {
     end,
   },
 
+  -- Transparency management for consistent theming
+  {
+    "tribela/transparent.nvim",
+    event = "VeryLazy",
+    config = function()
+      require("transparent").setup({
+        groups = {
+          -- Core UI elements
+          'Normal', 'NormalNC', 'Comment', 'Constant', 'Special', 'Identifier',
+          'Statement', 'PreProc', 'Type', 'Underlined', 'Todo', 'String',
+          'Function', 'Conditional', 'Repeat', 'Operator', 'Structure',
+          'LineNr', 'NonText', 'SignColumn', 'CursorLineNr', 'EndOfBuffer',
+          
+          -- Floating windows and popups
+          'NormalFloat', 'FloatBorder', 'FloatTitle',
+          
+          -- Telescope
+          'TelescopeNormal', 'TelescopeBorder', 'TelescopePromptNormal',
+          'TelescopePromptBorder', 'TelescopeResultsNormal', 'TelescopeResultsBorder',
+          'TelescopePreviewNormal', 'TelescopePreviewBorder',
+          
+          -- Neo-tree
+          'NeoTreeNormal', 'NeoTreeNormalNC', 'NeoTreeEndOfBuffer',
+          
+          -- Lualine (statusline)
+          'StatusLine', 'StatusLineNC',
+          
+          -- Bufferline (tabline)
+          'TabLine', 'TabLineFill', 'TabLineSel',
+          
+          -- Diagnostic virtual text
+          'DiagnosticVirtualTextError', 'DiagnosticVirtualTextWarn',
+          'DiagnosticVirtualTextInfo', 'DiagnosticVirtualTextHint',
+        },
+        extra_groups = {
+          -- Snacks dashboard
+          'SnacksDashboardNormal', 'SnacksDashboardDesc', 'SnacksDashboardFile',
+          'SnacksDashboardDir', 'SnacksDashboardFooter', 'SnacksDashboardHeader',
+          'SnacksDashboardIcon', 'SnacksDashboardKey', 'SnacksDashboardTerminal',
+          
+          -- Git signs
+          'GitSignsAdd', 'GitSignsChange', 'GitSignsDelete',
+          
+          -- LSP and completion (non-selection items only)
+          'Pmenu', 'PmenuSbar', 'PmenuThumb',
+          'CmpItemAbbr', 'CmpItemAbbrMatch', 'CmpItemKind', 'CmpItemMenu',
+          
+          -- Outline
+          'OutlineNormal', 'OutlineCurrent',
+          
+          -- Terminal
+          'TerminalNormal',
+        },
+        exclude_groups = {
+          -- Keep some elements opaque for better readability
+          'CursorLine', 'CursorColumn', 'ColorColumn',
+          'VertSplit', 'WinSeparator',
+          'Visual', 'VisualNOS',
+          'Search', 'IncSearch', 'CurSearch',
+          'MatchParen',
+          'ErrorMsg', 'WarningMsg', 'ModeMsg', 'MoreMsg',
+          'Question', 'Title',
+          'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText',
+          'SpellBad', 'SpellCap', 'SpellLocal', 'SpellRare',
+          
+          -- Menu and popup selection highlights - keep opaque for visibility
+          'PmenuSel', 'PmenuKindSel', 'PmenuExtraSel',
+          'WildMenu', 'StatusLineTermNC',
+          
+          -- nvzone/menu specific highlights
+          'MenuSel', 'MenuSelBorder', 'MenuSelText',
+        },
+      })
+      
+      -- Apply transparency settings after colorscheme changes
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = function()
+          -- Small delay to ensure colorscheme is fully loaded
+          vim.defer_fn(function()
+            -- Re-apply transparency to ensure consistency
+            if vim.g.transparent_enabled then
+              require("transparent").setup({})
+            end
+            
+            -- Fix menu selection highlights for proper contrast
+            local is_dark = vim.o.background == "dark"
+            if is_dark then
+              -- Dark theme menu selection
+              vim.api.nvim_set_hl(0, "PmenuSel", { bg = "#404040", fg = "#ffffff" })
+              vim.api.nvim_set_hl(0, "WildMenu", { bg = "#404040", fg = "#ffffff" })
+            else
+              -- Light theme menu selection - use a light blue/gray background
+              vim.api.nvim_set_hl(0, "PmenuSel", { bg = "#e6f3ff", fg = "#2e3436" })
+              vim.api.nvim_set_hl(0, "WildMenu", { bg = "#e6f3ff", fg = "#2e3436" })
+            end
+            
+            -- Ensure nvzone/menu has proper contrast (these might not exist yet)
+            pcall(function()
+              if is_dark then
+                vim.api.nvim_set_hl(0, "MenuSel", { bg = "#404040", fg = "#ffffff" })
+                vim.api.nvim_set_hl(0, "MenuSelBorder", { bg = "#404040", fg = "#666666" })
+              else
+                vim.api.nvim_set_hl(0, "MenuSel", { bg = "#e6f3ff", fg = "#2e3436" })
+                vim.api.nvim_set_hl(0, "MenuSelBorder", { bg = "#e6f3ff", fg = "#999999" })
+              end
+            end)
+          end, 50)
+        end,
+      })
+    end,
+  },
+
   -- Fuzzy finder
   {
     "nvim-telescope/telescope.nvim",
@@ -721,6 +833,22 @@ return {
           { name = "separator" },
         },
 
+        test_menu = {
+          { name = "󰙨 Run File Tests", cmd = "lua require('neotest').run.run(vim.fn.expand('%'))", rtxt = "tf" },
+          { name = " Run Nearest Test", cmd = "lua require('neotest').run.run()", rtxt = "tn" },
+          { name = "󰙨 Run All Tests", cmd = "lua require('neotest').run.run(vim.fn.getcwd())", rtxt = "ta" },
+          { name = " Run Last Test", cmd = "lua require('neotest').run.run_last()", rtxt = "tl" },
+          { name = "separator" },
+          { name = " Test Summary", cmd = "lua require('neotest').summary.toggle()", rtxt = "ts" },
+          { name = " Show Output", cmd = "lua require('neotest').output.open({ enter = true, auto_close = true })", rtxt = "to" },
+          { name = " Toggle Output Panel", cmd = "lua require('neotest').output_panel.toggle()", rtxt = "tO" },
+          { name = "separator" },
+          { name = " Debug Test", cmd = "lua require('neotest').run.run({strategy = 'dap'})", rtxt = "td" },
+          { name = " Toggle Watch", cmd = "lua require('neotest').watch.toggle(vim.fn.expand('%'))", rtxt = "tw" },
+          { name = " Test Error Details", cmd = "lua require('neotest').output.open({ enter = false, auto_close = false, short = false })", rtxt = "te" },
+          { name = " Stop Tests", cmd = "lua require('neotest').run.stop()", rtxt = "tS" },
+        },
+
         context_menu = {
           { name = " File Operations", cmd = "FileMenu", rtxt = "mf" },
           { name = "separator" },
@@ -734,9 +862,30 @@ return {
         }
       }
 
-      -- Create user commands
+      -- Add test runner to both context menu and right-click menu
+      table.insert(_G.ide_menus.context_menu, #_G.ide_menus.context_menu, { name = "󰙨 Test Runner", cmd = "TestMenu", rtxt = "mk" })
+
+      -- Create user commands with theme-aware styling
       local function menu_opts()
-        return { mouse = true, border = 'rounded', winblend = 0 }
+        -- Ensure proper menu highlighting for both light and dark themes
+        local is_dark = vim.o.background == "dark"
+        
+        -- Set menu-specific highlights for better contrast
+        if is_dark then
+          -- Dark theme: use subtle dark backgrounds
+          vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#2d2d2d", fg = "#ffffff" })
+          vim.api.nvim_set_hl(0, "FloatBorder", { bg = "#2d2d2d", fg = "#666666" })
+        else
+          -- Light theme: use light backgrounds with good contrast
+          vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#ffffff", fg = "#2e3436" })
+          vim.api.nvim_set_hl(0, "FloatBorder", { bg = "#ffffff", fg = "#999999" })
+        end
+        
+        return { 
+          mouse = true, 
+          border = 'rounded', 
+          winblend = 0,  -- No transparency for menu windows to ensure readability
+        }
       end
       vim.api.nvim_create_user_command("BufferMenu", function() menu.open(normalize_menu(_G.ide_menus.buffer_menu), menu_opts()) end, {})
       vim.api.nvim_create_user_command("LspMenu", function() menu.open(normalize_menu(_G.ide_menus.lsp_menu), menu_opts()) end, {})
@@ -745,6 +894,7 @@ return {
       vim.api.nvim_create_user_command("FileMenu", function() menu.open(normalize_menu(_G.ide_menus.file_menu), menu_opts()) end, {})
       vim.api.nvim_create_user_command("LayoutMenu", function() menu.open(normalize_menu(_G.ide_menus.layout_menu), menu_opts()) end, {})
       vim.api.nvim_create_user_command("DebugMenu", function() menu.open(normalize_menu(_G.ide_menus.debug_menu), menu_opts()) end, {})
+      vim.api.nvim_create_user_command("TestMenu", function() menu.open(normalize_menu(_G.ide_menus.test_menu), menu_opts()) end, {})
       vim.api.nvim_create_user_command("ContextMenu", function() menu.open(normalize_menu(_G.ide_menus.context_menu), menu_opts()) end, {})
 
       -- Right-click context menu with copy/paste + IDE entries
