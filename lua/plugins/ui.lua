@@ -118,6 +118,7 @@ return {
     "catgoose/nvim-colorizer.lua",
     event = { "BufReadPost", "BufNewFile" },
     opts = {
+      lazy_load = true,
       filetypes = { "*", "!neo-tree", "!TelescopePrompt", "!snacks_dashboard" },
       user_default_options = {
         RGB = true,          -- #RGB hex
@@ -137,6 +138,16 @@ return {
     },
     config = function(_, opts)
       require("colorizer").setup(opts)
+    end,
+  },
+
+  -- Color picker / palette utilities
+  {
+    "nvzone/minty",
+    cmd = { "Minty", "Shades", "Huefy", "Tinty" },
+    dependencies = { "nvzone/volt" },
+    config = function()
+      require("minty").setup()
     end,
   },
 
