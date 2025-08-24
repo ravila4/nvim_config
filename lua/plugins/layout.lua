@@ -84,13 +84,13 @@ return {
         {
           title = "Diff Files",
           ft = "DiffviewFiles",
-          size = { width = 0.3 },
+          size = { width = 0.2 },
         },
         -- Database UI (if using)
         {
           title = "DB",
           ft = "dbui",
-          size = { width = 0.3 },
+          size = { width = 0.2 },
         },
       },
       keys = {
@@ -166,10 +166,6 @@ return {
         enable_git_status = true,
         enable_diagnostics = true,
         use_popups_for_input = false,
-        follow_current_file = {
-          enabled = true,
-          leave_dirs_open = false,
-        },
         default_component_configs = {
           name = {
             use_git_status_colors = false,
@@ -187,31 +183,31 @@ return {
             highlight = "NeoTreeIndentMarker",
           },
           icon = {
-            folder_closed = "",
-            folder_open = "",
+            folder_closed = "",
+            folder_open = "",
             folder_empty = "󰜌",
             default = "*",
           },
           git_status = {
             symbols = {
-              added = "",
-              modified = "",
-              deleted = "✖",
-              renamed = "󰁕",
-              untracked = "",
-              ignored = "",
-              unstaged = "󰄱",
+              added = "A",
+              modified = "M",
+              deleted = "D",
+              renamed = "R",
+              untracked = "U",
+              ignored = "I",
+              unstaged = "",
               staged = "",
-              conflict = "",
+              conflict = "~",
             },
           },
-        },
-        window = {
-          position = "left",
-          width = 30,
-          mapping_options = {
-            noremap = true,
-            nowait = true,
+          window = {
+              position = "left",
+              width = 30,
+              mapping_options = {
+                noremap = true,
+                nowait = true,
+              },
           },
         },
         filesystem = {
@@ -248,17 +244,9 @@ return {
       end
 
       set_neotree_highlights()
-      -- Emphasize current file selection in the tree
-      local function set_neotree_cursorline()
-        local is_dark = vim.o.background == "dark"
-        vim.api.nvim_set_hl(0, "NeoTreeCursorLine", { bg = is_dark and "#37373d" or "#e5e4e2" })
-        vim.api.nvim_set_hl(0, "NeoTreeFileNameOpened", { bold = true, fg = is_dark and "#ffffff" or "#2e3436" })
-      end
-      set_neotree_cursorline()
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function()
           set_neotree_highlights()
-          set_neotree_cursorline()
         end,
       })
     end,
@@ -285,7 +273,7 @@ return {
         outline_items = {
           highlight_hovered_item = true,
           show_symbol_details = true,
-          auto_set_cursor = false,
+          auto_set_cursor = true,
         },
         -- Better buffer handling
         provider_selector = nil,
@@ -306,6 +294,9 @@ return {
             "Trait",
           },
         },
+        preview_window = {
+            border = 'rounded',
+          },
       })
     end,
     init = function()

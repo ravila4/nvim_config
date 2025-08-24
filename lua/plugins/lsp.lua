@@ -30,7 +30,7 @@ return {
         end
       end
 
-      -- Python LSP
+      -- Python LSP: Pyright for types + LSP features
       lspconfig.pyright.setup({
         capabilities = capabilities,
         settings = {
@@ -38,14 +38,33 @@ return {
             analysis = {
               autoSearchPaths = true,
               useLibraryCodeForTypes = true,
-              extraPaths = (vim.env.CONDA_PREFIX ~= nil or vim.env.VIRTUAL_ENV ~= nil)
-                and vim.tbl_map(function(path)
-                  return vim.fn.expand(path)
-                end, vim.fn.glob(vim.fn.expand((vim.env.CONDA_PREFIX or vim.env.VIRTUAL_ENV) .. "/lib/python*/site-packages"), true, true))
-                or {},
+              typeCheckingMode = "basic", -- basic, strict, or off
+              -- Auto-detect virtual environments (uv, conda, venv)
+              extraPaths = vim.tbl_flatten({
+                -- uv environments
+                vim.fn.glob(vim.fn.expand("~/.local/share/uv/python/*/lib/python*/site-packages"), true, true),
+                -- conda environments
+                vim.env.CONDA_PREFIX and vim.fn.glob(vim.fn.expand(vim.env.CONDA_PREFIX .. "/lib/python*/site-packages"), true, true) or {},
+                -- standard virtual environments
+                vim.env.VIRTUAL_ENV and vim.fn.glob(vim.fn.expand(vim.env.VIRTUAL_ENV .. "/lib/python*/site-packages"), true, true) or {},
+              }),
             },
           },
         },
+        on_attach = function(client, bufnr)
+          -- Disable pyright's formatting since we use ruff via conform
+          client.server_capabilities.documentFormattingProvider = false
+          client.server_capabilities.documentRangeFormattingProvider = false
+        end,
+      })
+
+      -- Python Linting: Ruff LSP for fast linting
+      lspconfig.ruff.setup({
+        capabilities = capabilities,
+        on_attach = function(client, bufnr)
+          -- Disable hover in favor of pyright's more detailed hover
+          client.server_capabilities.hoverProvider = false
+        end,
       })
 
       -- R Language Server
@@ -93,12 +112,36 @@ return {
         },
       })
 
-      -- Hover keymap and handler for VSCode-like doc popups
+      -- LSP and diagnostic keymaps
       vim.api.nvim_create_autocmd('LspAttach', {
         callback = function(args)
+          local bufnr = args.buf
+
+          -- LSP hover
           vim.keymap.set('n', 'K', function()
             vim.lsp.buf.hover({ border = 'rounded', focusable = false })
-          end, { desc = 'LSP Hover', buffer = args.buf })
+          end, { desc = 'LSP Hover', buffer = bufnr })
+
+          -- Diagnostic navigation and details
+          vim.keymap.set('n', '<leader>df', function()
+            vim.diagnostic.open_float({ border = 'rounded', focusable = true })
+          end, { desc = 'Show diagnostic details', buffer = bufnr })
+
+          vim.keymap.set('n', ']d', function()
+            vim.diagnostic.goto_next()
+          end, { desc = 'Next diagnostic', buffer = bufnr })
+
+          vim.keymap.set('n', '[d', function()
+            vim.diagnostic.goto_prev()
+          end, { desc = 'Previous diagnostic', buffer = bufnr })
+
+          vim.keymap.set('n', ']e', function()
+            vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
+          end, { desc = 'Next error', buffer = bufnr })
+
+          vim.keymap.set('n', '[e', function()
+            vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
+          end, { desc = 'Previous error', buffer = bufnr })
         end,
       })
 
@@ -111,4 +154,16 @@ return {
       })
     end,
   },
+
+  vim.diagnostic.config({
+    signs = {
+      text = {
+        [vim.diagnostic.severity.ERROR] = 'E',
+        [vim.diagnostic.severity.WARN] =  'W',
+        [vim.diagnostic.severity.INFO] = 'I',
+        [vim.diagnostic.severity.HINT] = 'H',
+      },
+    }
+  })
+
 }

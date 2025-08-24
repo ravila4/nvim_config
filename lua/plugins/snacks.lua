@@ -109,21 +109,39 @@ return {
       zen = {
         enabled = true,
         toggles = {
-          dim = true,
-          git_signs = false,
-          mini_diff_signs = false,
-          diagnostics = false,
-          inlay_hints = false,
+          dim = false,           -- Disable built-in dimming
+          git_signs = false,     -- Hide git signs
+          diagnostics = false,   -- Hide diagnostics
+          inlay_hints = false,   -- Hide inlay hints
+          indent = false,        -- Hide indent guides
+          statuscolumn = false,  -- Hide status column
         },
         show = {
-          statusline = false,
-          tabline = false,
+          statusline = false,    -- Hide statusline
+          tabline = false,       -- Hide tabline
         },
         win = {
-          backdrop = 0.95,
+          enter = true,
+          fixbuf = false,
+          minimal = false,
           width = 120,
-          height = 1,
+          height = 0,
+          backdrop = { transparent = true, blend = 40 },
+          keys = { q = false },
+          zindex = 40,
+          wo = {
+            winhighlight = "NormalFloat:Normal",
+          },
+          w = {
+            snacks_main = true,
+          },
         },
+        on_open = function()
+          vim.opt.wrap = true   -- Enable word wrap in zen mode
+        end,
+        on_close = function()
+          vim.opt.wrap = false  -- Restore no wrap when exiting zen
+        end,
       },
 
       -- Improved quickfix with modern UI
@@ -343,6 +361,12 @@ return {
           vim.api.nvim_set_hl(0, "SnacksDashboardFile", { fg = "#2aa3a3" })    -- Lighter variant
           vim.api.nvim_set_hl(0, "SnacksDashboardDir", { fg = "#1a6b6b" })     -- Darker variant
 
+          -- Set zen mode backdrop to match theme
+          local function set_zen_backdrop()
+            local bg_color = vim.o.background == "light" and "#ffffff" or "#1e1e1e"
+            vim.api.nvim_set_hl(0, "SnacksBackdrop", { bg = bg_color, fg = "NONE" })
+          end
+
           -- Fix word highlighting for both light and dark themes
           local function set_word_highlights()
             if vim.o.background == "light" then
@@ -367,10 +391,14 @@ return {
 
           -- Set highlights initially
           set_word_highlights()
+          set_zen_backdrop()
 
           -- Update highlights when colorscheme changes
           vim.api.nvim_create_autocmd("ColorScheme", {
-            callback = set_word_highlights,
+            callback = function()
+              set_word_highlights()
+              set_zen_backdrop()
+            end,
           })
         end,
       })

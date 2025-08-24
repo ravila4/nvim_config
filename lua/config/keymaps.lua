@@ -56,6 +56,9 @@ map("t", "<C-l>", "<C-\\><C-N>:wincmd l<CR>", { desc = "Move to right split from
 -- Easy terminal mode escape
 map("t", "<Esc><Esc>", "<C-\\><C-N>", { desc = "Exit terminal mode", silent = true })
 
+-- Line wrapping toggle
+map("n", "<leader>tw", ":set wrap!<CR>", { desc = "Toggle line wrapping" })
+
 -- ClaudeCode keymaps
 map("n", "<leader>cc", "<cmd>ClaudeCode<cr>", { desc = "Toggle Claude Code" })
 map("n", "<leader>cf", "<cmd>ClaudeCodeFocus<cr>", { desc = "Focus Claude Code" })

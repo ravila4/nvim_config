@@ -25,11 +25,11 @@ return {
         nerd_font_variant = "normal",
         kind_icons = {
           Text = "", Method = "", Function = "", Constructor = "",
-          Field = "ﰠ", Variable = "", Class = "", Interface = "",
+          Field = "ﰠ", Variable = "", Class = "", Interface = "",
           Module = "", Property = "", Unit = "塞", Value = "",
           Enum = "", Keyword = "", Snippet = "", Color = "",
           File = "", Reference = "", Folder = "", EnumMember = "",
-          Constant = "", Struct = "פּ", Event = "", Operator = "",
+          Constant = "", Struct = "", Event = "", Operator = "",
           TypeParameter = "",
         },
       },

@@ -27,6 +27,11 @@ opt.hlsearch = true
 opt.ignorecase = true
 opt.smartcase = true
 
+-- Text wrapping
+opt.wrap = false        -- Disable line wrapping by default
+opt.linebreak = true    -- When wrapping is enabled, break at word boundaries
+opt.showbreak = "↳ "    -- Visual indicator for wrapped lines
+
 -- Misc
 opt.encoding = "utf8"
 opt.scrolloff = 4

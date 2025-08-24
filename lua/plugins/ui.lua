@@ -1,3 +1,6 @@
+-- Load UV environment support
+require("config.uv-env")
+
 return {
   -- Status line
   {
@@ -10,6 +13,7 @@ return {
           theme = "adwaita",
           component_separators = { left = "", right = "" },
           section_separators = { left = "", right = "" },
+          globalstatus = true, -- Enable global statusline for edgy.nvim
         },
         sections = {
           lualine_a = { "mode" },
@@ -31,18 +35,6 @@ return {
           },
           lualine_c = {
             { "filename", path = 1 },
-            {
-              function()
-                -- Show Python virtual environment
-                local venv = os.getenv("VIRTUAL_ENV")
-                if venv then
-                  local venv_name = vim.fn.fnamemodify(venv, ":t")
-                  return " " .. venv_name
-                end
-                return ""
-              end,
-              color = { fg = "#4ec9b0", gui = "bold" },
-            }
           },
           lualine_x = {
             "encoding",
@@ -123,7 +115,7 @@ return {
       user_default_options = {
         RGB = true,          -- #RGB hex
         RRGGBB = true,       -- #RRGGBB hex
-        names = true,        -- Named CSS colors
+        names = false,        -- Named CSS colors
         RRGGBBAA = true,     -- #RRGGBBAA hex
         AARRGGBB = true,     -- 0xAARRGGBB
         rgb_fn = true,       -- rgb()/rgba()
@@ -651,101 +643,94 @@ return {
       -- Store menu configurations globally for access
       _G.ide_menus = {
         buffer_menu = {
-          { name = "󰍉 Close Buffer", cmd = "bdelete", rtxt = "" },
-          { name = "󰓦 Close Others", cmd = "BufferLineCloseOthers", rtxt = "" },
-          { name = "󰪥 Close Left", cmd = "BufferLineCloseLeft", rtxt = "" },
-          { name = "󰪦 Close Right", cmd = "BufferLineCloseRight", rtxt = "" },
+          { name = " Close Buffer", cmd = "bdelete", rtxt = "" },
+          { name = " Close Others", cmd = "BufferLineCloseOthers", rtxt = "" },
           { name = "separator" },
-          { name = "󰤼 Split Horizontal", cmd = "split", rtxt = "" },
-          { name = "󰤻 Split Vertical", cmd = "vsplit", rtxt = "" },
+          { name = "󰤻 Split Horizontal", cmd = "split", rtxt = "" },
+          { name = "󰤼 Split Vertical", cmd = "vsplit", rtxt = "" },
           { name = "separator" },
-          { name = "󰌪 Pin Tab", cmd = "BufferLineTogglePin", rtxt = "" },
-          { name = "󰘬 Pick Buffer", cmd = "BufferLinePick", rtxt = "" },
+          { name = "󰐃 Pin Tab", cmd = "BufferLineTogglePin", rtxt = "" },
+          { name = " Pick Buffer", cmd = "BufferLinePick", rtxt = "" },
         },
 
         lsp_menu = {
           { name = "󰊕 Go to Definition", cmd = "lua vim.lsp.buf.definition()", rtxt = "gd" },
-          { name = "󰁨 Go to References", cmd = "lua vim.lsp.buf.references()", rtxt = "gr" },
-          { name = "󰊗 Go to Implementation", cmd = "lua vim.lsp.buf.implementation()", rtxt = "gi" },
-          { name = "󰊘 Go to Type Definition", cmd = "lua vim.lsp.buf.type_definition()", rtxt = "gt" },
+          { name = " Go to References", cmd = "lua vim.lsp.buf.references()", rtxt = "gr" },
+          { name = " Go to Implementation", cmd = "lua vim.lsp.buf.implementation()", rtxt = "gi" },
+          { name = " Go to Type Definition", cmd = "lua vim.lsp.buf.type_definition()", rtxt = "gt" },
           { name = "separator" },
-          { name = "󰒕 Rename Symbol", cmd = "lua vim.lsp.buf.rename()", rtxt = "rn" },
-          { name = "󰬔 Code Action", cmd = "lua vim.lsp.buf.code_action()", rtxt = "ca" },
-          { name = "󰐦 Format Document", cmd = "lua vim.lsp.buf.format()", rtxt = "fm" },
+          { name = " Rename Symbol", cmd = "lua vim.lsp.buf.rename()", rtxt = "rn" },
+          { name = " Code Action", cmd = "lua vim.lsp.buf.code_action()", rtxt = "ca" },
+          { name = "󰊄 Format Document", cmd = "lua vim.lsp.buf.format()", rtxt = "fm" },
           { name = "separator" },
-          { name = "󰠠 Show Diagnostics", cmd = "lua vim.diagnostic.open_float()", rtxt = "df" },
-          { name = "󰒧 Toggle Diagnostics", cmd = "lua require('lsp_lines').toggle()", rtxt = "ld" },
+          { name = " Show Diagnostics", cmd = "lua vim.diagnostic.open_float()", rtxt = "df" },
+          { name = " Toggle Diagnostic Lines", cmd = "lua require('lsp_lines').toggle()", rtxt = "ld" },
         },
 
         git_menu = {
-          { name = "󰊢 Git Status", cmd = "Neotree git_status", rtxt = "" },
-          { name = "󰊢 Git Status (float, main)", cmd = "Neotree float git_status git_base=main", rtxt = "gS" },
-          { name = "󰊢 Open Diffview", cmd = "DiffviewOpen", rtxt = "gd" },
-          { name = "󰊢 File History", cmd = "DiffviewFileHistory %", rtxt = "gh" },
-          { name = "󰊢 Diff Last Commit", cmd = "DiffviewOpen HEAD~1", rtxt = "gD" },
+          { name = "󰊢 Git Status", cmd = "Neotree float git_status git_base=main", rtxt = "gS" },
+          { name = " Open Diffview", cmd = "DiffviewOpen", rtxt = "gd" },
+          { name = " Diff Last Commit", cmd = "DiffviewOpen HEAD~1", rtxt = "gD" },
+          { name = " File History", cmd = "DiffviewFileHistory %", rtxt = "gh" },
+          { name = " Close Diffview", cmd = "DiffviewClose", rtxt = "gc" },
           { name = "separator" },
-          { name = "󰊢 Lazygit", cmd = "lua Snacks.lazygit()", rtxt = "gg" },
           { name = "󰊢 Git Blame Line", cmd = "lua Snacks.git.blame_line()", rtxt = "gB" },
-          { name = "separator" },
-          { name = "󰊢 Close Diffview", cmd = "DiffviewClose", rtxt = "gc" },
         },
 
         terminal_menu = {
           { name = "󰆍 Toggle Terminal", cmd = "lua Snacks.terminal()", rtxt = "tt" },
           { name = "󰆍 Floating Terminal", cmd = "lua Snacks.terminal.toggle()", rtxt = "" },
           { name = "separator" },
-          { name = "🐍 Python REPL", cmd = "lua Snacks.terminal.toggle('python3')", rtxt = "" },
-          { name = "📊 R Console", cmd = "lua Snacks.terminal.toggle('R')", rtxt = "" },
+          { name = " Python REPL", cmd = "lua Snacks.terminal.toggle('python3')", rtxt = "" },
+          { name = " R Console", cmd = "lua Snacks.terminal.toggle('R')", rtxt = "" },
           { name = "📓 IPython", cmd = "lua Snacks.terminal.toggle('ipython')", rtxt = "" },
-          { name = "separator" },
-          { name = "󰌪 Split Terminal H", cmd = "split | terminal", rtxt = "" },
-          { name = "󰤻 Split Terminal V", cmd = "vsplit | terminal", rtxt = "" },
         },
 
         file_menu = {
-          { name = "󰈔 Find Files", cmd = "Telescope find_files", rtxt = "ff" },
-          { name = "󰈞 Recent Files", cmd = "Telescope oldfiles", rtxt = "fr" },
+          { name = "󰈞 Find Files", cmd = "Telescope find_files", rtxt = "ff" },
+          { name = "󱋡 Recent Files", cmd = "Telescope oldfiles", rtxt = "fr" },
           { name = "󰈬 Live Grep", cmd = "Telescope live_grep", rtxt = "fg" },
           { name = "separator" },
-          { name = "󰙅 New File", cmd = "ene", rtxt = "" },
-          { name = "󰈔 File Explorer", cmd = "Neotree toggle", rtxt = "e" },
+          { name = "󰝒 New File", cmd = "ene", rtxt = "" },
+          { name = "󰙅 File Explorer", cmd = "Neotree toggle", rtxt = "e" },
           { name = "󰘎 Code Outline", cmd = "Outline", rtxt = "s" },
           { name = "separator" },
-          { name = "💾 Save", cmd = "w", rtxt = "" },
-          { name = "💾 Save All", cmd = "wa", rtxt = "" },
+          { name = " Save", cmd = "w", rtxt = "" },
+          { name = " Save All", cmd = "wa", rtxt = "" },
         },
 
         layout_menu = {
-          { name = "󰹑 Toggle Left Panel", cmd = "lua require('edgy').toggle('left')", rtxt = "ll" },
-          { name = "󰹐 Toggle Right Panel", cmd = "lua require('edgy').toggle('right')", rtxt = "lr" },
-          { name = "󰹏 Toggle Bottom Panel", cmd = "lua require('edgy').toggle('bottom')", rtxt = "lb" },
+          { name = " Toggle Left Panel", cmd = "lua require('edgy').toggle('left')", rtxt = "ll" },
+          { name = " Toggle Right Panel", cmd = "lua require('edgy').toggle('right')", rtxt = "lr" },
+          { name = " Toggle Bottom Panel", cmd = "lua require('edgy').toggle('bottom')", rtxt = "lb" },
           { name = "separator" },
-          { name = "󰹊 Full IDE Layout", cmd = "lua require('edgy').open()", rtxt = "lL" },
-          { name = "󰹎 Close All Panels", cmd = "lua require('edgy').close()", rtxt = "lc" },
+          { name = " Full IDE Layout", cmd = "lua require('edgy').open()", rtxt = "lL" },
+          { name = " Close All Panels", cmd = "lua require('edgy').close()", rtxt = "lc" },
           { name = "separator" },
-          { name = "󰹔 Zen Mode", cmd = "lua Snacks.zen()", rtxt = "z" },
-          { name = "󰹕 Zoom Window", cmd = "lua Snacks.zen.zoom()", rtxt = "Z" },
+          { name = " Zen Mode", cmd = "lua Snacks.zen()", rtxt = "z" },
+          { name = " Zoom Window", cmd = "lua Snacks.zen.zoom()", rtxt = "Z" },
         },
 
         debug_menu = {
-          { name = "🔴 Add Breakpoint", cmd = "echo 'Debug: Breakpoint (nvim-dap needed)'", rtxt = "" },
-          { name = "🟢 Start Debugging", cmd = "echo 'Debug: Start (nvim-dap needed)'", rtxt = "" },
-          { name = "⏸️  Step Over", cmd = "echo 'Debug: Step Over (nvim-dap needed)'", rtxt = "" },
-          { name = "⏬ Step Into", cmd = "echo 'Debug: Step Into (nvim-dap needed)'", rtxt = "" },
-          { name = "⏫ Step Out", cmd = "echo 'Debug: Step Out (nvim-dap needed)'", rtxt = "" },
+          { name = " Add Breakpoint", cmd = "echo 'Debug: Breakpoint (nvim-dap needed)'", rtxt = "" },
+          { name = " Start Debugging", cmd = "echo 'Debug: Start (nvim-dap needed)'", rtxt = "" },
+          { name = "  Step Over", cmd = "echo 'Debug: Step Over (nvim-dap needed)'", rtxt = "" },
+          { name = " Step Into", cmd = "echo 'Debug: Step Into (nvim-dap needed)'", rtxt = "" },
+          { name = " Step Out", cmd = "echo 'Debug: Step Out (nvim-dap needed)'", rtxt = "" },
+          { name = " Stop Debugging", cmd = "echo 'Debug: Stop (nvim-dap needed)'", rtxt = "" },
           { name = "separator" },
-          { name = "📊 Evaluate Expression", cmd = "echo 'Debug: Evaluate (nvim-dap needed)'", rtxt = "" },
-          { name = "🛑 Stop Debugging", cmd = "echo 'Debug: Stop (nvim-dap needed)'", rtxt = "" },
         },
 
         context_menu = {
-          { name = "📁 File Operations", cmd = "FileMenu", rtxt = "mf" },
-          { name = "📋 Buffer Actions", cmd = "BufferMenu", rtxt = "mb" },
-          { name = "🔧 LSP Actions", cmd = "LspMenu", rtxt = "ml" },
+          { name = " File Operations", cmd = "FileMenu", rtxt = "mf" },
+          { name = "separator" },
+          { name = " LSP Actions", cmd = "LspMenu", rtxt = "ml" },
+          { name = " Debug Tools", cmd = "DebugMenu", rtxt = "md" },
+          { name = "separator" },
           { name = "󰊢 Git Operations", cmd = "GitMenu", rtxt = "mg" },
-          { name = "📟 Terminal/REPL", cmd = "TerminalMenu", rtxt = "mt" },
-          { name = "📐 Layout Control", cmd = "LayoutMenu", rtxt = "mp" },
-          { name = "🔍 Debug Tools", cmd = "DebugMenu", rtxt = "md" },
+          { name = " Layout Control", cmd = "LayoutMenu", rtxt = "mp" },
+          { name = " Buffer Actions", cmd = "BufferMenu", rtxt = "mb" },
+          { name = " Terminal/REPL", cmd = "TerminalMenu", rtxt = "mt" },
         }
       }
 
@@ -770,21 +755,15 @@ return {
         local mode = vim.fn.mode()
         local has_selection = mode == 'v' or mode == 'V' or mode == '\22'
         local right_click_menu = {
-          { name = "📋 Copy", cmd = has_selection and '"+y' or 'echo "No text selected"', rtxt = "y" },
-          { name = "📄 Paste", cmd = '"+p', rtxt = "p" },
-          { name = "📄 Paste Before", cmd = '"+P', rtxt = "P" },
+          { name = " File Operations", cmd = "FileMenu", rtxt = "mf" },
           { name = "separator" },
-          { name = "🔤 Select All", cmd = "normal! ggVG", rtxt = "ggVG" },
-          { name = "🔤 Select Line", cmd = "normal! V", rtxt = "V" },
+          { name = " LSP Actions", cmd = "LspMenu", rtxt = "ml" },
+          { name = " Debug Tools", cmd = "DebugMenu", rtxt = "md" },
           { name = "separator" },
-          { name = "📁 File Operations", cmd = "FileMenu", rtxt = "mf" },
-          { name = "📋 Buffer Actions", cmd = "BufferMenu", rtxt = "mb" },
-          { name = "🔧 LSP Actions", cmd = "LspMenu", rtxt = "ml" },
-          { name = "separator" },
-          { name = "📟 Terminal/REPL", cmd = "TerminalMenu", rtxt = "mt" },
           { name = "󰊢 Git Operations", cmd = "GitMenu", rtxt = "mg" },
-          { name = "📐 Layout Control", cmd = "LayoutMenu", rtxt = "mp" },
-          { name = "🔍 Debug Tools", cmd = "DebugMenu", rtxt = "md" },
+          { name = " Layout Control", cmd = "LayoutMenu", rtxt = "mp" },
+          { name = " Buffer Actions", cmd = "BufferMenu", rtxt = "mb" },
+          { name = " Terminal/REPL", cmd = "TerminalMenu", rtxt = "mt" },
         }
         menu.open(normalize_menu(right_click_menu), menu_opts())
       end, {})
