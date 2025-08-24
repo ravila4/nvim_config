@@ -5,6 +5,15 @@ return {
     dependencies = { "L3MON4D3/LuaSnip" },
     version = "*",
     opts = {
+      enabled = function()
+        local bt = vim.bo.buftype
+        if bt == 'prompt' or bt == 'nofile' then return false end
+        local ft = vim.bo.filetype
+        if ft == 'neo-tree' or ft == 'neo-tree-popup' or ft == 'TelescopePrompt' or ft == 'snacks_dashboard' then
+          return false
+        end
+        return true
+      end,
       keymap = {
         preset = "default",
         ['<Tab>'] = { 'select_next', 'fallback' },
@@ -36,7 +45,15 @@ return {
         },
         trigger = { show_on_insert = true },
       },
-      sources = { default = { 'lsp', 'path', 'snippets', 'buffer' } },
+      sources = {
+        default = { 'lsp', 'path', 'snippets', 'buffer' },
+        per_filetype = {
+          ['neo-tree'] = {},
+          ['neo-tree-popup'] = {},
+          TelescopePrompt = {},
+          snacks_dashboard = {},
+        }
+      },
       signature = { enabled = true },
       snippets = { preset = 'luasnip' },
       performance = { filter_on_keystroke = true, debounce = 0, throttle = 0 },
