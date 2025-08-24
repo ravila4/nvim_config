@@ -29,7 +29,7 @@ return {
               symbols = { error = " ", warn = " ", info = " ", hint = " " },
             }
           },
-          lualine_c = { 
+          lualine_c = {
             { "filename", path = 1 },
             {
               function()
@@ -210,7 +210,7 @@ return {
             },
           },
           live_grep = {
-            theme = "ivy", 
+            theme = "ivy",
             layout_config = {
               height = 0.4,
             },
@@ -295,7 +295,7 @@ return {
       -- Named session functionality
       {
         "<leader>qn",
-        function() 
+        function()
           vim.ui.input({ prompt = "Session name: " }, function(name)
             if name and name ~= "" then
               -- Save current session with custom name
@@ -615,7 +615,7 @@ return {
         end
         return normalized
       end
-      
+
       -- Store menu configurations globally for access
       _G.ide_menus = {
         buffer_menu = {
@@ -717,7 +717,7 @@ return {
         }
       }
 
-      -- Create user commands  
+      -- Create user commands
       local function menu_opts()
         return { mouse = true, border = 'rounded', winblend = 0 }
       end
@@ -773,7 +773,7 @@ return {
       { "<leader>mf", "<cmd>FileMenu<cr>", desc = "File Menu" },
       { "<leader>mp", "<cmd>LayoutMenu<cr>", desc = "Layout Menu" },
       { "<leader>md", "<cmd>DebugMenu<cr>", desc = "Debug Menu" },
-      
+
       -- Right-click context menu support
       { "<RightMouse>", function()
           if vim.bo.filetype == 'snacks_dashboard' or vim.bo.filetype == 'dashboard' then return end

@@ -76,7 +76,7 @@ vim.api.nvim_create_autocmd("ColorScheme", {
   group = "TrailingSpace",
   callback = function()
     -- Use a subtle red that works in both light and dark modes
-    vim.api.nvim_set_hl(0, "TrailingSpaces", { 
+    vim.api.nvim_set_hl(0, "TrailingSpaces", {
       bg = vim.o.background == "dark" and "#3c1e1e" or "#ffe6e6",
       fg = vim.o.background == "dark" and "#ff6b6b" or "#cc0000"
     })
@@ -97,7 +97,7 @@ vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
         "lazy", "mason", "neo-tree", "telescope", "dashboard", "snacks_dashboard",
         "help", "terminal", "qf", "trouble", "fugitive", "defx", ""
       }
- 
+
       if buftype == "" and not vim.tbl_contains(skip_filetypes, filetype) and filetype ~= "" then
         -- Clear any existing matches first
         vim.fn.clearmatches()
@@ -119,7 +119,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 -- Ensure highlight is set on startup
 vim.defer_fn(function()
-  vim.api.nvim_set_hl(0, "TrailingSpaces", { 
+  vim.api.nvim_set_hl(0, "TrailingSpaces", {
     bg = vim.o.background == "dark" and "#3c1e1e" or "#ffe6e6",
     fg = vim.o.background == "dark" and "#ff6b6b" or "#cc0000"
   })
@@ -138,8 +138,8 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
       for _, buf in ipairs(bufs) do
         local bufname = vim.api.nvim_buf_get_name(buf)
         local buftype = vim.bo[buf].buftype
-        if buftype ~= "" or 
-           bufname:match("OUTLINE") or 
+        if buftype ~= "" or
+           bufname:match("OUTLINE") or
            bufname:match("neo%-tree") or
            bufname:match("snacks_explorer") or
            bufname:match("Outline") then
@@ -169,9 +169,3 @@ vim.api.nvim_create_autocmd("User", {
   end,
 })
 
--- Check if running in VSCode or ordinary Neovim
-if vim.g.vscode then
-    -- VSCode extension
-else
-    -- ordinary Neovim
-end

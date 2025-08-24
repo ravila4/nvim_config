@@ -19,12 +19,16 @@ return {
     config = function()
       local lspconfig = require("lspconfig")
       local capabilities = vim.lsp.protocol.make_client_capabilities()
-      pcall(function()
-        local ok, blink = pcall(require, 'blink.cmp')
-        if ok and blink and blink.get_lsp_capabilities then
-          capabilities = blink.get_lsp_capabilities(capabilities)
+      -- Prefer blink.cmp capabilities; fallback to cmp-nvim-lsp if present; otherwise defaults
+      local ok_blink, blink = pcall(require, 'blink.cmp')
+      if ok_blink and blink and blink.get_lsp_capabilities then
+        capabilities = blink.get_lsp_capabilities(capabilities)
+      else
+        local ok_cmp, cmp_cap = pcall(require, 'cmp_nvim_lsp')
+        if ok_cmp and cmp_cap and cmp_cap.default_capabilities then
+          capabilities = cmp_cap.default_capabilities(capabilities)
         end
-      end)
+      end
 
       -- Python LSP
       lspconfig.pyright.setup({

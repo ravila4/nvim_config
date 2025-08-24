@@ -63,10 +63,10 @@ return {
           end,
           size = { height = 0.6 },
         },
-        -- Outline/symbols (like RStudio environment panel) 
+        -- Outline/symbols (like RStudio environment panel)
         {
           title = "Outline",
-          ft = "Outline", 
+          ft = "Outline",
           size = { height = 0.4 },
           filter = function(buf, win)
             return vim.bo[buf].filetype == "Outline"
@@ -297,17 +297,17 @@ return {
       -- Custom highlight groups for subtle edgy panel styling
       local function setup_edgy_highlights()
         local is_dark = vim.o.background == "dark"
-        
+
         -- Remove background highlighting - use same as normal
         vim.api.nvim_set_hl(0, "EdgyNormal", {
           bg = "NONE",
           fg = "NONE",
         })
         vim.api.nvim_set_hl(0, "EdgyNormalNC", {
-          bg = "NONE", 
+          bg = "NONE",
           fg = "NONE",
         })
-        
+
         -- Subtle title bar styling instead of full background
         vim.api.nvim_set_hl(0, "EdgyWinBar", {
           bg = "NONE",
@@ -319,19 +319,19 @@ return {
           fg = is_dark and "#569cd6" or "#1c71d8", -- Adwaita blue
           bold = true,
         })
-        
+
         -- Optional: subtle border for active panels
         vim.api.nvim_set_hl(0, "EdgyBorder", {
           bg = "NONE",
           fg = is_dark and "#404040" or "#d0d0d0",
         })
       end
-      
+
       -- Setup highlights after colorscheme loads
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = setup_edgy_highlights,
       })
-      
+
       -- Setup highlights on startup
       vim.api.nvim_create_autocmd("VimEnter", {
         callback = function()

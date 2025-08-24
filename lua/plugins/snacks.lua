@@ -31,12 +31,10 @@ return {
             { icon = " ", key = "f", desc = "Find File", action = ":lua Snacks.dashboard.pick('files')" },
             { icon = " ", key = "n", desc = "New File", action = ":ene | startinsert" },
             { icon = " ", key = "g", desc = "Find Text", action = ":lua Snacks.dashboard.pick('live_grep')" },
-            { icon = " ", key = "r", desc = "Recent Files", action = ":lua Snacks.dashboard.pick('oldfiles')" },
             { icon = " ", key = "c", desc = "Config", action = ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})" },
-            { icon = " ", key = "s", desc = "Restore Session", action = function() require("persistence").load() end },
             { icon = " ", key = "S", desc = "Select Session", action = function() require("persistence").select() end },
             { icon = " ", key = "l", desc = "Last Session", action = function() require("persistence").load({ last = true }) end },
-            { icon = "󰅖 ", key = "x", desc = "Close Session", action = function()
+            { icon = " ", key = "x", desc = "Close Session", action = function()
               local current = vim.api.nvim_get_current_buf()
               local buffers = vim.api.nvim_list_bufs()
               for _, buf in ipairs(buffers) do
@@ -59,7 +57,7 @@ return {
             { icon = " ", key = "R", desc = "Restore Named Session", action = function()
               local session_dir = vim.fn.expand(vim.fn.stdpath("state") .. "/sessions/")
               local sessions = {}
-              
+
               for name, type in vim.fs.dir(session_dir) do
                 if type == "file" and name:match("%.vim$") then
                   local session_name = name:gsub("%.vim$", "")
@@ -68,12 +66,12 @@ return {
                   end
                 end
               end
-              
+
               if #sessions == 0 then
                 vim.notify("No named sessions found")
                 return
               end
-              
+
               vim.ui.select(sessions, { prompt = "Select session:" }, function(choice)
                 if choice then
                   local session_file = session_dir .. choice .. ".vim"
@@ -344,7 +342,7 @@ return {
           vim.api.nvim_set_hl(0, "SnacksDashboardTitle", { fg = "#228787" })   -- Your lualine teal
           vim.api.nvim_set_hl(0, "SnacksDashboardFile", { fg = "#2aa3a3" })    -- Lighter variant
           vim.api.nvim_set_hl(0, "SnacksDashboardDir", { fg = "#1a6b6b" })     -- Darker variant
-          
+
           -- Fix word highlighting for both light and dark themes
           local function set_word_highlights()
             if vim.o.background == "light" then
@@ -357,7 +355,7 @@ return {
               vim.api.nvim_set_hl(0, "CursorWord", { bg = "#f0f8ff", fg = "NONE", underline = true, sp = "#228787" })
               vim.api.nvim_set_hl(0, "MatchParen", { bg = "#f0f8ff", fg = "NONE", underline = true, sp = "#228787" })
             else
-              -- Dark theme: subtle dark background with teal underline  
+              -- Dark theme: subtle dark background with teal underline
               vim.api.nvim_set_hl(0, "SnacksWords", { bg = "#1a3a3a", fg = "NONE", underline = true, sp = "#228787" })
               vim.api.nvim_set_hl(0, "LspReferenceText", { bg = "#1a3a3a", fg = "NONE", underline = true, sp = "#228787" })
               vim.api.nvim_set_hl(0, "LspReferenceRead", { bg = "#1a3a3a", fg = "NONE", underline = true, sp = "#228787" })
@@ -366,10 +364,10 @@ return {
               vim.api.nvim_set_hl(0, "MatchParen", { bg = "#1a3a3a", fg = "NONE", underline = true, sp = "#228787" })
             end
           end
-          
+
           -- Set highlights initially
           set_word_highlights()
-          
+
           -- Update highlights when colorscheme changes
           vim.api.nvim_create_autocmd("ColorScheme", {
             callback = set_word_highlights,
