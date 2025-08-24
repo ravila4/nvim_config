@@ -1,15 +1,5 @@
 return {
   {
-    "hrsh7th/nvim-cmp",
-    enabled = false,
-  },
-
-  {
-    "hrsh7th/cmp-nvim-lsp",
-    enabled = false,
-  },
-
-  {
     "saghen/blink.cmp",
     event = { "InsertEnter", "CmdlineEnter" },
     dependencies = { "L3MON4D3/LuaSnip" },
@@ -20,6 +10,7 @@ return {
         ['<Tab>'] = { 'select_next', 'fallback' },
         ['<S-Tab>'] = { 'select_prev', 'fallback' },
         ['<CR>'] = { 'fallback' },
+        ['<C-y>'] = { 'accept', 'fallback' },
       },
       appearance = {
         nerd_font_variant = "normal",
@@ -37,7 +28,12 @@ return {
         keyword = { range = "full" },
         menu = { border = "rounded" },
         documentation = { window = { border = "rounded" } },
-        list = { selection = { auto_insert = false }, max_height = 15 },
+        list = {
+            selection = {
+                preselect =  false,
+                auto_insert = true,
+            },
+        },
         trigger = { show_on_insert = true },
       },
       sources = { default = { 'lsp', 'path', 'snippets', 'buffer' } },

@@ -179,7 +179,8 @@ All menu items are clickable with mouse and mapped to actual commands; items tha
     - Blue lines for information
     - Full message text visible without truncation
 - **Completion**: Fast autocomplete with blink.cmp (LSP, path, snippets, buffer)
-  - Selection: Tab/Shift-Tab; Enter inserts newline
+  - Selection: Tab/Shift-Tab; selection auto-inserts (no extra confirm)
+  - Cancel: Esc; Enter remains a pure newline
   - Signature help and auto-brackets enabled; neutral gray borders
 - **Syntax Highlighting**: Treesitter for all major languages
 - **Code Outline**: Function and class navigation
@@ -233,8 +234,8 @@ All menu items are clickable with mouse and mapped to actual commands; items tha
 ## AI Assistance
 
 - **Inline suggestions (Copilot)**: inline ghost text with safe keymaps that do not conflict with completion
-  - Accept: Alt-l; Accept word: Alt-w; Accept line: Alt-;
-  - Next/Prev: Alt-]/Alt-[; Dismiss: Ctrl-]
+  - Accept: Ctrl-l; Accept word: Ctrl-j; Accept line: Ctrl-k
+  - Next/Prev: Ctrl-n/Ctrl-p; Dismiss: Ctrl-]
   - Auto-trigger enabled; subtle neutral gray suggestion color
 - **Completion engine**: blink.cmp (fast, LSP-backed)
   - Sources: LSP, path, snippets, buffer
