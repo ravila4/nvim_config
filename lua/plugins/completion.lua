@@ -67,11 +67,11 @@ return {
         local is_dark = vim.o.background == 'dark'
         local border = is_dark and '#404040' or '#d0d0d0'
         local menu_bg = is_dark and '#2d2d30' or '#f1f0ef'   -- uniform light gray in light mode
-        local sel_bg = '#228787'                              -- brand teal
-        local sel_fg = '#ffffff'
+        local sel_bg = is_dark and '#37373d' or '#e5e4e2'    -- darker gray for hover/selection
+        local fg = is_dark and '#cccccc' or '#2e3436'
         vim.api.nvim_set_hl(0, 'BlinkCmpBorder', { fg = border, bg = 'NONE' })
-        vim.api.nvim_set_hl(0, 'BlinkCmpMenu', { bg = menu_bg, fg = is_dark and '#cccccc' or '#2e3436' })
-        vim.api.nvim_set_hl(0, 'BlinkCmpMenuSelection', { bg = sel_bg, fg = sel_fg })
+        vim.api.nvim_set_hl(0, 'BlinkCmpMenu', { bg = menu_bg, fg = fg })
+        vim.api.nvim_set_hl(0, 'BlinkCmpMenuSelection', { bg = sel_bg, fg = fg })
       end
       set_blink_hl()
       vim.api.nvim_create_autocmd('ColorScheme', { callback = set_blink_hl })

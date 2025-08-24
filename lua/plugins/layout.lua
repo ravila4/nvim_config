@@ -166,9 +166,14 @@ return {
         enable_git_status = true,
         enable_diagnostics = true,
         use_popups_for_input = false,
+        follow_current_file = {
+          enabled = true,
+          leave_dirs_open = false,
+        },
         default_component_configs = {
           name = {
             use_git_status_colors = false,
+            highlight = "NeoTreeFileName",
           },
           container = {
             enable_character_fade = true,
@@ -243,8 +248,18 @@ return {
       end
 
       set_neotree_highlights()
+      -- Emphasize current file selection in the tree
+      local function set_neotree_cursorline()
+        local is_dark = vim.o.background == "dark"
+        vim.api.nvim_set_hl(0, "NeoTreeCursorLine", { bg = is_dark and "#37373d" or "#e5e4e2" })
+        vim.api.nvim_set_hl(0, "NeoTreeFileNameOpened", { bold = true, fg = is_dark and "#ffffff" or "#2e3436" })
+      end
+      set_neotree_cursorline()
       vim.api.nvim_create_autocmd("ColorScheme", {
-        callback = set_neotree_highlights,
+        callback = function()
+          set_neotree_highlights()
+          set_neotree_cursorline()
+        end,
       })
     end,
   },
