@@ -155,24 +155,24 @@ return {
           'Statement', 'PreProc', 'Type', 'Underlined', 'Todo', 'String',
           'Function', 'Conditional', 'Repeat', 'Operator', 'Structure',
           'LineNr', 'NonText', 'SignColumn', 'CursorLineNr', 'EndOfBuffer',
-          
+
           -- Floating windows and popups
           'NormalFloat', 'FloatBorder', 'FloatTitle',
-          
+
           -- Telescope
           'TelescopeNormal', 'TelescopeBorder', 'TelescopePromptNormal',
           'TelescopePromptBorder', 'TelescopeResultsNormal', 'TelescopeResultsBorder',
           'TelescopePreviewNormal', 'TelescopePreviewBorder',
-          
+
           -- Neo-tree
           'NeoTreeNormal', 'NeoTreeNormalNC', 'NeoTreeEndOfBuffer',
-          
+
           -- Lualine (statusline)
           'StatusLine', 'StatusLineNC',
-          
+
           -- Bufferline (tabline)
           'TabLine', 'TabLineFill', 'TabLineSel',
-          
+
           -- Diagnostic virtual text
           'DiagnosticVirtualTextError', 'DiagnosticVirtualTextWarn',
           'DiagnosticVirtualTextInfo', 'DiagnosticVirtualTextHint',
@@ -182,17 +182,17 @@ return {
           'SnacksDashboardNormal', 'SnacksDashboardDesc', 'SnacksDashboardFile',
           'SnacksDashboardDir', 'SnacksDashboardFooter', 'SnacksDashboardHeader',
           'SnacksDashboardIcon', 'SnacksDashboardKey', 'SnacksDashboardTerminal',
-          
+
           -- Git signs
           'GitSignsAdd', 'GitSignsChange', 'GitSignsDelete',
-          
+
           -- LSP and completion (non-selection items only)
           'Pmenu', 'PmenuSbar', 'PmenuThumb',
           'CmpItemAbbr', 'CmpItemAbbrMatch', 'CmpItemKind', 'CmpItemMenu',
-          
+
           -- Outline
           'OutlineNormal', 'OutlineCurrent',
-          
+
           -- Terminal
           'TerminalNormal',
         },
@@ -207,16 +207,16 @@ return {
           'Question', 'Title',
           'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText',
           'SpellBad', 'SpellCap', 'SpellLocal', 'SpellRare',
-          
+
           -- Menu and popup selection highlights - keep opaque for visibility
           'PmenuSel', 'PmenuKindSel', 'PmenuExtraSel',
           'WildMenu', 'StatusLineTermNC',
-          
+
           -- nvzone/menu specific highlights
           'MenuSel', 'MenuSelBorder', 'MenuSelText',
         },
       })
-      
+
       -- Apply transparency settings after colorscheme changes
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function()
@@ -226,7 +226,7 @@ return {
             if vim.g.transparent_enabled then
               require("transparent").setup({})
             end
-            
+
             -- Fix menu selection highlights for proper contrast
             local is_dark = vim.o.background == "dark"
             if is_dark then
@@ -238,7 +238,7 @@ return {
               vim.api.nvim_set_hl(0, "PmenuSel", { bg = "#e6f3ff", fg = "#2e3436" })
               vim.api.nvim_set_hl(0, "WildMenu", { bg = "#e6f3ff", fg = "#2e3436" })
             end
-            
+
             -- Ensure nvzone/menu has proper contrast (these might not exist yet)
             pcall(function()
               if is_dark then
@@ -721,6 +721,23 @@ return {
     dependencies = { "nvzone/volt" },
     config = function()
       local menu = require("menu")
+      
+      -- Set ExBlack3Bg immediately when plugin loads (for first menu)
+      vim.api.nvim_set_hl(0, "ExBlack3Bg", { bg = "#3584e4", fg = "#ffffff" })
+      
+      -- Also use vim.schedule to ensure it's set after all plugins are loaded
+      vim.schedule(function()
+        vim.api.nvim_set_hl(0, "ExBlack3Bg", { bg = "#3584e4", fg = "#ffffff" })
+      end)
+      
+      -- Also ensure it persists after colorscheme changes
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = function()
+          vim.api.nvim_set_hl(0, "ExBlack3Bg", { bg = "#3584e4", fg = "#ffffff" })
+        end
+      })
+      
+
 
       local function normalize_menu(items)
         local normalized = {}
@@ -869,21 +886,23 @@ return {
       local function menu_opts()
         -- Ensure proper menu highlighting for both light and dark themes
         local is_dark = vim.o.background == "dark"
-        
-        -- Set menu-specific highlights for better contrast
+
+        -- Set the nvzone/menu hover highlight group (fixes black menu selection)
         if is_dark then
-          -- Dark theme: use subtle dark backgrounds
+          vim.api.nvim_set_hl(0, "ExBlack3Bg", { bg = "#3584e4", fg = "#ffffff" })
+          -- Set menu-specific highlights for better contrast
           vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#2d2d2d", fg = "#ffffff" })
           vim.api.nvim_set_hl(0, "FloatBorder", { bg = "#2d2d2d", fg = "#666666" })
         else
-          -- Light theme: use light backgrounds with good contrast
+          vim.api.nvim_set_hl(0, "ExBlack3Bg", { bg = "#3584e4", fg = "#ffffff" })
+          -- Set menu-specific highlights for better contrast
           vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#ffffff", fg = "#2e3436" })
           vim.api.nvim_set_hl(0, "FloatBorder", { bg = "#ffffff", fg = "#999999" })
         end
-        
-        return { 
-          mouse = true, 
-          border = 'rounded', 
+
+        return {
+          mouse = true,
+          border = 'rounded',
           winblend = 0,  -- No transparency for menu windows to ensure readability
         }
       end
@@ -902,20 +921,8 @@ return {
         if vim.bo.filetype == 'snacks_dashboard' or vim.bo.filetype == 'dashboard' then
           return
         end
-        local mode = vim.fn.mode()
-        local has_selection = mode == 'v' or mode == 'V' or mode == '\22'
-        local right_click_menu = {
-          { name = " File Operations", cmd = "FileMenu", rtxt = "mf" },
-          { name = "separator" },
-          { name = " LSP Actions", cmd = "LspMenu", rtxt = "ml" },
-          { name = " Debug Tools", cmd = "DebugMenu", rtxt = "md" },
-          { name = "separator" },
-          { name = "󰊢 Git Operations", cmd = "GitMenu", rtxt = "mg" },
-          { name = " Layout Control", cmd = "LayoutMenu", rtxt = "mp" },
-          { name = " Buffer Actions", cmd = "BufferMenu", rtxt = "mb" },
-          { name = " Terminal/REPL", cmd = "TerminalMenu", rtxt = "mt" },
-        }
-        menu.open(normalize_menu(right_click_menu), menu_opts())
+        -- Use the same context menu as Ctrl-t for consistency
+        menu.open(normalize_menu(_G.ide_menus.context_menu), menu_opts())
       end, {})
     end,
     keys = {
