@@ -19,21 +19,20 @@ return {
           lualine_a = { "mode" },
           lualine_b = {
             "branch",
+          },
+          lualine_c = {
             "diff",
             {
               "diagnostics",
               sources = { "nvim_lsp", "nvim_diagnostic" },
               sections = { "error", "warn", "info", "hint" },
-              diagnostics_color = {
-                error = "DiagnosticError",
-                warn = "DiagnosticWarn",
-                info = "DiagnosticInfo",
-                hint = "DiagnosticHint",
+              symbols = {
+                error ="",
+                warn = "󱈸",
+                info = "󰙎",
+                hint = "",
               },
-              symbols = { error = " ", warn = " ", info = " ", hint = " " },
-            }
-          },
-          lualine_c = {
+            },
             { "filename", path = 1 },
           },
           lualine_x = {
