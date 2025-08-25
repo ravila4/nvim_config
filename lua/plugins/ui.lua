@@ -207,16 +207,13 @@ return {
   -- Transparency management for consistent theming
   {
     "tribela/transparent.nvim",
-    event = "VeryLazy",
+    lazy = false,
+    priority = 999,
     config = function()
-      require("transparent").setup({
-        groups = {
-          -- Core UI elements
-          'Normal', 'NormalNC', 'Comment', 'Constant', 'Special', 'Identifier',
-          'Statement', 'PreProc', 'Type', 'Underlined', 'Todo', 'String',
-          'Function', 'Conditional', 'Repeat', 'Operator', 'Structure',
-          'LineNr', 'NonText', 'SignColumn', 'CursorLineNr', 'EndOfBuffer',
-
+      local transparent = require("transparent")
+      transparent.setup({
+        auto = true,
+        extra_groups = {
           -- Floating windows and popups
           'NormalFloat', 'FloatBorder', 'FloatTitle',
 
@@ -228,17 +225,13 @@ return {
           -- Neo-tree
           'NeoTreeNormal', 'NeoTreeNormalNC', 'NeoTreeEndOfBuffer',
 
-          -- Lualine (statusline)
-          'StatusLine', 'StatusLineNC',
-
           -- Bufferline (tabline)
           'TabLine', 'TabLineFill', 'TabLineSel',
 
           -- Diagnostic virtual text
           'DiagnosticVirtualTextError', 'DiagnosticVirtualTextWarn',
           'DiagnosticVirtualTextInfo', 'DiagnosticVirtualTextHint',
-        },
-        extra_groups = {
+
           -- Snacks dashboard
           'SnacksDashboardNormal', 'SnacksDashboardDesc', 'SnacksDashboardFile',
           'SnacksDashboardDir', 'SnacksDashboardFooter', 'SnacksDashboardHeader',
@@ -257,10 +250,11 @@ return {
           -- Terminal
           'TerminalNormal',
         },
-        exclude_groups = {
-          -- Keep some elements opaque for better readability
+        excludes = {
+          -- Keep cursorline opaque for better readability
           'CursorLine', 'CursorColumn', 'ColorColumn',
-          'VertSplit', 'WinSeparator',
+          
+          -- Keep important UI elements opaque
           'Visual', 'VisualNOS',
           'Search', 'IncSearch', 'CurSearch',
           'MatchParen',
@@ -269,48 +263,37 @@ return {
           'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText',
           'SpellBad', 'SpellCap', 'SpellLocal', 'SpellRare',
 
+          -- Keep statusline (lualine) opaque - StatusLine is the main highlight group
+          'StatusLine', 'StatusLineNC',
+
           -- Menu and popup selection highlights - keep opaque for visibility
           'PmenuSel', 'PmenuKindSel', 'PmenuExtraSel',
           'WildMenu', 'StatusLineTermNC',
 
-          -- nvzone/menu specific highlights
-          'MenuSel', 'MenuSelBorder', 'MenuSelText',
+          -- Window separators for better structure visibility
+          'VertSplit', 'WinSeparator',
+          
+          -- Telescope selection for better visibility
+          'TelescopeSelection', 'TelescopeSelectionCaret',
         },
       })
 
-      -- Apply transparency settings after colorscheme changes
+      -- transparent.nvim is now properly configured
+
+      -- Ensure proper menu contrast after transparency is applied
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function()
-          -- Small delay to ensure colorscheme is fully loaded
           vim.defer_fn(function()
-            -- Re-apply transparency to ensure consistency
-            if vim.g.transparent_enabled then
-              require("transparent").setup({})
-            end
-
-            -- Fix menu selection highlights for proper contrast
             local is_dark = vim.o.background == "dark"
+            -- Fix menu selection highlights for proper contrast
             if is_dark then
-              -- Dark theme menu selection
               vim.api.nvim_set_hl(0, "PmenuSel", { bg = "#404040", fg = "#ffffff" })
               vim.api.nvim_set_hl(0, "WildMenu", { bg = "#404040", fg = "#ffffff" })
             else
-              -- Light theme menu selection - use a light blue/gray background
               vim.api.nvim_set_hl(0, "PmenuSel", { bg = "#e6f3ff", fg = "#2e3436" })
               vim.api.nvim_set_hl(0, "WildMenu", { bg = "#e6f3ff", fg = "#2e3436" })
             end
-
-            -- Ensure nvzone/menu has proper contrast (these might not exist yet)
-            pcall(function()
-              if is_dark then
-                vim.api.nvim_set_hl(0, "MenuSel", { bg = "#404040", fg = "#ffffff" })
-                vim.api.nvim_set_hl(0, "MenuSelBorder", { bg = "#404040", fg = "#666666" })
-              else
-                vim.api.nvim_set_hl(0, "MenuSel", { bg = "#e6f3ff", fg = "#2e3436" })
-                vim.api.nvim_set_hl(0, "MenuSelBorder", { bg = "#e6f3ff", fg = "#999999" })
-              end
-            end)
-          end, 50)
+          end, 100)
         end,
       })
     end,
