@@ -507,21 +507,7 @@ return {
         max_prefix_length = 30,
         truncate_names = true,
         tab_size = 21,
-        diagnostics = "nvim_lsp",
-        diagnostics_update_in_insert = false,
-        diagnostics_indicator = function(count, level, diagnostics_dict, context)
-          if level:match("error") then
-            return " " .. count
-          elseif level:match("warn") then
-            return " " .. count
-          elseif level:match("info") then
-            return " " .. count
-          elseif level:match("hint") then
-            return " " .. count
-          else
-            return ""
-          end
-        end,
+        diagnostics = false, -- Disable diagnostic indicators
         color_icons = true,
         show_buffer_icons = true,
         show_buffer_close_icons = true,
@@ -699,6 +685,24 @@ return {
         }
       end,
     },
+    config = function(_, opts)
+      require("bufferline").setup(opts)
+      
+      -- Override the builtin pinned group icon
+      local groups = require("bufferline.groups")
+      if groups.builtin and groups.builtin.pinned then
+        groups.builtin.pinned.icon = "󰐃"
+      end
+      
+      -- Force set indicator colors after setup
+      vim.schedule(function()
+        local is_dark = vim.o.background == "dark"
+        vim.api.nvim_set_hl(0, "BufferLineIndicatorSelected", {
+          fg = is_dark and "#569cd6" or "#1c71d8", -- Adwaita blue
+          bg = is_dark and "#1e1e1e" or "#ffffff",
+        })
+      end)
+    end,
     keys = {
       { "<leader>bp", "<Cmd>BufferLineTogglePin<CR>", desc = "Toggle Pin" },
       { "<leader>bP", "<Cmd>BufferLineGroupClose ungrouped<CR>", desc = "Delete Non-Pinned Buffers" },
