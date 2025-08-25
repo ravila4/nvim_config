@@ -100,7 +100,69 @@ return {
     "lewis6991/gitsigns.nvim",
     event = { "BufReadPre", "BufNewFile" },
     config = function()
-      require("gitsigns").setup()
+      require("gitsigns").setup({
+        signs = {
+          add          = { text = '┃' },
+          change       = { text = '┃' },
+          delete       = { text = '_' },
+          topdelete    = { text = '‾' },
+          changedelete = { text = '~' },
+          untracked    = { text = '┆' },
+        },
+        signs_staged = {
+          add          = { text = '┃' },
+          change       = { text = '┃' },
+          delete       = { text = '_' },
+          topdelete    = { text = '‾' },
+          changedelete = { text = '~' },
+          untracked    = { text = '┆' },
+        },
+      })
+      
+      -- Set theme-aware git sign colors
+      local function set_git_colors()
+        local is_dark = vim.o.background == "dark"
+        
+        if is_dark then
+          -- Dark theme - softer colors for better visibility
+          vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#4ec9b0" })          -- Teal green
+          vim.api.nvim_set_hl(0, "GitSignsChange", { fg = "#dcdcaa" })       -- Light yellow
+          vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#f48771" })       -- Light red
+          vim.api.nvim_set_hl(0, "GitSignsTopdelete", { fg = "#f48771" })    -- Light red
+          vim.api.nvim_set_hl(0, "GitSignsChangedelete", { fg = "#d19a66" }) -- Orange
+          vim.api.nvim_set_hl(0, "GitSignsUntracked", { fg = "#569cd6" })    -- Light blue
+          
+          -- Staged versions (50% opacity effect)
+          vim.api.nvim_set_hl(0, "GitSignsStagedAdd", { fg = "#3a9688" })
+          vim.api.nvim_set_hl(0, "GitSignsStagedChange", { fg = "#a6a677" })
+          vim.api.nvim_set_hl(0, "GitSignsStagedDelete", { fg = "#c16a5a" })
+          vim.api.nvim_set_hl(0, "GitSignsStagedTopdelete", { fg = "#c16a5a" })
+          vim.api.nvim_set_hl(0, "GitSignsStagedChangedelete", { fg = "#a67350" })
+        else
+          -- Light theme - more vibrant colors for contrast with light background
+          vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#26a269" })          -- Adwaita green
+          vim.api.nvim_set_hl(0, "GitSignsChange", { fg = "#f57c00" })       -- Adwaita orange
+          vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#a51d2d" })       -- Adwaita red
+          vim.api.nvim_set_hl(0, "GitSignsTopdelete", { fg = "#a51d2d" })    -- Adwaita red
+          vim.api.nvim_set_hl(0, "GitSignsChangedelete", { fg = "#c64600" }) -- Darker orange
+          vim.api.nvim_set_hl(0, "GitSignsUntracked", { fg = "#1c71d8" })    -- Adwaita blue
+          
+          -- Staged versions (muted variants)
+          vim.api.nvim_set_hl(0, "GitSignsStagedAdd", { fg = "#5aa65f" })
+          vim.api.nvim_set_hl(0, "GitSignsStagedChange", { fg = "#b8860b" })
+          vim.api.nvim_set_hl(0, "GitSignsStagedDelete", { fg = "#cd5c5c" })
+          vim.api.nvim_set_hl(0, "GitSignsStagedTopdelete", { fg = "#cd5c5c" })
+          vim.api.nvim_set_hl(0, "GitSignsStagedChangedelete", { fg = "#d2691e" })
+        end
+      end
+      
+      -- Set colors immediately
+      set_git_colors()
+      
+      -- Update colors when colorscheme changes
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = set_git_colors,
+      })
     end,
   },
 
