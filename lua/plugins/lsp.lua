@@ -60,11 +60,11 @@ return {
 
       -- Python Linting: Ruff LSP for fast linting
       lspconfig.ruff.setup({
-        capabilities = capabilities,
-        on_attach = function(client, bufnr)
-          -- Disable hover in favor of pyright's more detailed hover
-          client.server_capabilities.hoverProvider = false
-        end,
+         capabilities = capabilities,
+         on_attach = function(client, bufnr)
+           -- Disable hover in favor of pyright's more detailed hover
+           client.server_capabilities.hoverProvider = false
+         end,
       })
 
       -- R Language Server

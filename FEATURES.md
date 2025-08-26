@@ -185,6 +185,156 @@ All menu items are clickable with mouse and mapped to actual commands; items tha
 - **Syntax Highlighting**: Treesitter for all major languages
 - **Code Outline**: Function and class navigation
 
+### Jupyter Notebook Integration
+
+Your IDE supports **three complementary Jupyter workflows** designed for different bioinformatics scenarios. Each tool excels in specific situations and they can work together seamlessly.
+
+## 🎯 Three-Tool Strategy Overview
+
+| Tool | Best For | Strengths | Use Case |
+|------|----------|-----------|----------|
+| **Molten** | Local analysis + visualization | Inline plots, VSCode-like experience | Daily data analysis, genomics plots |
+| **Vim-Slime** | Reliable REPL workflow | Rock-solid, works everywhere | Remote servers, large datasets, terminal-focused |
+| **Jupynium** | Secured remote servers | Browser-based, no server config needed | DNAnexus, AllOfUs, locked-down platforms |
+
+## 🖼️ Molten-nvim (Local + Inline Images)
+
+**Perfect for**: Local bioinformatics analysis with rich visualizations
+
+### Key Features
+- **Inline Images**: Plots and visualizations appear directly in Neovim
+- **Real-time Output**: See results as code executes (like VSCode notebooks)
+- **Multiple Kernels**: Python, R, Julia support
+- **Performance Optimized**: 1MB output limit for large genomics datasets
+- **Theme Integration**: Uses your teal accent colors
+
+### Molten Commands
+| Key | Action | Description |
+|-----|--------|-------------|
+| `<leader>mi` | Initialize | Start kernel for current language |
+| `<leader>mr` | Run selection | Execute highlighted code |
+| `<leader>ml` | Run line | Execute current line |
+| `<leader>mc` | Re-run cell | Re-execute cell at cursor |
+| `<leader>md` | Delete cell | Remove cell and output |
+| `<leader>mh` | Hide output | Hide cell output |
+| `<leader>ms` | Show output | Show cell output |
+| `<leader>mq` | Quit kernel | Stop kernel session |
+
+### Setup Requirements
+- **Terminal**: Kitty or compatible for image rendering
+- **Dependencies**: image.nvim plugin (automatically installed)
+- **Python**: Local Python environment with desired packages
+
+## 📟 Vim-Slime (Terminal REPL)
+
+**Perfect for**: Reliable terminal-based workflow, remote servers, large datasets
+
+### Key Features
+- **Rock Solid**: Minimal dependencies, always works
+- **Terminal Integration**: Uses your existing edgy.nvim terminal layout
+- **Cell-based Execution**: Standard `# %%` cell delimiters  
+- **Remote Friendly**: Works perfectly over SSH with tmux
+- **IPython Integration**: Enhanced with vim-ipython-cell plugin
+
+### Slime Commands (Unified `<leader>j*`)
+| Key | Action | Description |
+|-----|--------|-------------|
+| `<leader>jr` | Run cell | Execute cell at cursor |
+| `<leader>jR` | Run cell + jump | Execute and jump to next cell |
+| `<leader>ja` | Run all above | Execute all cells above cursor |
+| `<leader>jA` | Run all below | Execute all cells below cursor |
+| `<leader>jn` | Next cell | Jump to next `# %%` delimiter |
+| `<leader>jp` | Previous cell | Jump to previous `# %%` delimiter |
+| `<leader>js` | Start IPython | Launch or restart IPython session |
+| `<leader>jt` | Open terminal | Open IPython in bottom panel |
+| `<leader>jc` | Clear terminal | Clear IPython output |
+
+### Additional Slime Commands
+| Key | Action | Description |
+|-----|--------|-------------|
+| `<leader>sc` | Send line | Send current line to terminal |
+| `<leader>ss` | Send operator | Send text object to terminal |
+| `<leader>st` | Configure target | Set terminal target |
+
+## 🌐 Jupynium (Remote/Secured Servers)
+
+**Perfect for**: DNAnexus, AllOfUs, secured platforms where you can't configure the server
+
+### Key Features
+- **Browser Automation**: Controls Jupyter through Firefox (no server access needed)
+- **Secured Servers**: Works with platforms that block direct kernel access
+- **Real-time Sync**: Edit in Neovim, see changes in browser instantly
+- **Full Context**: Maintains complete notebook state (not shortsighted)
+- **Remote Friendly**: SSH port forwarding support
+
+### Jupynium Commands (`.ju.*` and `.ipynb` files)
+| Key | Action | Description |
+|-----|--------|-------------|
+| `<leader>us` | Start server | Launch Jupyter and attach to server |
+| `<leader>ur` | Start sync | Begin real-time syncing |
+| `<leader>ud` | Download notebook | Save .ipynb copy locally |
+| `<leader>uc` | Execute cells | Run selected cells in browser |
+| `<leader>ua` | Scroll to cell | Navigate browser to current cell |
+| `<leader>uk` | Kernel info | Show kernel status |
+| `<leader>uq` | Stop sync | Disconnect from notebook |
+
+### Setup Requirements
+- **Browser**: Firefox with geckodriver installed  
+- **Server**: Any Jupyter server (local or remote)
+- **Files**: Works with `.ju.py`, `.ipynb`, and `.md` files
+
+## 🔄 Unified Workflow Integration
+
+### Smart Tool Selection
+Choose your tool based on the scenario:
+- **Molten**: Local work where you want to see plots inline
+- **Vim-Slime**: When you need reliability or are on remote servers  
+- **Jupynium**: Secured servers where you can't install/configure anything
+
+### Unified Keybindings
+Common commands work across all tools (context-sensitive):
+- `<leader>jr` - Run cell (adapts to active tool)  
+- `<leader>ji` - Initialize session (adapts to active tool)
+- Standard `# %%` cell delimiters work with all tools
+
+### Terminal Integration
+- **Bottom Panel**: Seamless integration with your edgy.nvim layout
+- **Multiple Terminals**: Can run IPython alongside Jupyter browser sessions
+- **Session Persistence**: Terminal sessions survive across Neovim restarts
+
+### Workflow Examples
+
+#### Local Analysis Session
+```bash
+# 1. Start Molten for visualization
+<leader>mi  # Initialize Python kernel
+
+# 2. Run cells with inline plots  
+<leader>mr  # See matplotlib plots directly in editor
+
+# 3. Switch to terminal for debugging
+<leader>jt  # Open IPython terminal
+<leader>sc  # Send problematic code to terminal
+```
+
+#### Remote Server Session  
+```bash
+# 1. SSH to server, start tmux
+# 2. Open Neovim with Python file
+# 3. Use vim-slime for reliable execution
+<leader>js  # Start IPython in terminal
+<leader>jr  # Run cells via terminal
+```
+
+#### Secured Platform Session
+```bash
+# 1. Create .ju.py file (jupynium format)
+# 2. Connect to secured Jupyter server
+<leader>us  # Start jupynium server connection
+<leader>ur  # Begin sync
+<leader>uc  # Execute cells in browser
+```
+
 ### Git Integration
 - **Git Signs**: See added/modified/deleted lines
 - **Git Status**: Right panel integration
