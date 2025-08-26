@@ -73,7 +73,7 @@ return {
     ft = { "python", "julia", "r", "markdown", "quarto" },
     config = function()
       require("image").setup({
-        backend = "kitty", -- or "ueberzug" depending on your terminal
+        backend = "kitty", -- Ghostty supports kitty graphics protocol
         integrations = {
           markdown = {
             enabled = true,
@@ -140,4 +140,5 @@ return {
       })
     end,
   },
+}
 

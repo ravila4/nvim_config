@@ -2,6 +2,46 @@
 -- Quarto, Obsidian, and embedded code support
 
 return {
+  -- Markview.nvim for beautiful markdown rendering
+  {
+    "OXY2DEV/markview.nvim",
+    lazy = false, -- Plugin handles its own lazy loading
+    priority = 10000, -- Very high priority to load before treesitter
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      "nvim-tree/nvim-web-devicons",
+    },
+    config = function()
+      require("markview").setup({
+        -- Experimental settings
+        experimental = {
+          check_rtp_message = false, -- Hide the runtime path warning message
+        },
+        
+        -- Preview configuration
+        preview = {
+          filetypes = { "markdown", "quarto", "rmd" }, -- Moved from top level
+          modes = { "n", "no", "c" }, -- Normal, operator-pending, command modes
+          hybrid_modes = { "n" },     -- Partial rendering in normal mode
+          ignore_buftypes = { "nofile", "terminal" }, -- Buffer types to ignore
+          callbacks = {
+            on_enable = function()
+              -- Disable conflicting plugins temporarily
+              vim.cmd("TSBufDisable highlight") -- Avoid conflicts
+            end,
+            on_disable = function()
+              -- Re-enable when markview is disabled
+              vim.cmd("TSBufEnable highlight")
+            end,
+          },
+        },
+      })
+      
+      -- Keybindings for markview
+      vim.keymap.set("n", "<leader>mv", ":Markview toggleAll<CR>", { desc = "Toggle Markview" })
+      vim.keymap.set("n", "<leader>ms", ":Markview splitToggle<CR>", { desc = "Markview split toggle" })
+    end,
+  },
   -- Obsidian notes
   {
     "epwalsh/obsidian.nvim",
@@ -19,6 +59,21 @@ return {
         completion = {
           nvim_cmp = true,
         },
+        ui = {
+          enable = true, -- Enable Obsidian UI features
+          checkboxes = {
+            [" "] = { char = "󰄱", hl_group = "ObsidianTodo" },
+            ["x"] = { char = "", hl_group = "ObsidianDone" },
+          },
+        },
+      })
+      
+      -- Set conceallevel to 2 for Obsidian compatibility
+      vim.api.nvim_create_autocmd("BufEnter", {
+        pattern = vim.fn.expand("~") .. "/Documents/Obsidian-Notes/*.md",
+        callback = function()
+          vim.opt_local.conceallevel = 2
+        end,
       })
 
       -- Obsidian keymap
