@@ -239,12 +239,12 @@ return {
           'SnacksDashboardNormal', 'SnacksDashboardDesc', 'SnacksDashboardFile',
           'SnacksDashboardDir', 'SnacksDashboardFooter', 'SnacksDashboardHeader',
           'SnacksDashboardIcon', 'SnacksDashboardKey', 'SnacksDashboardTerminal',
+          'SnacksDashboardTitle', 'SnacksDashboardSpecial',
 
           -- Git signs
           'GitSignsAdd', 'GitSignsChange', 'GitSignsDelete',
 
           -- LSP and completion (non-selection items only)
-          'Pmenu', 'PmenuSbar', 'PmenuThumb',
           'CmpItemAbbr', 'CmpItemAbbrMatch', 'CmpItemKind', 'CmpItemMenu',
 
           -- Outline
@@ -256,7 +256,7 @@ return {
         excludes = {
           -- Keep cursorline opaque for better readability
           'CursorLine', 'CursorColumn', 'ColorColumn',
-          
+
           -- Keep important UI elements opaque
           'Visual', 'VisualNOS',
           'Search', 'IncSearch', 'CurSearch',
@@ -269,13 +269,9 @@ return {
           -- Keep statusline (lualine) opaque - StatusLine is the main highlight group
           'StatusLine', 'StatusLineNC',
 
-          -- Menu and popup selection highlights - keep opaque for visibility
-          -- 'PmenuSel', 'PmenuKindSel', 'PmenuExtraSel',
-          -- 'WildMenu', 'StatusLineTermNC',
-
           -- Window separators for better structure visibility
           'VertSplit', 'WinSeparator',
-          
+
           -- Telescope selection for better visibility
           'TelescopeSelection', 'TelescopeSelectionCaret',
         },
@@ -288,15 +284,18 @@ return {
         callback = function()
           vim.defer_fn(function()
             local is_dark = vim.o.background == "dark"
-            
+
             -- Force window separators to be transparent with theme-appropriate colors
             local is_dark = vim.o.background == "dark"
             local separator_fg = is_dark and "#484a4a" or "#cacac9"
-            
+
             vim.api.nvim_set_hl(0, "VertSplit", { bg = "NONE", fg = separator_fg })
             vim.api.nvim_set_hl(0, "WinSeparator", { bg = "NONE", fg = separator_fg })
             vim.api.nvim_set_hl(0, "StatusLineNC", { bg = "NONE" })
-            
+
+            -- Fix dashboard directory icons
+            vim.api.nvim_set_hl(0, "Directory", { bg = "NONE" })
+
           end, 100)
         end,
       })
@@ -309,6 +308,9 @@ return {
             local separator_fg = is_dark and "#484a4a" or "#cacac9"
             vim.api.nvim_set_hl(0, "VertSplit", { bg = "NONE", fg = separator_fg })
             vim.api.nvim_set_hl(0, "WinSeparator", { bg = "NONE", fg = separator_fg })
+
+            -- Fix dashboard directory icons here too
+            vim.api.nvim_set_hl(0, "Directory", { bg = "NONE", fg = is_dark and "#569cd6" or "#1c71d8" })
           end, 300) -- Even later for initial load
         end,
       })
