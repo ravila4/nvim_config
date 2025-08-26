@@ -31,4 +31,20 @@ return {
       vim.api.nvim_create_autocmd("ColorScheme", { callback = set_copilot_hl })
     end,
   },
+
+  -- Claude Code integration
+  {
+    "coder/claudecode.nvim",
+    event = "VeryLazy",
+    config = function()
+      require("claudecode").setup({
+        terminal = {
+          split_side = "right",
+          split_width_percentage = 0.4,
+          provider = "auto",
+          auto_close = true,
+        },
+      })
+    end,
+  },
 }
