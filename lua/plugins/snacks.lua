@@ -367,6 +367,23 @@ return {
             vim.api.nvim_set_hl(0, "SnacksBackdrop", { bg = bg_color, fg = "NONE" })
           end
 
+          -- Set highlights for indent guides
+          local function set_indent_highlights()
+            local is_dark = vim.o.background == "dark"
+            -- Unfocused indent guides - much lighter/subtle
+            vim.api.nvim_set_hl(0, "SnacksIndent", {
+              fg = is_dark and "#404040" or "#e0e0e0",
+            })
+            -- Regular scope guide
+            vim.api.nvim_set_hl(0, "SnacksIndentScope", {
+              fg = is_dark and "#404040" or "#e0e0e0",
+            })
+            -- Focused scope with arrow - theme-appropriate accent color
+            vim.api.nvim_set_hl(0, "SnacksIndentChunk", {
+              fg = is_dark and "#248f8f" or "#248f8f",
+            })
+          end
+
           -- Fix word highlighting for both light and dark themes
           local function set_word_highlights()
             if vim.o.background == "light" then
@@ -392,12 +409,14 @@ return {
           -- Set highlights initially
           set_word_highlights()
           set_zen_backdrop()
+          set_indent_highlights()
 
           -- Update highlights when colorscheme changes
           vim.api.nvim_create_autocmd("ColorScheme", {
             callback = function()
               set_word_highlights()
               set_zen_backdrop()
+              set_indent_highlights()
             end,
           })
         end,
