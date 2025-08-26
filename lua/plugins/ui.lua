@@ -1,6 +1,3 @@
--- Load UV environment support
-require("config.uv-env")
-
 return {
   -- Status line
   {
