@@ -130,6 +130,63 @@ vim.defer_fn(function()
   })
 end, 200)
 
+-- Command to delete trailing spaces (reuses same buffer filtering logic)
+vim.api.nvim_create_user_command("DeleteTrailingSpaces", function()
+  local buftype = vim.bo.buftype
+  local filetype = vim.bo.filetype
+
+  -- Skip special buffers (same logic as highlighting)
+  local skip_filetypes = {
+    "lazy", "mason", "neo-tree", "telescope", "dashboard", "snacks_dashboard",
+    "help", "terminal", "qf", "trouble", "fugitive", "defx", ""
+  }
+
+  if buftype ~= "" or vim.tbl_contains(skip_filetypes, filetype) or filetype == "" then
+    print("DeleteTrailingSpaces: Skipping special buffer")
+    return
+  end
+
+  -- Save cursor position
+  local cursor_pos = vim.api.nvim_win_get_cursor(0)
+
+  -- Count trailing spaces before deletion
+  local lines_with_trailing = 0
+  local total_trailing_chars = 0
+
+  for line_num = 1, vim.fn.line('$') do
+    local line = vim.fn.getline(line_num)
+    local trailing = line:match('%s+$')
+    if trailing then
+      lines_with_trailing = lines_with_trailing + 1
+      total_trailing_chars = total_trailing_chars + #trailing
+    end
+  end
+
+  if total_trailing_chars == 0 then
+    print("No trailing spaces found")
+    return
+  end
+
+  -- Delete trailing spaces
+  vim.cmd([[silent! %s/\s\+$//e]])
+
+  -- Restore cursor position
+  pcall(vim.api.nvim_win_set_cursor, 0, cursor_pos)
+
+  -- Update trailing space highlighting after deletion
+  vim.defer_fn(function()
+    vim.fn.clearmatches()
+    vim.fn.matchadd("TrailingSpaces", "\\s\\+$")
+  end, 50)
+
+  print(string.format("Removed %d trailing characters from %d lines", total_trailing_chars, lines_with_trailing))
+end, {
+  desc = "Delete all trailing spaces in current buffer"
+})
+
+-- Add a mapping for convenience
+vim.keymap.set("n", "<leader>dw", "<cmd>DeleteTrailingSpaces<cr>", { desc = "Delete trailing spaces" })
+
 -- Session persistence and layout management
 vim.api.nvim_create_augroup("SessionLayout", { clear = true })
 
