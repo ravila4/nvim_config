@@ -20,7 +20,9 @@ This Neovim configuration transforms your editor into a modern bioinformatics ID
 ## Beautiful TUI Elements (snacks.nvim)
 
 ### Visual Enhancements
-- **Notifications**: Animated, elegant notifications
+- **Notifications**: Animated, elegant notifications (5 second duration)
+  - **History Access**: `<leader>n` - View past notifications anytime
+  - **Dismiss All**: `<leader>un` - Clear all current notifications
 - **Zen Mode**: Distraction-free coding environment
 - **Smooth Scrolling**: Buttery smooth animations
 - **Indent Guides**: Beautiful code structure visualization

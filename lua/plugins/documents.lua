@@ -60,20 +60,8 @@ return {
           nvim_cmp = true,
         },
         ui = {
-          enable = true, -- Enable Obsidian UI features
-          checkboxes = {
-            [" "] = { char = "󰄱", hl_group = "ObsidianTodo" },
-            ["x"] = { char = "", hl_group = "ObsidianDone" },
-          },
+          enable = false, -- Disable UI features since markview.nvim handles rendering
         },
-      })
-      
-      -- Set conceallevel to 2 for Obsidian compatibility
-      vim.api.nvim_create_autocmd("BufEnter", {
-        pattern = vim.fn.expand("~") .. "/Documents/Obsidian-Notes/*.md",
-        callback = function()
-          vim.opt_local.conceallevel = 2
-        end,
       })
 
       -- Obsidian keymap
