@@ -84,10 +84,10 @@ return {
 
         -- Set background for all NavicIcons* highlight groups
         local icon_types = {
-          "File", "Module", "Namespace", "Package", "Class", "Method", 
-          "Property", "Field", "Constructor", "Enum", "Interface", 
-          "Function", "Variable", "Constant", "String", "Number", 
-          "Boolean", "Array", "Object", "Key", "Null", "EnumMember", 
+          "File", "Module", "Namespace", "Package", "Class", "Method",
+          "Property", "Field", "Constructor", "Enum", "Interface",
+          "Function", "Variable", "Constant", "String", "Number",
+          "Boolean", "Array", "Object", "Key", "Null", "EnumMember",
           "Struct", "Event", "Operator", "TypeParameter"
         }
 
@@ -185,17 +185,18 @@ return {
 
       -- Python Linting: Ruff LSP for fast linting
       lspconfig.ruff.setup({
-         capabilities = capabilities,
-         on_attach = function(client, bufnr)
-           -- Disable hover in favor of pyright's more detailed hover
-           client.server_capabilities.hoverProvider = false
+        capabilities = capabilities,
+        cmd = { vim.fn.expand("~/.local/share/nvim/mason/packages/ruff/venv/bin/ruff"), "server" },
+        on_attach = function(client, bufnr)
+          -- Disable hover in favor of pyright's more detailed hover
+          client.server_capabilities.hoverProvider = false
 
-           -- Attach navic if available (but ruff doesn't provide document symbols)
-           local ok_navic, navic = pcall(require, "nvim-navic")
-           if ok_navic and client.server_capabilities.documentSymbolProvider then
-             navic.attach(client, bufnr)
-           end
-         end,
+          -- Attach navic if available (but ruff doesn't provide document symbols)
+          local ok_navic, navic = pcall(require, "nvim-navic")
+          if ok_navic and client.server_capabilities.documentSymbolProvider then
+            navic.attach(client, bufnr)
+          end
+        end,
       })
 
       -- R Language Server
