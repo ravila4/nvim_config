@@ -217,6 +217,9 @@ return {
           -- Floating windows and popups
           'NormalFloat', 'FloatBorder', 'FloatTitle',
 
+          -- Window splits and separators
+          'WinSeparator', 'VertSplit',
+
           -- Telescope
           'TelescopeNormal', 'TelescopeBorder', 'TelescopePromptNormal',
           'TelescopePromptBorder', 'TelescopeResultsNormal', 'TelescopeResultsBorder',
@@ -267,8 +270,8 @@ return {
           'StatusLine', 'StatusLineNC',
 
           -- Menu and popup selection highlights - keep opaque for visibility
-          'PmenuSel', 'PmenuKindSel', 'PmenuExtraSel',
-          'WildMenu', 'StatusLineTermNC',
+          -- 'PmenuSel', 'PmenuKindSel', 'PmenuExtraSel',
+          -- 'WildMenu', 'StatusLineTermNC',
 
           -- Window separators for better structure visibility
           'VertSplit', 'WinSeparator',
@@ -285,15 +288,28 @@ return {
         callback = function()
           vim.defer_fn(function()
             local is_dark = vim.o.background == "dark"
-            -- Fix menu selection highlights for proper contrast
-            if is_dark then
-              vim.api.nvim_set_hl(0, "PmenuSel", { bg = "#404040", fg = "#ffffff" })
-              vim.api.nvim_set_hl(0, "WildMenu", { bg = "#404040", fg = "#ffffff" })
-            else
-              vim.api.nvim_set_hl(0, "PmenuSel", { bg = "#e6f3ff", fg = "#2e3436" })
-              vim.api.nvim_set_hl(0, "WildMenu", { bg = "#e6f3ff", fg = "#2e3436" })
-            end
+            
+            -- Force window separators to be transparent with theme-appropriate colors
+            local is_dark = vim.o.background == "dark"
+            local separator_fg = is_dark and "#484a4a" or "#cacac9"
+            
+            vim.api.nvim_set_hl(0, "VertSplit", { bg = "NONE", fg = separator_fg })
+            vim.api.nvim_set_hl(0, "WinSeparator", { bg = "NONE", fg = separator_fg })
+            vim.api.nvim_set_hl(0, "StatusLineNC", { bg = "NONE" })
+            
           end, 100)
+        end,
+      })
+
+      -- Additional fix for initial load timing in dark mode
+      vim.api.nvim_create_autocmd("VimEnter", {
+        callback = function()
+          vim.defer_fn(function()
+            local is_dark = vim.o.background == "dark"
+            local separator_fg = is_dark and "#484a4a" or "#cacac9"
+            vim.api.nvim_set_hl(0, "VertSplit", { bg = "NONE", fg = separator_fg })
+            vim.api.nvim_set_hl(0, "WinSeparator", { bg = "NONE", fg = separator_fg })
+          end, 300) -- Even later for initial load
         end,
       })
     end,
