@@ -10,6 +10,103 @@ return {
     end,
   },
 
+  -- Navigation breadcrumbs
+  {
+    "SmiteshP/nvim-navic",
+    event = "LspAttach",
+    config = function()
+      require("nvim-navic").setup({
+        icons = {
+          File = ' ',
+          Module = ' ',
+          Namespace = ' ',
+          Package = ' ',
+          Class = ' ',
+          Method = ' ',
+          Property = ' ',
+          Field = ' ',
+          Constructor = ' ',
+          Enum = ' ',
+          Interface = ' ',
+          Function = ' ',
+          Variable = ' ',
+          Constant = ' ',
+          String = ' ',
+          Number = ' ',
+          Boolean = ' ',
+          Array = ' ',
+          Object = ' ',
+          Key = ' ',
+          Null = ' ',
+          EnumMember = ' ',
+          Struct = ' ',
+          Event = ' ',
+          Operator = ' ',
+          TypeParameter = ' '
+        },
+        lsp = {
+          auto_attach = true,
+          preference = nil, -- Use default order (pyright first for Python files)
+        },
+        highlight = true, -- Use LSP semantic tokens for syntax highlighting
+        separator = " > ", -- Breadcrumb separator
+        depth_limit = 0, -- No limit on breadcrumb depth
+        depth_limit_indicator = "..", -- Indicator when depth is exceeded
+        safe_output = true, -- Sanitize output
+        lazy_update_context = false,
+        click = false, -- Disable clicking
+        format_text = function(text)
+          return text -- Keep original text formatting
+        end,
+      })
+
+      -- Set up highlight groups with your teal theme (solid backgrounds)
+      local function setup_navic_highlights()
+        local is_dark = vim.o.background == "dark"
+        local bg_color = is_dark and "#1c1c1c" or "#ffffff"
+
+        vim.api.nvim_set_hl(0, "NavicText", {
+          fg = is_dark and "#cccccc" or "#2e3436",
+          bg = bg_color
+        })
+        vim.api.nvim_set_hl(0, "NavicSeparator", {
+          fg = "#228787",
+          bg = bg_color
+        })
+
+        -- Set winbar background to match
+        vim.api.nvim_set_hl(0, "WinBar", {
+          bg = bg_color
+        })
+        vim.api.nvim_set_hl(0, "WinBarNC", {
+          bg = bg_color
+        })
+
+        -- Set background for all NavicIcons* highlight groups
+        local icon_types = {
+          "File", "Module", "Namespace", "Package", "Class", "Method", 
+          "Property", "Field", "Constructor", "Enum", "Interface", 
+          "Function", "Variable", "Constant", "String", "Number", 
+          "Boolean", "Array", "Object", "Key", "Null", "EnumMember", 
+          "Struct", "Event", "Operator", "TypeParameter"
+        }
+
+        for _, icon_type in ipairs(icon_types) do
+          local hl_group = "NavicIcons" .. icon_type
+          local existing_hl = vim.api.nvim_get_hl(0, { name = hl_group })
+          vim.api.nvim_set_hl(0, hl_group, vim.tbl_extend("force", existing_hl, { bg = bg_color }))
+        end
+      end
+
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = setup_navic_highlights,
+      })
+
+      -- Set initial highlight groups
+      setup_navic_highlights()
+    end,
+  },
+
   {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
@@ -55,6 +152,34 @@ return {
           -- Disable pyright's formatting since we use ruff via conform
           client.server_capabilities.documentFormattingProvider = false
           client.server_capabilities.documentRangeFormattingProvider = false
+
+          -- Attach navic if available
+          local ok_navic, navic = pcall(require, "nvim-navic")
+          if ok_navic and client.server_capabilities.documentSymbolProvider then
+            navic.attach(client, bufnr)
+
+            -- Set up winbar for this buffer
+            local function update_winbar()
+              vim.schedule(function()
+                if navic.is_available(bufnr) then
+                  local location = navic.get_location()
+                  local filepath = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":~:.")
+                  if location and location ~= "" then
+                    vim.wo.winbar = string.format("%%#NavicText# %s %%#NavicSeparator#>%%#NavicText# %s", filepath, location)
+                  else
+                    vim.wo.winbar = string.format("%%#NavicText# %s", filepath)
+                  end
+                end
+              end)
+            end
+
+            -- Update immediately and on cursor movement
+            update_winbar()
+            vim.api.nvim_create_autocmd({"CursorMoved", "CursorHold"}, {
+              buffer = bufnr,
+              callback = update_winbar,
+            })
+          end
         end,
       })
 
@@ -64,6 +189,12 @@ return {
          on_attach = function(client, bufnr)
            -- Disable hover in favor of pyright's more detailed hover
            client.server_capabilities.hoverProvider = false
+
+           -- Attach navic if available (but ruff doesn't provide document symbols)
+           local ok_navic, navic = pcall(require, "nvim-navic")
+           if ok_navic and client.server_capabilities.documentSymbolProvider then
+             navic.attach(client, bufnr)
+           end
          end,
       })
 
@@ -93,6 +224,35 @@ return {
             },
           },
         },
+        on_attach = function(client, bufnr)
+          -- Attach navic if available
+          local ok_navic, navic = pcall(require, "nvim-navic")
+          if ok_navic and client.server_capabilities.documentSymbolProvider then
+            navic.attach(client, bufnr)
+
+            -- Set up winbar for this buffer
+            local function update_winbar()
+              vim.schedule(function()
+                if navic.is_available(bufnr) then
+                  local location = navic.get_location()
+                  local filepath = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":~:.")
+                  if location and location ~= "" then
+                    vim.wo.winbar = string.format("%%#NavicText# %s %%#NavicSeparator#>%%#NavicText# %s", filepath, location)
+                  else
+                    vim.wo.winbar = string.format("%%#NavicText# %s", filepath)
+                  end
+                end
+              end)
+            end
+
+            -- Update immediately and on cursor movement
+            update_winbar()
+            vim.api.nvim_create_autocmd({"CursorMoved", "CursorHold"}, {
+              buffer = bufnr,
+              callback = update_winbar,
+            })
+          end
+        end,
       })
 
       -- Configure diagnostics to work well with lsp_lines

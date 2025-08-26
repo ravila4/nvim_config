@@ -578,17 +578,17 @@ return {
         if is_dark then
           -- Dark theme colors
           colors = {
-            fill = { bg = "#242424" },
-            background = { bg = "#2d2d30", fg = "#cccccc" },
+            fill = { bg = "NONE" },
+            background = { bg = "#37373d", fg = "#cccccc" },
             buffer_visible = { bg = "#37373d", fg = "#cccccc" },
-            buffer_selected = { bg = "#1e1e1e", fg = "#ffffff", bold = true },
+            buffer_selected = { bg = "#1c1c1c", fg = "#ffffff", bold = true },
           }
         else
           -- Light theme colors
           colors = {
-            fill = { bg = "#f6f5f4" },
-            background = { bg = "#f1f0ef", fg = "#3d3846" },
-            buffer_visible = { bg = "#e5e4e2", fg = "#5e5c64" },
+            fill = { bg = "NONE" },
+            background = { bg = "#d8d7d4", fg = "#5e5c64" },
+            buffer_visible = { bg = "#d8d7d4", fg = "#5e5c64" },
             buffer_selected = { bg = "#ffffff", fg = "#2e3436", bold = true },
           }
         end
