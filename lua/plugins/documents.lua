@@ -42,9 +42,10 @@ return {
       vim.keymap.set("n", "<leader>ms", ":Markview splitToggle<CR>", { desc = "Markview split toggle" })
     end,
   },
-  -- Obsidian notes
+  -- Obsidian notes (community fork)
   {
-    "epwalsh/obsidian.nvim",
+    "obsidian-nvim/obsidian.nvim",
+    version = "*", -- Use latest stable release
     event = {
       "BufReadPre " .. vim.fn.expand("~") .. "/Documents/Obsidian-Notes/**.md",
       "BufNewFile " .. vim.fn.expand("~") .. "/Documents/Obsidian-Notes/**.md",
@@ -52,26 +53,88 @@ return {
     dependencies = {
       "nvim-lua/plenary.nvim",
       "hrsh7th/nvim-cmp",
+      "nvim-telescope/telescope.nvim", -- For picker functionality
     },
     config = function()
       require("obsidian").setup({
-        dir = "~/Documents/Obsidian-Notes",
+        workspaces = {
+          {
+            name = "notes",
+            path = "~/Documents/Obsidian-Notes",
+          },
+        },
+        
+        -- Enhanced completion configuration
         completion = {
           nvim_cmp = true,
+          min_chars = 2,
+          new_notes_location = "current_dir",
         },
+        
+        -- Picker configuration (uses telescope by default)
+        picker = {
+          name = "telescope.nvim",
+          mappings = {
+            new = "<C-x>", -- Create new note
+            insert_link = "<C-l>", -- Insert link to note
+          },
+        },
+        
+        -- Daily notes configuration (matches your existing structure)
+        daily_notes = {
+          folder = "Daily Log",
+          date_format = "%Y-%m-%d",
+          alias_format = "%B %d, %Y",
+        },
+        
+        -- UI configuration - keep disabled for markview compatibility
         ui = {
-          enable = false, -- Disable UI features since markview.nvim handles rendering
+          enable = false, -- Let markview handle rendering
+          update_debounce = 200,
+          checkboxes = {},
+        },
+        
+        -- Attachment configuration (matches your _images pattern)
+        attachments = {
+          img_folder = "_images",
+        },
+        
+        -- Note path and ID generation
+        note_id_func = function(title)
+          local suffix = ""
+          if title ~= nil then
+            suffix = title:gsub(" ", "-"):gsub("[^A-Za-z0-9-]", ""):lower()
+          else
+            for _ = 1, 4 do
+              suffix = suffix .. string.char(math.random(65, 90))
+            end
+          end
+          return tostring(os.date("%Y-%m-%d")) .. "_" .. suffix
+        end,
+        
+        -- Template configuration (matches your existing Templates folder)
+        templates = {
+          subdir = "Templates",
+          date_format = "%Y-%m-%d",
+          time_format = "%H:%M",
         },
       })
 
-      -- Obsidian keymap
+      -- Enhanced Obsidian keymaps
       vim.keymap.set("n", "gf", function()
         if require("obsidian").util.cursor_on_markdown_link() then
           return "<cmd>ObsidianFollowLink<CR>"
         else
           return "gf"
         end
-      end, { noremap = false, expr = true })
+      end, { noremap = false, expr = true, desc = "Follow Obsidian link" })
+      
+      -- Additional useful keymaps
+      vim.keymap.set("n", "<leader>oc", "<cmd>ObsidianTOC<CR>", { desc = "Obsidian TOC" })
+      vim.keymap.set("n", "<leader>ob", "<cmd>ObsidianBacklinks<CR>", { desc = "Obsidian backlinks" })
+      vim.keymap.set("n", "<leader>ot", "<cmd>ObsidianTags<CR>", { desc = "Obsidian tags" })
+      vim.keymap.set("n", "<leader>on", "<cmd>ObsidianNew<CR>", { desc = "New Obsidian note" })
+      vim.keymap.set("n", "<leader>os", "<cmd>ObsidianSearch<CR>", { desc = "Search Obsidian notes" })
     end,
   },
 
