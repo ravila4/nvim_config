@@ -63,14 +63,14 @@ return {
             path = "~/Documents/Obsidian-Notes",
           },
         },
-        
+
         -- Enhanced completion configuration
         completion = {
           nvim_cmp = true,
           min_chars = 2,
           new_notes_location = "current_dir",
         },
-        
+
         -- Picker configuration (uses telescope by default)
         picker = {
           name = "telescope.nvim",
@@ -79,26 +79,26 @@ return {
             insert_link = "<C-l>", -- Insert link to note
           },
         },
-        
+
         -- Daily notes configuration (matches your existing structure)
         daily_notes = {
           folder = "Daily Log",
           date_format = "%Y-%m-%d",
           alias_format = "%B %d, %Y",
         },
-        
+
         -- UI configuration - keep disabled for markview compatibility
         ui = {
           enable = false, -- Let markview handle rendering
           update_debounce = 200,
           checkboxes = {},
         },
-        
+
         -- Attachment configuration (matches your _images pattern)
         attachments = {
           img_folder = "_images",
         },
-        
+
         -- Note path and ID generation
         note_id_func = function(title)
           local suffix = ""
@@ -111,7 +111,7 @@ return {
           end
           return tostring(os.date("%Y-%m-%d")) .. "_" .. suffix
         end,
-        
+
         -- Template configuration (matches your existing Templates folder)
         templates = {
           subdir = "Templates",
@@ -128,7 +128,7 @@ return {
           return "gf"
         end
       end, { noremap = false, expr = true, desc = "Follow Obsidian link" })
-      
+
       -- Additional useful keymaps
       vim.keymap.set("n", "<leader>oc", "<cmd>ObsidianTOC<CR>", { desc = "Obsidian TOC" })
       vim.keymap.set("n", "<leader>ob", "<cmd>ObsidianBacklinks<CR>", { desc = "Obsidian backlinks" })

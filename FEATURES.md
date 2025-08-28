@@ -94,6 +94,8 @@ All menu items are clickable with mouse and mapped to actual commands; items tha
 | `<leader>mt` | **Terminal/REPL** | Python REPL, R console, IPython, split terminals |
 | `<leader>mp` | **Layout Control** | Toggle panels, full IDE layout, zen mode, zoom |
 | `<leader>md` | **Debug Tools** | Breakpoints, debugging controls (ready for nvim-dap) |
+| `<leader>mc` | **Claude Code** | AI assistance, context sending, diff management |
+| `<leader>mk` | **Test Runner** | Run tests, test summary, debug tests |
 
 ### Bioinformatics Workflow Features
 - **Python REPL**: Quick access to Python console for data analysis
@@ -101,6 +103,82 @@ All menu items are clickable with mouse and mapped to actual commands; items tha
 - **IPython**: Enhanced interactive Python with rich output
 - **Split Terminals**: Multiple terminals for complex workflows
 - **Quick File Navigation**: Perfect for large bioinformatics projects
+
+## Claude Code AI Integration
+
+### Overview
+Seamless integration with Claude Code for AI-assisted development directly within Neovim.
+
+### Core Features
+- **Smart Context Detection**: Automatically detects what to send based on cursor position
+- **Telescope Integration**: Beautiful picker for selecting context to send
+- **Diff Management**: Accept/deny AI suggestions with visual diff
+- **Menu Integration**: Full integration with existing menu system
+
+### Key Bindings
+| Key | Action | Description |
+|-----|--------|-------------|
+| `<leader>cc` | Toggle Claude Code | Open/close Claude Code terminal |
+| `<leader>cf` | Focus Claude Code | Focus on Claude Code window |
+| `<leader>cs` | Smart Context | Send intelligent context based on cursor |
+| `<leader>cp` | Context Picker | Telescope picker for context selection |
+| `<leader>cm` | Select Model | Choose Claude model |
+| `<leader>ca` | Accept Diff | Accept AI suggestions |
+| `<leader>cd` | Deny Diff | Reject AI suggestions |
+| `<leader>mc` | Claude Menu | Open Claude Code menu |
+
+### Smart Context Features
+The smart context system (`<leader>cs`) intelligently determines what to send:
+
+1. **Visual Selection**: If text is selected, sends the selection
+2. **Error Context**: If cursor is on a diagnostic, sends file + error context
+3. **Symbol Context**: If cursor is on a function/variable, sends relevant code
+4. **Fallback**: Opens context picker for manual selection
+
+### Context Picker Options
+The telescope context picker (`<leader>cp`) provides:
+
+- **📄 Current file**: Send currently open file
+- **🔍 Current function/symbol**: Send code around cursor
+- **👁 Visual selection**: Send currently selected text
+- **📚 All open buffers**: Send all open files for project context
+- **📊 Git diff (staged)**: Send staged changes for review
+- **📊 Git diff (working)**: Send working tree changes
+- **📦 Project files**: Auto-detected config files (package.json, requirements.txt, etc.)
+- **📋 README**: Project documentation for context
+
+### Menu Integration
+Claude Code is fully integrated into the context menu system:
+
+- **Main Menu**: `Ctrl-t` → Claude Code
+- **Direct Menu**: `<leader>mc` → Claude Code menu
+- **Right-click**: Context menu includes Claude Code options
+
+### Workflow Examples
+
+#### Code Review Workflow
+1. Make changes to your code
+2. `<leader>cs` → Automatically sends file context
+3. Ask Claude to review your changes
+4. Use `<leader>ca` to accept suggestions
+
+#### Debugging Workflow
+1. Place cursor on error/warning
+2. `<leader>cs` → Sends error context automatically
+3. Claude analyzes the issue
+4. Apply fixes with diff management
+
+#### Project Context Workflow
+1. `<leader>cp` → Open context picker
+2. Select "All open buffers" and relevant config files
+3. Ask Claude about architecture or implementation
+4. Get comprehensive project-aware assistance
+
+### Advanced Features
+- **WebSocket Integration**: Real-time communication with Claude Code CLI
+- **Diff Visualization**: Native Neovim diff view for AI suggestions
+- **Model Selection**: Switch between different Claude models
+- **Context History**: Track what context was sent for better conversations
 
 ## VSCode-Style Tabs
 
