@@ -17,7 +17,7 @@ return {
         experimental = {
           check_rtp_message = false, -- Hide the runtime path warning message
         },
-        
+
         -- Preview configuration
         preview = {
           filetypes = { "markdown", "quarto", "rmd" }, -- Moved from top level
@@ -36,7 +36,7 @@ return {
           },
         },
       })
-      
+
       -- Keybindings for markview
       vim.keymap.set("n", "<leader>mv", ":Markview toggleAll<CR>", { desc = "Toggle Markview" })
       vim.keymap.set("n", "<leader>ms", ":Markview splitToggle<CR>", { desc = "Markview split toggle" })
