@@ -46,7 +46,7 @@ return {
         },
         lsp = {
           auto_attach = true,
-          preference = nil, -- Use default order (pyright first for Python files)
+          preference = { "r_language_server", "pyright", "otter-ls" }, -- Prefer r_language_server for R, pyright for Python
         },
         highlight = true, -- Use LSP semantic tokens for syntax highlighting
         separator = " > ", -- Breadcrumb separator
