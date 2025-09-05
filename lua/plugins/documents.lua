@@ -95,8 +95,10 @@ return {
         completion = {
           nvim_cmp = true,
           min_chars = 2,
-          new_notes_location = "current_dir",
         },
+        
+        -- Note creation location
+        new_notes_location = "current_dir",
 
         -- Picker configuration (uses telescope by default)
         picker = {
@@ -118,8 +120,10 @@ return {
         ui = {
           enable = false, -- Let markview handle rendering
           update_debounce = 200,
-          checkboxes = {},
         },
+        
+        -- Disable legacy commands to avoid deprecation warnings
+        legacy_commands = false,
 
         -- Attachment configuration (matches your _images pattern)
         attachments = {

@@ -185,7 +185,6 @@ return {
           markdown = {
             enabled = true,
             clear_in_insert_mode = false,
-            download_remote_images = true,
             only_render_image_at_cursor = false,
             filetypes = { "markdown", "quarto", "rmd" },
           },
@@ -194,6 +193,20 @@ return {
         max_height_window_percentage = 50,
         window_overlap_clear_enabled = true, -- Prevent overlapping text
         window_overlap_clear_ft_ignore = { "cmp_menu", "cmp_docs", "" },
+        -- Document-specific sizing to prevent whitespace issues
+        doc = {
+          max_width = 80,  -- Reasonable inline width
+          max_height = 40, -- Prevent excessive height
+        },
+        -- Image scaling and conversion options
+        convert = {
+          magick = {
+            default = { "-scale", "1920x1080>", "-quality", "85" }, -- Scale down large images
+            vector = { "-density", 300, "{src}[0]" }, -- Higher quality SVG rendering
+          },
+        },
+        -- Auto-resize to handle window changes and scrolling
+        auto_resize = true,
         -- Custom path resolution for Obsidian vault images
         resolve = function(file, src)
           local obsidian_vault = vim.fn.expand("~/Documents/Obsidian-Notes")
