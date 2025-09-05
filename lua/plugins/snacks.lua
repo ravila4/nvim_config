@@ -207,6 +207,10 @@ return {
         },
         -- Auto-resize to handle window changes and scrolling
         auto_resize = true,
+        -- LaTeX math rendering support
+        math = {
+          enabled = false, -- Disable to avoid conflicts with markview LaTeX rendering
+        },
         -- Custom path resolution for Obsidian vault images
         resolve = function(file, src)
           local obsidian_vault = vim.fn.expand("~/Documents/Obsidian-Notes")
@@ -396,7 +400,7 @@ return {
           require("snacks").image.setup()
         end
       end, 100)
-      
+
       vim.api.nvim_create_autocmd("User", {
         pattern = "VeryLazy",
         callback = function()

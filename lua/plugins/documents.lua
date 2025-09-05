@@ -38,6 +38,22 @@ return {
             enable = false,
           },
         },
+        -- Enable LaTeX math rendering
+        latex = {
+          enable = true,
+          blocks = {
+            enable = true, -- Enable display math ($$...$$)
+            hl = "MarkviewCode", -- Highlight group for display math blocks
+            text = "  LaTeX ", -- Text shown for display math blocks
+          },
+          inlines = {
+            enable = true, -- Enable inline math ($...$)
+            hl = "MarkviewInlineCode", -- Highlight group for inline math
+          },
+          fonts = { enable = true },     -- Font styling (\mathbb, \mathcal, etc.)
+          commands = { enable = true },  -- LaTeX commands (\frac, \sum, etc.)
+          symbols = { enable = true },   -- Mathematical symbols
+        },
         -- Experimental settings
         experimental = {
           check_rtp_message = false, -- Hide the runtime path warning message
@@ -96,7 +112,7 @@ return {
           nvim_cmp = true,
           min_chars = 2,
         },
-        
+
         -- Note creation location
         new_notes_location = "current_dir",
 
@@ -121,7 +137,7 @@ return {
           enable = false, -- Let markview handle rendering
           update_debounce = 200,
         },
-        
+
         -- Disable legacy commands to avoid deprecation warnings
         legacy_commands = false,
 

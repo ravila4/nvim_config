@@ -4,6 +4,7 @@ return {
     build = ":TSUpdate",
     event = { "BufReadPre", "BufNewFile" },
     dependencies = {
+      "OXY2DEV/markview.nvim", -- Ensure markview loads before treesitter
       "nvim-treesitter/nvim-treesitter-textobjects",
     },
     config = function()
@@ -22,6 +23,7 @@ return {
           "lua",
           "markdown",
           "markdown_inline",
+          "latex", -- For LaTeX math rendering in markview
         },
         sync_install = false,
         auto_install = true,
