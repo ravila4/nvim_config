@@ -12,13 +12,37 @@ return {
       "nvim-tree/nvim-web-devicons",
     },
     config = function()
-      require("markview").setup({
+      local markview = require("markview")
+      local presets = require("markview.presets")
+
+      markview.setup({
+        markdown = {
+          headings = {
+            enable = true,
+            heading_1 = { style = "icon", icon = "# ", sign = "" },
+            heading_2 = { style = "icon", icon = "## ", sign = "" },
+            heading_3 = { style = "icon", icon = "### ", sign = "" },
+            heading_4 = { style = "icon", icon = "#### ", sign = "" },
+            heading_5 = { style = "icon", icon = "##### ", sign = "" },
+            heading_6 = { style = "icon", icon = "###### ", sign = "" },
+          },
+          code_blocks = {
+            enable = true,
+            sign = false,
+          },
+          horizontal_rules = presets.horizontal_rules.thin,
+        },
+        -- Disable markview's image handling - let snacks.image handle it
+        markdown_inline = {
+          images = {
+            enable = false,
+          },
+        },
         -- Experimental settings
         experimental = {
           check_rtp_message = false, -- Hide the runtime path warning message
         },
 
-        -- Preview configuration
         preview = {
           filetypes = { "markdown", "quarto", "rmd" }, -- Moved from top level
           modes = { "n", "no", "c" }, -- Normal, operator-pending, command modes
@@ -28,6 +52,9 @@ return {
             on_enable = function()
               -- Disable conflicting plugins temporarily
               vim.cmd("TSBufDisable highlight") -- Avoid conflicts
+              -- Enable line wrapping for markdown
+              vim.opt_local.wrap = true
+              vim.opt_local.linebreak = true
             end,
             on_disable = function()
               -- Re-enable when markview is disabled

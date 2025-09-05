@@ -26,6 +26,7 @@ return {
 
       dashboard = {
         enabled = true,
+        disable_move = true,
         preset = {
           keys = {
             { icon = " ", key = "f", desc = "Find File", action = ":lua Snacks.dashboard.pick('files')" },
@@ -91,13 +92,20 @@ return {
  ██║╚██╗██║██╔══╝  ██║   ██║╚██╗ ██╔╝██║██║╚██╔╝██║
  ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
  ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝
-
-  Your Next-Gen Bioinformatics IDE  
-
 ]],
         },
         sections = {
-          { section = "header" },
+          { section = "header",
+            hl = "SnacksDashboardHeader",
+          },
+          {
+            section = "terminal",
+            cmd = vim.fn.stdpath("config") .. "/scripts/bio-greeting.sh",
+            hl = "SnacksDashboardDesc",
+            height = 3,
+            ttl = 300, -- Cache for 5 minutes
+            align = "center",
+          },
           { section = "keys", gap = 1, padding = 1 },
           { pane = 2, icon = " ", title = "Recent Files", section = "recent_files", indent = 2, padding = 1 , limit = 10 },
           { pane = 2, icon = " ", title = "Projects", section = "projects", indent = 2, padding = 1, limit = 10 },
@@ -167,6 +175,45 @@ return {
           duration = { step = 15, total = 250 },
           easing = "linear",
         },
+      },
+
+      -- Native image display for markdown, obsidian, and notebooks
+      image = {
+        enabled = true,
+        backend = "kitty", -- Good for Ghostty terminal
+        integrations = {
+          markdown = {
+            enabled = true,
+            clear_in_insert_mode = false,
+            download_remote_images = true,
+            only_render_image_at_cursor = false,
+            filetypes = { "markdown", "quarto", "rmd" },
+          },
+        },
+        max_width = 120, -- Match your zen mode width
+        max_height_window_percentage = 50,
+        window_overlap_clear_enabled = true, -- Prevent overlapping text
+        window_overlap_clear_ft_ignore = { "cmp_menu", "cmp_docs", "" },
+        -- Custom path resolution for Obsidian vault images
+        resolve = function(file, src)
+          local obsidian_vault = vim.fn.expand("~/Documents/Obsidian-Notes")
+          -- Only apply custom resolution for files in Obsidian vault
+          if file:match(vim.pesc(obsidian_vault)) then
+            -- If src is just a filename, use find to locate it
+            if not src:find("/") and not src:find("\\") then
+              local handle = io.popen('find "' .. obsidian_vault .. '" -name "' .. src .. '" -type f 2>/dev/null | head -1')
+              if handle then
+                local found_path = handle:read("*l")
+                handle:close()
+                if found_path and found_path ~= "" and vim.fn.filereadable(found_path) == 1 then
+                  return found_path
+                end
+              end
+            end
+          end
+          -- Return nil to use default resolution
+          return nil
+        end,
       },
 
       -- Indent guides
@@ -329,6 +376,14 @@ return {
       { "[[", function() Snacks.words.jump(-vim.v.count1) end, desc = "Prev Reference", mode = { "n", "t" } },
     },
     init = function()
+      -- Initialize image resolver early
+      vim.defer_fn(function()
+        if package.loaded["snacks"] and package.loaded["snacks"].image then
+          -- Force image module initialization
+          require("snacks").image.setup()
+        end
+      end, 100)
+      
       vim.api.nvim_create_autocmd("User", {
         pattern = "VeryLazy",
         callback = function()
@@ -417,6 +472,16 @@ return {
               set_word_highlights()
               set_zen_backdrop()
               set_indent_highlights()
+            end,
+          })
+
+          -- Ensure snacks.image is ready for markdown files
+          vim.api.nvim_create_autocmd("FileType", {
+            pattern = { "markdown", "quarto", "rmd" },
+            callback = function()
+              if package.loaded["snacks"] and require("snacks").image then
+                require("snacks").image.setup()
+              end
             end,
           })
         end,
