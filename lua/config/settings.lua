@@ -12,7 +12,7 @@ opt.number = true
 -- opt.relativenumber = true
 
 -- Highlight current line
-opt.cursorline = true
+opt.cursorline = false
 
 -- Tabbing
 opt.tabstop = 8
