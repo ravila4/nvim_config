@@ -17,7 +17,7 @@ return {
     "benlubas/molten-nvim",
     version = "^1.0.0", -- Use latest stable
     build = ":UpdateRemotePlugins",
-    ft = { "python", "julia", "r" },
+    ft = { "python", "julia", "r", "ipynb" },
     dependencies = {
       "3rd/image.nvim", -- For inline image rendering
     },
@@ -45,7 +45,7 @@ return {
       end
 
       vim.api.nvim_create_autocmd("FileType", {
-        pattern = { "python", "julia", "r" },
+        pattern = { "python", "julia", "r", "ipynb" },
         callback = function()
           -- Molten-specific mappings (prefix: <leader>m)
           map("n", "<leader>mi", ":MoltenInit<CR>", "[Molten] Initialize kernel")
@@ -90,6 +90,18 @@ return {
         window_overlap_clear_enabled = false,
         window_overlap_clear_ft_ignore = { "cmp_menu", "cmp_docs", "" },
       })
+    end,
+  },
+
+  -- Jupytext.vim for .ipynb file conversion to readable text format
+  {
+    "goerz/jupytext.vim",
+    lazy = false, -- Must load immediately to handle .ipynb file conversion
+    config = function()
+      -- Basic configuration for jupytext.vim
+      vim.g.jupytext_enable = 1
+      vim.g.jupytext_fmt = "py:percent" -- Convert to Python with %% cell markers
+      vim.g.jupytext_command = "jupytext"
     end,
   },
 

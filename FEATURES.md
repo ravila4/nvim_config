@@ -267,6 +267,33 @@ Claude Code is fully integrated into the context menu system:
 
 ### Jupyter Notebook Integration
 
+Your IDE provides **seamless Jupyter notebook editing** with automatic conversion to readable Python format. When you open `.ipynb` files, they're automatically converted to Python files with `# %%` cell markers for easier editing, while preserving all notebook functionality.
+
+#### Jupyter Notebook Features
+- **Automatic Conversion**: `.ipynb` files display as readable Python with `# %%` cell markers
+- **Syntax Highlighting**: Full Python LSP support (pyright) with autocomplete and diagnostics  
+- **Bi-directional Sync**: Changes save back to original `.ipynb` format
+- **Molten Integration**: VSCode-like inline execution and output display
+- **Git Friendly**: Edit notebooks as text for better version control
+
+#### Jupyter Notebook Commands
+| Key | Action | Description |
+|-----|--------|-------------|
+| `<leader>mi` | Initialize kernel | Start Jupyter kernel for notebook |
+| `<leader>jr` | Run cell | Execute cell at cursor |
+| `<leader>ml` | Run line | Execute current line |
+| `<leader>mc` | Re-run cell | Re-execute current cell |
+| `<leader>mr` | Run selection | Execute highlighted code |
+| `<leader>ms` | Show output | Display cell output |
+| `<leader>mh` | Hide output | Hide cell output |
+| `<leader>md` | Delete cell | Remove cell and output |
+| `<leader>mq` | Quit kernel | Stop kernel session |
+
+#### Setup Requirements
+- **Jupytext**: Installed globally with `uv tool install jupytext`
+- **Terminal**: Kitty or compatible for image display (optional)
+- **Python Environment**: Local Python with desired packages
+
 Your IDE supports **three complementary Jupyter workflows** designed for different bioinformatics scenarios. Each tool excels in specific situations and they can work together seamlessly.
 
 ## 🎯 Three-Tool Strategy Overview

@@ -158,6 +158,19 @@ return {
           { name = "󰜺 Deny Diff", cmd = "ClaudeCodeDiffDeny", rtxt = "cr" },
         },
 
+        jupyter_menu = {
+          { name = "🚀 Initialize Kernel", cmd = "MoltenInit", rtxt = "mi" },
+          { name = "▶️ Run Cell", cmd = "MoltenEvaluateLine", rtxt = "jr" },
+          { name = "🔄 Re-run Cell", cmd = "MoltenReevaluateCell", rtxt = "mc" },
+          { name = "📊 Run Selection", cmd = "MoltenEvaluateVisual", rtxt = "mr" },
+          { name = "separator" },
+          { name = "👁 Show Output", cmd = "MoltenShowOutput", rtxt = "ms" },
+          { name = "🙈 Hide Output", cmd = "MoltenHideOutput", rtxt = "mh" },
+          { name = "🗑️ Delete Cell", cmd = "MoltenDelete", rtxt = "md" },
+          { name = "separator" },
+          { name = "🛑 Quit Kernel", cmd = "MoltenDeinit", rtxt = "mq" },
+        },
+
         context_menu = {
           { name = " File Operations", cmd = "FileMenu", rtxt = "mf" },
           { name = "separator" },
@@ -211,6 +224,7 @@ return {
       vim.api.nvim_create_user_command("DebugMenu", function() menu.open(normalize_menu(_G.ide_menus.debug_menu), _G.ide_menus._menu_opts()) end, {})
       vim.api.nvim_create_user_command("TestMenu", function() menu.open(normalize_menu(_G.ide_menus.test_menu), _G.ide_menus._menu_opts()) end, {})
       vim.api.nvim_create_user_command("ClaudeMenu", function() menu.open(normalize_menu(_G.ide_menus.claude_menu), _G.ide_menus._menu_opts()) end, {})
+      vim.api.nvim_create_user_command("JupyterMenu", function() menu.open(normalize_menu(_G.ide_menus.jupyter_menu), _G.ide_menus._menu_opts()) end, {})
       vim.api.nvim_create_user_command("ContextMenu", function() menu.open(normalize_menu(_G.ide_menus.context_menu), _G.ide_menus._menu_opts()) end, {})
 
       -- Right-click context menu with copy/paste + IDE entries
@@ -218,8 +232,17 @@ return {
         if vim.bo.filetype == 'snacks_dashboard' or vim.bo.filetype == 'dashboard' then
           return
         end
-        -- Use the same context menu as Ctrl-t for consistency
-        menu.open(normalize_menu(_G.ide_menus.context_menu), _G.ide_menus._menu_opts())
+        
+        -- Create dynamic context menu - add Jupyter submenu for .ipynb files
+        local context_menu = vim.deepcopy(_G.ide_menus.context_menu)
+        local filename = vim.fn.expand('%:t')
+        
+        if filename:match('%.ipynb$') then
+          -- Add Jupyter menu item to the context menu for notebook files
+          table.insert(context_menu, #context_menu, { name = "📓 Jupyter Notebook", cmd = "JupyterMenu", rtxt = "mj" })
+        end
+        
+        menu.open(normalize_menu(context_menu), _G.ide_menus._menu_opts())
       end, {})
     end,
     keys = {
@@ -240,6 +263,7 @@ return {
       { "<leader>md", "<cmd>DebugMenu<cr>", desc = "Debug Menu" },
       { "<leader>mk", "<cmd>TestMenu<cr>", desc = "Test Menu" },
       { "<leader>mC", "<cmd>ClaudeMenu<cr>", desc = "Claude Code Menu" },
+      { "<leader>mj", "<cmd>JupyterMenu<cr>", desc = "Jupyter Menu" },
 
       -- Right-click context menu support
       { "<RightMouse>", function()

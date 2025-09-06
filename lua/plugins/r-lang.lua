@@ -14,9 +14,4 @@ return {
     end,
   },
 
-  -- Jupyter notebook support (including R notebooks)
-  {
-    "goerz/jupytext.vim",
-    ft = { "ipynb", "jupytext" },
-  },
 }
