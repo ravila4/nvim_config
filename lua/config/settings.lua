@@ -42,6 +42,9 @@ opt.wildmenu = true
 opt.wildmode = "list"
 opt.mouse = "a"
 
+-- Leader key timeout (default is 1000ms)
+opt.timeoutlen = 800 -- Slightly shorter than default for better responsiveness
+
 -- GUI settings
 opt.mousehide = false
 opt.mousemodel = "popup"

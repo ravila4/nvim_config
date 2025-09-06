@@ -28,7 +28,10 @@ return {
       -- UI adjustments for Firenvim
       local function on_ui_enter()
         vim.opt.guifont = "AndaleMono:h9"
-        vim.keymap.set("n", "<space>", ":set lines=28 columns=110<CR>")
+        -- Only set this keybinding when actually in Firenvim
+        if vim.g.started_by_firenvim then
+          vim.keymap.set("n", "<space>", ":set lines=28 columns=110<CR>")
+        end
 
         local fontsize = 9
         local function adjust_font_size(amount)

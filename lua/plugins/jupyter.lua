@@ -185,6 +185,25 @@ return {
           return "markdown"
         end,
       })
+      
+      -- Ensure proper markdown detection and syntax highlighting for converted notebooks
+      vim.api.nvim_create_autocmd({"BufRead", "BufNewFile"}, {
+        pattern = "*.ipynb",
+        callback = function()
+          -- Force markdown filetype and enable syntax highlighting
+          vim.bo.filetype = "markdown"
+          -- Enable treesitter highlighting
+          vim.defer_fn(function()
+            if vim.bo.filetype == "markdown" then
+              vim.cmd("TSBufEnable highlight")
+              -- Trigger markview if available
+              if pcall(require, "markview") then
+                vim.cmd("Markview enable")
+              end
+            end
+          end, 100)
+        end,
+      })
     end,
   },
 
