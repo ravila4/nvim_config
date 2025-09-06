@@ -79,10 +79,16 @@ return {
           args = { "check", "--select", "I", "--fix", "--stdin-filename", "$FILENAME", "-" },
           stdin = true,
         },
-        -- Prettier with custom config
+        -- Prettier (using system installation)
         prettier = {
           command = "prettier",
           args = { "--stdin-filepath", "$FILENAME" },
+          stdin = true,
+        },
+        -- Stylua with 2-space indentation
+        stylua = {
+          command = "stylua",
+          args = { "--indent-type", "Spaces", "--indent-width", "2", "--stdin-filepath", "$FILENAME", "-" },
           stdin = true,
         },
       },

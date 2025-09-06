@@ -28,9 +28,9 @@ opt.ignorecase = true
 opt.smartcase = true
 
 -- Text wrapping
-opt.wrap = false        -- Disable line wrapping by default
-opt.linebreak = true    -- When wrapping is enabled, break at word boundaries
-opt.showbreak = "↳ "    -- Visual indicator for wrapped lines
+opt.wrap = false -- Disable line wrapping by default
+opt.linebreak = true -- When wrapping is enabled, break at word boundaries
+opt.showbreak = "↳ " -- Visual indicator for wrapped lines
 
 -- Misc
 opt.encoding = "utf8"
@@ -83,7 +83,7 @@ vim.api.nvim_create_autocmd("ColorScheme", {
     -- Use a subtle red that works in both light and dark modes
     vim.api.nvim_set_hl(0, "TrailingSpaces", {
       bg = vim.o.background == "dark" and "#3c1e1e" or "#ffe6e6",
-      fg = vim.o.background == "dark" and "#ff6b6b" or "#cc0000"
+      fg = vim.o.background == "dark" and "#ff6b6b" or "#cc0000",
     })
   end,
 })
@@ -99,8 +99,19 @@ vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
 
       -- Skip special buffers and floating windows
       local skip_filetypes = {
-        "lazy", "mason", "neo-tree", "telescope", "dashboard", "snacks_dashboard",
-        "help", "terminal", "qf", "trouble", "fugitive", "defx", ""
+        "lazy",
+        "mason",
+        "neo-tree",
+        "telescope",
+        "dashboard",
+        "snacks_dashboard",
+        "help",
+        "terminal",
+        "qf",
+        "trouble",
+        "fugitive",
+        "defx",
+        "",
       }
 
       if buftype == "" and not vim.tbl_contains(skip_filetypes, filetype) and filetype ~= "" then
@@ -116,7 +127,20 @@ vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
 -- Clear trailing space highlighting for special filetypes
 vim.api.nvim_create_autocmd("FileType", {
   group = "TrailingSpace",
-  pattern = { "lazy", "mason", "neo-tree", "telescope", "dashboard", "snacks_dashboard", "help", "terminal", "qf", "trouble", "fugitive", "defx" },
+  pattern = {
+    "lazy",
+    "mason",
+    "neo-tree",
+    "telescope",
+    "dashboard",
+    "snacks_dashboard",
+    "help",
+    "terminal",
+    "qf",
+    "trouble",
+    "fugitive",
+    "defx",
+  },
   callback = function()
     vim.fn.clearmatches()
   end,
@@ -126,7 +150,7 @@ vim.api.nvim_create_autocmd("FileType", {
 vim.defer_fn(function()
   vim.api.nvim_set_hl(0, "TrailingSpaces", {
     bg = vim.o.background == "dark" and "#3c1e1e" or "#ffe6e6",
-    fg = vim.o.background == "dark" and "#ff6b6b" or "#cc0000"
+    fg = vim.o.background == "dark" and "#ff6b6b" or "#cc0000",
   })
 end, 200)
 
@@ -137,8 +161,19 @@ vim.api.nvim_create_user_command("DeleteTrailingSpaces", function()
 
   -- Skip special buffers (same logic as highlighting)
   local skip_filetypes = {
-    "lazy", "mason", "neo-tree", "telescope", "dashboard", "snacks_dashboard",
-    "help", "terminal", "qf", "trouble", "fugitive", "defx", ""
+    "lazy",
+    "mason",
+    "neo-tree",
+    "telescope",
+    "dashboard",
+    "snacks_dashboard",
+    "help",
+    "terminal",
+    "qf",
+    "trouble",
+    "fugitive",
+    "defx",
+    "",
   }
 
   if buftype ~= "" or vim.tbl_contains(skip_filetypes, filetype) or filetype == "" then
@@ -153,9 +188,9 @@ vim.api.nvim_create_user_command("DeleteTrailingSpaces", function()
   local lines_with_trailing = 0
   local total_trailing_chars = 0
 
-  for line_num = 1, vim.fn.line('$') do
+  for line_num = 1, vim.fn.line("$") do
     local line = vim.fn.getline(line_num)
-    local trailing = line:match('%s+$')
+    local trailing = line:match("%s+$")
     if trailing then
       lines_with_trailing = lines_with_trailing + 1
       total_trailing_chars = total_trailing_chars + #trailing
@@ -181,7 +216,7 @@ vim.api.nvim_create_user_command("DeleteTrailingSpaces", function()
 
   print(string.format("Removed %d trailing characters from %d lines", total_trailing_chars, lines_with_trailing))
 end, {
-  desc = "Delete all trailing spaces in current buffer"
+  desc = "Delete all trailing spaces in current buffer",
 })
 
 -- Add a mapping for convenience
@@ -200,12 +235,14 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
       for _, buf in ipairs(bufs) do
         local bufname = vim.api.nvim_buf_get_name(buf)
         local buftype = vim.bo[buf].buftype
-        if buftype ~= "" or
-           bufname:match("OUTLINE") or
-           bufname:match("neo%-tree") or
-           bufname:match("snacks_explorer") or
-           bufname:match("Outline") then
-          pcall(vim.api.nvim_buf_delete, buf, {force = true})
+        if
+          buftype ~= ""
+          or bufname:match("OUTLINE")
+          or bufname:match("neo%-tree")
+          or bufname:match("snacks_explorer")
+          or bufname:match("Outline")
+        then
+          pcall(vim.api.nvim_buf_delete, buf, { force = true })
         end
       end
       require("persistence").save()
@@ -224,10 +261,9 @@ vim.api.nvim_create_autocmd("User", {
       for _, buf in ipairs(bufs) do
         local bufname = vim.api.nvim_buf_get_name(buf)
         if bufname:match("OUTLINE") or bufname:match("Outline") then
-          pcall(vim.api.nvim_buf_delete, buf, {force = true})
+          pcall(vim.api.nvim_buf_delete, buf, { force = true })
         end
       end
     end, 100)
   end,
 })
-

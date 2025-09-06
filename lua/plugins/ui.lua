@@ -24,7 +24,7 @@ return {
               sources = { "nvim_lsp", "nvim_diagnostic" },
               sections = { "error", "warn", "info", "hint" },
               symbols = {
-                error ="",
+                error = "",
                 warn = "󱈸",
                 info = "󰙎",
                 hint = "",
@@ -35,7 +35,7 @@ return {
           lualine_x = {
             "encoding",
             "fileformat",
-            "filetype"
+            "filetype",
           },
           lualine_y = {
             {
@@ -68,9 +68,9 @@ return {
                   return { fg = palette.teal }
                 end
               end,
-            }
+            },
           },
-          lualine_z = { "location", "progress" }
+          lualine_z = { "location", "progress" },
         },
         inactive_sections = {
           lualine_a = {},
@@ -78,7 +78,7 @@ return {
           lualine_c = { "filename" },
           lualine_x = { "location" },
           lualine_y = {},
-          lualine_z = {}
+          lualine_z = {},
         },
       })
     end,
@@ -99,20 +99,20 @@ return {
     config = function()
       require("gitsigns").setup({
         signs = {
-          add          = { text = '┃' },
-          change       = { text = '┃' },
-          delete       = { text = '_' },
-          topdelete    = { text = '‾' },
-          changedelete = { text = '~' },
-          untracked    = { text = '┆' },
+          add = { text = "┃" },
+          change = { text = "┃" },
+          delete = { text = "_" },
+          topdelete = { text = "‾" },
+          changedelete = { text = "~" },
+          untracked = { text = "┆" },
         },
         signs_staged = {
-          add          = { text = '┃' },
-          change       = { text = '┃' },
-          delete       = { text = '_' },
-          topdelete    = { text = '‾' },
-          changedelete = { text = '~' },
-          untracked    = { text = '┆' },
+          add = { text = "┃" },
+          change = { text = "┃" },
+          delete = { text = "_" },
+          topdelete = { text = "‾" },
+          changedelete = { text = "~" },
+          untracked = { text = "┆" },
         },
       })
 
@@ -122,12 +122,12 @@ return {
 
         if is_dark then
           -- Dark theme - softer colors for better visibility
-          vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#4ec9b0" })          -- Teal green
-          vim.api.nvim_set_hl(0, "GitSignsChange", { fg = "#dcdcaa" })       -- Light yellow
-          vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#f48771" })       -- Light red
-          vim.api.nvim_set_hl(0, "GitSignsTopdelete", { fg = "#f48771" })    -- Light red
+          vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#4ec9b0" }) -- Teal green
+          vim.api.nvim_set_hl(0, "GitSignsChange", { fg = "#dcdcaa" }) -- Light yellow
+          vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#f48771" }) -- Light red
+          vim.api.nvim_set_hl(0, "GitSignsTopdelete", { fg = "#f48771" }) -- Light red
           vim.api.nvim_set_hl(0, "GitSignsChangedelete", { fg = "#d19a66" }) -- Orange
-          vim.api.nvim_set_hl(0, "GitSignsUntracked", { fg = "#569cd6" })    -- Light blue
+          vim.api.nvim_set_hl(0, "GitSignsUntracked", { fg = "#569cd6" }) -- Light blue
 
           -- Staged versions (50% opacity effect)
           vim.api.nvim_set_hl(0, "GitSignsStagedAdd", { fg = "#3a9688" })
@@ -136,13 +136,13 @@ return {
           vim.api.nvim_set_hl(0, "GitSignsStagedTopdelete", { fg = "#c16a5a" })
           vim.api.nvim_set_hl(0, "GitSignsStagedChangedelete", { fg = "#a67350" })
         else
-                    -- Dark theme - softer colors for better visibility
-          vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#4ec9b0" })          -- Teal green
-          vim.api.nvim_set_hl(0, "GitSignsChange", { fg = "#dcdcaa" })       -- Light yellow
-          vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#f48771" })       -- Light red
-          vim.api.nvim_set_hl(0, "GitSignsTopdelete", { fg = "#f48771" })    -- Light red
+          -- Dark theme - softer colors for better visibility
+          vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#4ec9b0" }) -- Teal green
+          vim.api.nvim_set_hl(0, "GitSignsChange", { fg = "#dcdcaa" }) -- Light yellow
+          vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#f48771" }) -- Light red
+          vim.api.nvim_set_hl(0, "GitSignsTopdelete", { fg = "#f48771" }) -- Light red
           vim.api.nvim_set_hl(0, "GitSignsChangedelete", { fg = "#d19a66" }) -- Orange
-          vim.api.nvim_set_hl(0, "GitSignsUntracked", { fg = "#569cd6" })    -- Light blue
+          vim.api.nvim_set_hl(0, "GitSignsUntracked", { fg = "#569cd6" }) -- Light blue
 
           -- Staged versions (50% opacity effect)
           vim.api.nvim_set_hl(0, "GitSignsStagedAdd", { fg = "#3a9688" })
@@ -171,17 +171,17 @@ return {
       lazy_load = true,
       filetypes = { "*", "!neo-tree", "!TelescopePrompt", "!snacks_dashboard" },
       user_default_options = {
-        RGB = true,          -- #RGB hex
-        RRGGBB = true,       -- #RRGGBB hex
-        names = false,        -- Named CSS colors
-        RRGGBBAA = true,     -- #RRGGBBAA hex
-        AARRGGBB = true,     -- 0xAARRGGBB
-        rgb_fn = true,       -- rgb()/rgba()
-        hsl_fn = true,       -- hsl()/hsla()
-        css = true,          -- Enable all CSS features: rgb_fn, hsl_fn, names, etc
-        css_fn = true,       -- Enable all CSS functions: rgb_fn, hsl_fn
+        RGB = true, -- #RGB hex
+        RRGGBB = true, -- #RRGGBB hex
+        names = false, -- Named CSS colors
+        RRGGBBAA = true, -- #RRGGBBAA hex
+        AARRGGBB = true, -- 0xAARRGGBB
+        rgb_fn = true, -- rgb()/rgba()
+        hsl_fn = true, -- hsl()/hsla()
+        css = true, -- Enable all CSS features: rgb_fn, hsl_fn, names, etc
+        css_fn = true, -- Enable all CSS functions: rgb_fn, hsl_fn
         mode = "background", -- Render mode: background|foreground|virtual
-        tailwind = true,     -- Recognize Tailwind colors
+        tailwind = true, -- Recognize Tailwind colors
         always_update = true,
       },
       buftypes = {},
@@ -212,65 +212,110 @@ return {
         auto = true,
         extra_groups = {
           -- Floating windows and popups
-          'NormalFloat', 'FloatBorder', 'FloatTitle',
+          "NormalFloat",
+          "FloatBorder",
+          "FloatTitle",
 
           -- Window splits and separators
-          'WinSeparator', 'VertSplit',
+          "WinSeparator",
+          "VertSplit",
 
           -- Telescope
-          'TelescopeNormal', 'TelescopeBorder', 'TelescopePromptNormal',
-          'TelescopePromptBorder', 'TelescopeResultsNormal', 'TelescopeResultsBorder',
-          'TelescopePreviewNormal', 'TelescopePreviewBorder',
+          "TelescopeNormal",
+          "TelescopeBorder",
+          "TelescopePromptNormal",
+          "TelescopePromptBorder",
+          "TelescopeResultsNormal",
+          "TelescopeResultsBorder",
+          "TelescopePreviewNormal",
+          "TelescopePreviewBorder",
 
           -- Neo-tree
-          'NeoTreeNormal', 'NeoTreeNormalNC', 'NeoTreeEndOfBuffer',
+          "NeoTreeNormal",
+          "NeoTreeNormalNC",
+          "NeoTreeEndOfBuffer",
 
           -- Bufferline (tabline)
-          'TabLine', 'TabLineFill', 'TabLineSel',
+          "TabLine",
+          "TabLineFill",
+          "TabLineSel",
 
           -- Diagnostic virtual text
-          'DiagnosticVirtualTextError', 'DiagnosticVirtualTextWarn',
-          'DiagnosticVirtualTextInfo', 'DiagnosticVirtualTextHint',
+          "DiagnosticVirtualTextError",
+          "DiagnosticVirtualTextWarn",
+          "DiagnosticVirtualTextInfo",
+          "DiagnosticVirtualTextHint",
 
           -- Snacks dashboard
-          'SnacksDashboardNormal', 'SnacksDashboardDesc', 'SnacksDashboardFile',
-          'SnacksDashboardDir', 'SnacksDashboardFooter', 'SnacksDashboardHeader',
-          'SnacksDashboardIcon', 'SnacksDashboardKey', 'SnacksDashboardTerminal',
-          'SnacksDashboardTitle', 'SnacksDashboardSpecial',
+          "SnacksDashboardNormal",
+          "SnacksDashboardDesc",
+          "SnacksDashboardFile",
+          "SnacksDashboardDir",
+          "SnacksDashboardFooter",
+          "SnacksDashboardHeader",
+          "SnacksDashboardIcon",
+          "SnacksDashboardKey",
+          "SnacksDashboardTerminal",
+          "SnacksDashboardTitle",
+          "SnacksDashboardSpecial",
 
           -- Git signs
-          'GitSignsAdd', 'GitSignsChange', 'GitSignsDelete',
+          "GitSignsAdd",
+          "GitSignsChange",
+          "GitSignsDelete",
 
           -- LSP and completion (non-selection items only)
-          'CmpItemAbbr', 'CmpItemAbbrMatch', 'CmpItemKind', 'CmpItemMenu',
+          "CmpItemAbbr",
+          "CmpItemAbbrMatch",
+          "CmpItemKind",
+          "CmpItemMenu",
 
           -- Outline
-          'OutlineNormal', 'OutlineCurrent',
+          "OutlineNormal",
+          "OutlineCurrent",
 
           -- Terminal
-          'TerminalNormal',
+          "TerminalNormal",
         },
         excludes = {
           -- Keep cursorline opaque for better readability
-          'CursorLine', 'CursorColumn', 'ColorColumn',
+          "CursorLine",
+          "CursorColumn",
+          "ColorColumn",
 
           -- Keep important UI elements opaque
-          'Visual', 'VisualNOS',
-          'Search', 'IncSearch', 'CurSearch',
-          'MatchParen',
-          'ErrorMsg', 'WarningMsg', 'ModeMsg', 'MoreMsg',
-          'Question', 'Title',
-          'DiffAdd', 'DiffChange', 'DiffDelete', 'DiffText',
-          'SpellBad', 'SpellCap', 'SpellLocal', 'SpellRare',
+          "Visual",
+          "VisualNOS",
+          "Search",
+          "IncSearch",
+          "CurSearch",
+          "MatchParen",
+          "ErrorMsg",
+          "WarningMsg",
+          "ModeMsg",
+          "MoreMsg",
+          "Question",
+          "Title",
+          "DiffAdd",
+          "DiffChange",
+          "DiffDelete",
+          "DiffText",
+          "SpellBad",
+          "SpellCap",
+          "SpellLocal",
+          "SpellRare",
 
           -- Keep statusline (lualine) opaque - StatusLine is the main highlight group
-          'StatusLine', 'StatusLineNC',
+          "StatusLine",
+          "StatusLineNC",
 
           -- Window separators for better structure visibility
-          'VertSplit', 'WinSeparator',
+          "VertSplit",
+          "WinSeparator",
 
           -- Telescope selection for better visibility
-          'TelescopeSelection', 'TelescopeSelectionCaret',
+          "TelescopeSelection",
+          "TelescopeSelectionCaret",
         },
       })
 
@@ -292,7 +337,6 @@ return {
 
             -- Fix dashboard directory icons
             vim.api.nvim_set_hl(0, "Directory", { bg = "NONE" })
-
           end, 100)
         end,
       })
@@ -453,14 +497,16 @@ return {
         local bufs = vim.api.nvim_list_bufs()
         for _, buf in ipairs(bufs) do
           local bufname = vim.api.nvim_buf_get_name(buf)
-          local buftype = vim.api.nvim_get_option_value("buftype", {buf = buf})
+          local buftype = vim.api.nvim_get_option_value("buftype", { buf = buf })
           -- Skip special buffers like outline, neo-tree, etc.
-          if buftype ~= "" or
-             string.match(bufname, "OUTLINE") or
-             string.match(bufname, "neo%-tree") or
-             string.match(bufname, "snacks_explorer") or
-             string.match(bufname, "Outline") then
-            vim.api.nvim_buf_delete(buf, {force = true})
+          if
+            buftype ~= ""
+            or string.match(bufname, "OUTLINE")
+            or string.match(bufname, "neo%-tree")
+            or string.match(bufname, "snacks_explorer")
+            or string.match(bufname, "Outline")
+          then
+            vim.api.nvim_buf_delete(buf, { force = true })
           end
         end
       end,
@@ -469,22 +515,30 @@ return {
     keys = {
       {
         "<leader>qs",
-        function() require("persistence").load() end,
+        function()
+          require("persistence").load()
+        end,
         desc = "Restore Session",
       },
       {
         "<leader>qS",
-        function() require("persistence").select() end,
+        function()
+          require("persistence").select()
+        end,
         desc = "Select Session",
       },
       {
         "<leader>ql",
-        function() require("persistence").load({ last = true }) end,
+        function()
+          require("persistence").load({ last = true })
+        end,
         desc = "Restore Last Session",
       },
       {
         "<leader>qd",
-        function() require("persistence").stop() end,
+        function()
+          require("persistence").stop()
+        end,
         desc = "Don't Save Current Session",
       },
       -- Named session functionality
@@ -581,7 +635,7 @@ return {
         hover = {
           enabled = true,
           delay = 200,
-          reveal = {'close'}
+          reveal = { "close" },
         },
         sort_by = "insert_at_end",
       },
@@ -776,5 +830,4 @@ return {
       { "]B", "<cmd>BufferLineMoveNext<cr>", desc = "Move buffer next" },
     },
   },
-
 }

@@ -21,7 +21,7 @@ return {
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = function()
           vim.api.nvim_set_hl(0, "ExBlack3Bg", { bg = "#3584e4", fg = "#ffffff" })
-        end
+        end,
       })
 
       local function normalize_menu(items)
@@ -140,12 +140,20 @@ return {
           { name = " Run All Tests", cmd = "lua require('neotest').run.run(vim.fn.getcwd())", rtxt = "ta" },
           { name = "separator" },
           { name = "  Test Summary", cmd = "lua require('neotest').summary.toggle()", rtxt = "ts" },
-          { name = " Show Output", cmd = "lua require('neotest').output.open({ enter = true, auto_close = true })", rtxt = "to" },
+          {
+            name = " Show Output",
+            cmd = "lua require('neotest').output.open({ enter = true, auto_close = true })",
+            rtxt = "to",
+          },
           { name = "  Toggle Output Panel", cmd = "lua require('neotest').output_panel.toggle()", rtxt = "tO" },
           { name = "separator" },
           { name = " Debug Test", cmd = "lua require('neotest').run.run({strategy = 'dap'})", rtxt = "td" },
           { name = "  Toggle Watch", cmd = "lua require('neotest').watch.toggle(vim.fn.expand('%'))", rtxt = "tw" },
-          { name = "  Test Error Details", cmd = "lua require('neotest').output.open({ enter = false, auto_close = false, short = false })", rtxt = "te" },
+          {
+            name = "  Test Error Details",
+            cmd = "lua require('neotest').output.open({ enter = false, auto_close = false, short = false })",
+            rtxt = "te",
+          },
           { name = " Stop Tests", cmd = "lua require('neotest').run.stop()", rtxt = "tS" },
         },
 
@@ -181,12 +189,20 @@ return {
           { name = " Layout Control", cmd = "LayoutMenu", rtxt = "mp" },
           { name = " Buffer Actions", cmd = "BufferMenu", rtxt = "mb" },
           { name = " Terminal/REPL", cmd = "TerminalMenu", rtxt = "mt" },
-        }
+        },
       }
 
       -- Add test runner and Claude Code to context menu
-      table.insert(_G.ide_menus.context_menu, #_G.ide_menus.context_menu, { name = "󰙨 Test Runner", cmd = "TestMenu", rtxt = "mk" })
-      table.insert(_G.ide_menus.context_menu, #_G.ide_menus.context_menu, { name = "󰛄 Claude Code", cmd = "ClaudeMenu", rtxt = "mC" })
+      table.insert(
+        _G.ide_menus.context_menu,
+        #_G.ide_menus.context_menu,
+        { name = "󰙨 Test Runner", cmd = "TestMenu", rtxt = "mk" }
+      )
+      table.insert(
+        _G.ide_menus.context_menu,
+        #_G.ide_menus.context_menu,
+        { name = "󰛄 Claude Code", cmd = "ClaudeMenu", rtxt = "mC" }
+      )
 
       -- Make menu utility functions globally available
       _G.ide_menus._normalize_menu = normalize_menu
@@ -209,51 +225,89 @@ return {
 
         return {
           mouse = true,
-          border = 'rounded',
-          winblend = 0,  -- No transparency for menu windows to ensure readability
+          border = "rounded",
+          winblend = 0, -- No transparency for menu windows to ensure readability
         }
       end
 
       -- Create user commands with theme-aware styling
-      vim.api.nvim_create_user_command("BufferMenu", function() menu.open(normalize_menu(_G.ide_menus.buffer_menu), _G.ide_menus._menu_opts()) end, {})
-      vim.api.nvim_create_user_command("LspMenu", function() menu.open(normalize_menu(_G.ide_menus.lsp_menu), _G.ide_menus._menu_opts()) end, {})
-      vim.api.nvim_create_user_command("GitMenu", function() menu.open(normalize_menu(_G.ide_menus.git_menu), _G.ide_menus._menu_opts()) end, {})
-      vim.api.nvim_create_user_command("TerminalMenu", function() menu.open(normalize_menu(_G.ide_menus.terminal_menu), _G.ide_menus._menu_opts()) end, {})
-      vim.api.nvim_create_user_command("FileMenu", function() menu.open(normalize_menu(_G.ide_menus.file_menu), _G.ide_menus._menu_opts()) end, {})
-      vim.api.nvim_create_user_command("LayoutMenu", function() menu.open(normalize_menu(_G.ide_menus.layout_menu), _G.ide_menus._menu_opts()) end, {})
-      vim.api.nvim_create_user_command("DebugMenu", function() menu.open(normalize_menu(_G.ide_menus.debug_menu), _G.ide_menus._menu_opts()) end, {})
-      vim.api.nvim_create_user_command("TestMenu", function() menu.open(normalize_menu(_G.ide_menus.test_menu), _G.ide_menus._menu_opts()) end, {})
-      vim.api.nvim_create_user_command("ClaudeMenu", function() menu.open(normalize_menu(_G.ide_menus.claude_menu), _G.ide_menus._menu_opts()) end, {})
-      vim.api.nvim_create_user_command("JupyterMenu", function() menu.open(normalize_menu(_G.ide_menus.jupyter_menu), _G.ide_menus._menu_opts()) end, {})
-      vim.api.nvim_create_user_command("ContextMenu", function() menu.open(normalize_menu(_G.ide_menus.context_menu), _G.ide_menus._menu_opts()) end, {})
+      vim.api.nvim_create_user_command("BufferMenu", function()
+        menu.open(normalize_menu(_G.ide_menus.buffer_menu), _G.ide_menus._menu_opts())
+      end, {})
+      vim.api.nvim_create_user_command("LspMenu", function()
+        menu.open(normalize_menu(_G.ide_menus.lsp_menu), _G.ide_menus._menu_opts())
+      end, {})
+      vim.api.nvim_create_user_command("GitMenu", function()
+        menu.open(normalize_menu(_G.ide_menus.git_menu), _G.ide_menus._menu_opts())
+      end, {})
+      vim.api.nvim_create_user_command("TerminalMenu", function()
+        menu.open(normalize_menu(_G.ide_menus.terminal_menu), _G.ide_menus._menu_opts())
+      end, {})
+      vim.api.nvim_create_user_command("FileMenu", function()
+        menu.open(normalize_menu(_G.ide_menus.file_menu), _G.ide_menus._menu_opts())
+      end, {})
+      vim.api.nvim_create_user_command("LayoutMenu", function()
+        menu.open(normalize_menu(_G.ide_menus.layout_menu), _G.ide_menus._menu_opts())
+      end, {})
+      vim.api.nvim_create_user_command("DebugMenu", function()
+        menu.open(normalize_menu(_G.ide_menus.debug_menu), _G.ide_menus._menu_opts())
+      end, {})
+      vim.api.nvim_create_user_command("TestMenu", function()
+        menu.open(normalize_menu(_G.ide_menus.test_menu), _G.ide_menus._menu_opts())
+      end, {})
+      vim.api.nvim_create_user_command("ClaudeMenu", function()
+        menu.open(normalize_menu(_G.ide_menus.claude_menu), _G.ide_menus._menu_opts())
+      end, {})
+      vim.api.nvim_create_user_command("JupyterMenu", function()
+        menu.open(normalize_menu(_G.ide_menus.jupyter_menu), _G.ide_menus._menu_opts())
+      end, {})
+      vim.api.nvim_create_user_command("ContextMenu", function()
+        menu.open(normalize_menu(_G.ide_menus.context_menu), _G.ide_menus._menu_opts())
+      end, {})
 
       -- Right-click context menu with copy/paste + IDE entries
       vim.api.nvim_create_user_command("RightClickMenu", function()
-        if vim.bo.filetype == 'snacks_dashboard' or vim.bo.filetype == 'dashboard' then
+        if vim.bo.filetype == "snacks_dashboard" or vim.bo.filetype == "dashboard" then
           return
         end
-        
+
         -- Create dynamic context menu - add Jupyter submenu for .ipynb files
         local context_menu = vim.deepcopy(_G.ide_menus.context_menu)
-        local filename = vim.fn.expand('%:t')
-        
-        if filename:match('%.ipynb$') then
+        local filename = vim.fn.expand("%:t")
+
+        if filename:match("%.ipynb$") then
           -- Add Jupyter menu item to the context menu for notebook files
-          table.insert(context_menu, #context_menu, { name = "📓 Jupyter Notebook", cmd = "JupyterMenu", rtxt = "mj" })
+          table.insert(
+            context_menu,
+            #context_menu,
+            { name = "📓 Jupyter Notebook", cmd = "JupyterMenu", rtxt = "mj" }
+          )
         end
-        
+
         menu.open(normalize_menu(context_menu), _G.ide_menus._menu_opts())
       end, {})
     end,
     keys = {
-      { "<C-t>", function()
-          if vim.bo.filetype == 'snacks_dashboard' or vim.bo.filetype == 'dashboard' then return end
-          vim.cmd('ContextMenu')
-        end, desc = "Open Context Menu" },
-      { "<leader>m", function()
-          if vim.bo.filetype == 'snacks_dashboard' or vim.bo.filetype == 'dashboard' then return end
-          vim.cmd('ContextMenu')
-        end, desc = "Open Context Menu" },
+      {
+        "<C-t>",
+        function()
+          if vim.bo.filetype == "snacks_dashboard" or vim.bo.filetype == "dashboard" then
+            return
+          end
+          vim.cmd("ContextMenu")
+        end,
+        desc = "Open Context Menu",
+      },
+      {
+        "<leader>m",
+        function()
+          if vim.bo.filetype == "snacks_dashboard" or vim.bo.filetype == "dashboard" then
+            return
+          end
+          vim.cmd("ContextMenu")
+        end,
+        desc = "Open Context Menu",
+      },
       { "<leader>mb", "<cmd>BufferMenu<cr>", desc = "Buffer Menu" },
       { "<leader>ml", "<cmd>LspMenu<cr>", desc = "LSP Menu" },
       { "<leader>mg", "<cmd>GitMenu<cr>", desc = "Git Menu" },
@@ -266,10 +320,17 @@ return {
       { "<leader>mj", "<cmd>JupyterMenu<cr>", desc = "Jupyter Menu" },
 
       -- Right-click context menu support
-      { "<RightMouse>", function()
-          if vim.bo.filetype == 'snacks_dashboard' or vim.bo.filetype == 'dashboard' then return end
-          vim.cmd('RightClickMenu')
-        end, desc = "Right-click Context Menu", mode = { "n", "v" } },
+      {
+        "<RightMouse>",
+        function()
+          if vim.bo.filetype == "snacks_dashboard" or vim.bo.filetype == "dashboard" then
+            return
+          end
+          vim.cmd("RightClickMenu")
+        end,
+        desc = "Right-click Context Menu",
+        mode = { "n", "v" },
+      },
     },
   },
 }

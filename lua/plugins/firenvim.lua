@@ -4,7 +4,7 @@ return {
   -- Firefox integration
   {
     "glacambre/firenvim",
-    enabled = false,  -- Disabling it for now
+    enabled = true, -- Disabling it for now
     lazy = false,
     build = function()
       vim.fn["firenvim#install"](0)
@@ -37,8 +37,12 @@ return {
           vim.fn.rpcnotify(0, "Gui", "WindowMaximized", 1)
         end
         -- Use Ctrl+= and Ctrl+- to adjust font size
-        vim.keymap.set({ "n", "i" }, "<C-=>", function() adjust_font_size(1) end)
-        vim.keymap.set({ "n", "i" }, "<C-->", function() adjust_font_size(-1) end)
+        vim.keymap.set({ "n", "i" }, "<C-=>", function()
+          adjust_font_size(1)
+        end)
+        vim.keymap.set({ "n", "i" }, "<C-->", function()
+          adjust_font_size(-1)
+        end)
       end
 
       vim.api.nvim_create_autocmd("UIEnter", {

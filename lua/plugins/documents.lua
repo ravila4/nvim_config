@@ -50,9 +50,9 @@ return {
             enable = true, -- Enable inline math ($...$)
             hl = "MarkviewInlineCode", -- Highlight group for inline math
           },
-          fonts = { enable = true },     -- Font styling (\mathbb, \mathcal, etc.)
-          commands = { enable = true },  -- LaTeX commands (\frac, \sum, etc.)
-          symbols = { enable = true },   -- Mathematical symbols
+          fonts = { enable = true }, -- Font styling (\mathbb, \mathcal, etc.)
+          commands = { enable = true }, -- LaTeX commands (\frac, \sum, etc.)
+          symbols = { enable = true }, -- Mathematical symbols
         },
         -- Experimental settings
         experimental = {
@@ -62,7 +62,7 @@ return {
         preview = {
           filetypes = { "markdown", "quarto", "rmd" }, -- Moved from top level
           modes = { "n", "no", "c" }, -- Normal, operator-pending, command modes
-          hybrid_modes = { "n" },     -- Partial rendering in normal mode
+          hybrid_modes = { "n" }, -- Partial rendering in normal mode
           ignore_buftypes = { "nofile", "terminal" }, -- Buffer types to ignore
           callbacks = {
             on_enable = function()

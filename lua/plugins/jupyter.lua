@@ -24,11 +24,11 @@ return {
     config = function()
       -- Global configuration
       vim.g.molten_image_provider = "image.nvim" -- Use image.nvim for inline images
-      vim.g.molten_output_win_max_height = 20    -- Reasonable output window height
-      vim.g.molten_auto_open_output = false      -- Manual control over output
-      vim.g.molten_wrap_output = true            -- Wrap long outputs
-      vim.g.molten_virt_text_output = true       -- Show outputs as virtual text
-      vim.g.molten_virt_lines_off_by_1 = true    -- Better virtual line positioning
+      vim.g.molten_output_win_max_height = 20 -- Reasonable output window height
+      vim.g.molten_auto_open_output = false -- Manual control over output
+      vim.g.molten_wrap_output = true -- Wrap long outputs
+      vim.g.molten_virt_text_output = true -- Show outputs as virtual text
+      vim.g.molten_virt_lines_off_by_1 = true -- Better virtual line positioning
 
       -- Theme integration - use your teal accent
       vim.g.molten_output_crop_border = true
@@ -36,8 +36,8 @@ return {
       vim.g.molten_output_virt_lines = true
 
       -- Performance settings for bioinformatics (large outputs)
-      vim.g.molten_limit_output_chars = 1000000  -- 1MB limit for large genomics outputs
-      vim.g.molten_copy_output = false           -- Don't auto-copy to clipboard
+      vim.g.molten_limit_output_chars = 1000000 -- 1MB limit for large genomics outputs
+      vim.g.molten_copy_output = false -- Don't auto-copy to clipboard
 
       -- Molten keybindings (unified with other Jupyter tools)
       local function map(mode, key, cmd, desc)
@@ -64,7 +64,7 @@ return {
           map("n", "<leader>ji", ":MoltenInit<CR>", "[Unified] Initialize")
         end,
       })
-    end
+    end,
   },
 
   -- Image.nvim for inline image rendering (molten-nvim dependency)
@@ -153,4 +153,3 @@ return {
     end,
   },
 }
-

@@ -11,20 +11,84 @@ return {
       "nvim-neotest/neotest-python",
     },
     keys = {
-      { "<leader>tf", function() require("neotest").run.run(vim.fn.expand("%")) end, desc = "Run Test File" },
-      { "<leader>tn", function() require("neotest").run.run() end, desc = "Run Nearest Test" },
-      { "<leader>ta", function() require("neotest").run.run(vim.fn.getcwd()) end, desc = "Run All Tests" },
-      { "<leader>tl", function() require("neotest").run.run_last() end, desc = "Run Last Test" },
-      { "<leader>ts", function() require("neotest").summary.toggle() end, desc = "Toggle Test Summary" },
-      { "<leader>to", function() require("neotest").output.open({ enter = true, auto_close = true }) end, desc = "Show Test Output" },
-      { "<leader>tO", function() require("neotest").output_panel.toggle() end, desc = "Toggle Test Output Panel" },
-      { "<leader>tS", function() require("neotest").run.stop() end, desc = "Stop Tests" },
-      { "<leader>tw", function() require("neotest").watch.toggle(vim.fn.expand("%")) end, desc = "Toggle Test Watch" },
-      { "<leader>td", function() require("neotest").run.run({strategy = "dap"}) end, desc = "Debug Nearest Test" },
+      {
+        "<leader>tf",
+        function()
+          require("neotest").run.run(vim.fn.expand("%"))
+        end,
+        desc = "Run Test File",
+      },
+      {
+        "<leader>tn",
+        function()
+          require("neotest").run.run()
+        end,
+        desc = "Run Nearest Test",
+      },
+      {
+        "<leader>ta",
+        function()
+          require("neotest").run.run(vim.fn.getcwd())
+        end,
+        desc = "Run All Tests",
+      },
+      {
+        "<leader>tl",
+        function()
+          require("neotest").run.run_last()
+        end,
+        desc = "Run Last Test",
+      },
+      {
+        "<leader>ts",
+        function()
+          require("neotest").summary.toggle()
+        end,
+        desc = "Toggle Test Summary",
+      },
+      {
+        "<leader>to",
+        function()
+          require("neotest").output.open({ enter = true, auto_close = true })
+        end,
+        desc = "Show Test Output",
+      },
+      {
+        "<leader>tO",
+        function()
+          require("neotest").output_panel.toggle()
+        end,
+        desc = "Toggle Test Output Panel",
+      },
+      {
+        "<leader>tS",
+        function()
+          require("neotest").run.stop()
+        end,
+        desc = "Stop Tests",
+      },
+      {
+        "<leader>tw",
+        function()
+          require("neotest").watch.toggle(vim.fn.expand("%"))
+        end,
+        desc = "Toggle Test Watch",
+      },
+      {
+        "<leader>td",
+        function()
+          require("neotest").run.run({ strategy = "dap" })
+        end,
+        desc = "Debug Nearest Test",
+      },
       -- Quick access to test output when in code
-      { "<leader>te", function() 
-        require("neotest").output.open({ enter = false, auto_close = false, short = false })
-      end, desc = "Show Test Error Details" },
+      {
+        "<leader>te",
+        function()
+          require("neotest").output.open({ enter = false, auto_close = false, short = false })
+        end,
+        desc = "Show Test Error Details",
+      },
     },
     opts = {
       -- See all config options with :h neotest.Config
@@ -36,12 +100,12 @@ return {
         -- Filter discovery to only test directories
         filter_dir = function(name, rel_path, root)
           -- Only scan directories that might contain tests
-          return name ~= "node_modules" and 
-                 name ~= ".git" and 
-                 name ~= "__pycache__" and 
-                 name ~= ".pytest_cache" and
-                 name ~= ".venv" and
-                 name ~= "venv"
+          return name ~= "node_modules"
+            and name ~= ".git"
+            and name ~= "__pycache__"
+            and name ~= ".pytest_cache"
+            and name ~= ".venv"
+            and name ~= "venv"
         end,
       },
       -- Enable persistent state for caching
@@ -65,14 +129,14 @@ return {
         open = "botright vsplit | vertical resize 50",
         mappings = {
           -- Consistent with Files/Outline behavior
-          expand = {"<CR>", "<2-LeftMouse>"}, -- Enter expands/collapses like Files panel
+          expand = { "<CR>", "<2-LeftMouse>" }, -- Enter expands/collapses like Files panel
           expand_all = "E",
           jumpto = "o", -- 'o' opens/jumps to test (like vim quickfix)
           output = "O", -- 'O' shows test output
           short = "s",
           attach = "a",
           run = "r",
-          debug = "d", 
+          debug = "d",
           run_marked = "R",
           debug_marked = "D",
           clear_marked = "M",
@@ -81,7 +145,7 @@ return {
           next_failed = "J",
           prev_failed = "K",
           mark = "m",
-          stop = "u"
+          stop = "u",
         },
       },
       -- Enable status signs in the gutter
@@ -141,7 +205,7 @@ return {
             justMyCode = false,
             console = "integratedTerminal",
           },
-          args = {"--log-level", "DEBUG", "--quiet", "-v"},
+          args = { "--log-level", "DEBUG", "--quiet", "-v" },
           runner = "pytest",
           -- Custom python path (supports uv, conda, venv) - cached for performance
           python = function()
@@ -149,21 +213,21 @@ return {
             if _G._neotest_python_path then
               return _G._neotest_python_path
             end
-            
+
             -- Check for uv first
             local uv_python = vim.fn.system("uv run which python 2>/dev/null"):gsub("\n", "")
             if vim.v.shell_error == 0 and uv_python ~= "" then
               _G._neotest_python_path = uv_python
               return uv_python
             end
-            
+
             -- Fallback to conda/venv
             local venv = vim.env.CONDA_PREFIX or vim.env.VIRTUAL_ENV
             if venv then
               _G._neotest_python_path = venv .. "/bin/python"
               return _G._neotest_python_path
             end
-            
+
             -- Default python
             _G._neotest_python_path = "python"
             return "python"
@@ -174,46 +238,47 @@ return {
           root_files = { "pyproject.toml", "pytest.ini", "setup.cfg", ".pytest_cache" },
           is_test_file = function(file_path)
             -- Exclude non-test files
-            if file_path:match("__init__%.py$") or 
-               file_path:match("conftest%.py$") then
+            if file_path:match("__init__%.py$") or file_path:match("conftest%.py$") then
               return false
             end
-            
+
             -- Include actual test files
-            return file_path:match("test_.+%.py$") or 
-                   file_path:match(".+_test%.py$") or
-                   (file_path:match("tests/.+%.py$") and 
-                    not file_path:match("__init__%.py$") and
-                    not file_path:match("conftest%.py$"))
+            return file_path:match("test_.+%.py$")
+              or file_path:match(".+_test%.py$")
+              or (
+                file_path:match("tests/.+%.py$")
+                and not file_path:match("__init__%.py$")
+                and not file_path:match("conftest%.py$")
+              )
           end,
         }),
       }
 
       require("neotest").setup(opts)
-      
+
       -- Debug function to check test discovery
       vim.api.nvim_create_user_command("NeotestDebug", function()
         local cwd = vim.fn.getcwd()
         print("Current working directory: " .. cwd)
-        
+
         -- Check for test files
         local test_files = vim.fn.glob(cwd .. "/**/test_*.py", false, true)
         local test_files2 = vim.fn.glob(cwd .. "/**/*_test.py", false, true)
         local tests_dir = vim.fn.glob(cwd .. "/tests/*.py", false, true)
-        
+
         print("Found test_*.py files: " .. vim.inspect(test_files))
         print("Found *_test.py files: " .. vim.inspect(test_files2))
         print("Found tests/*.py files: " .. vim.inspect(tests_dir))
-        
+
         -- Check Python environment
         local python_cmd = require("neotest").adapters[1].python()
         print("Python executable: " .. python_cmd)
-        
+
         -- Check if pytest is available
         local pytest_check = vim.fn.system(python_cmd .. " -c 'import pytest; print(pytest.__version__)'")
         print("Pytest version: " .. pytest_check:gsub("\n", ""))
       end, {})
-      
+
       -- Clear neotest cache command
       vim.api.nvim_create_user_command("NeotestClearCache", function()
         -- Clear the neotest cache
@@ -221,14 +286,14 @@ return {
         if neotest.state then
           neotest.state.clear()
         end
-        
+
         -- Clear Python path cache
         _G._neotest_python_path = nil
-        
+
         -- Clear package cache to force reload
         package.loaded["neotest"] = nil
         package.loaded["neotest-python"] = nil
-        
+
         vim.notify("Neotest cache cleared! Restart test discovery with :lua require('neotest').summary.toggle()")
       end, {})
 
@@ -253,7 +318,7 @@ return {
       -- Set up test status highlights with teal theme
       local function setup_test_highlights()
         local is_dark = vim.o.background == "dark"
-        
+
         vim.api.nvim_set_hl(0, "NeotestPassed", {
           fg = is_dark and "#4ec9b0" or "#26a269",
           bold = true,
@@ -270,7 +335,7 @@ return {
           fg = is_dark and "#858585" or "#77767b",
           bold = true,
         })
-        
+
         -- Fix unreadable cyan colors in test tree
         vim.api.nvim_set_hl(0, "NeotestNamespace", {
           fg = is_dark and "#dcdcaa" or "#795e26", -- Yellow/brown for namespaces
@@ -285,16 +350,16 @@ return {
           fg = is_dark and "#cccccc" or "#2e3436", -- Normal text for test names
         })
       end
-      
+
       setup_test_highlights()
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = setup_test_highlights,
       })
-      
+
       -- Configure floating window highlights to match theme
       local function setup_neotest_float_highlights()
         local is_dark = vim.o.background == "dark"
-        
+
         -- Set floating window colors to match Telescope
         vim.api.nvim_set_hl(0, "NeotestBorder", {
           fg = is_dark and "#404040" or "#d0d0d0",
@@ -305,7 +370,7 @@ return {
           bold = true,
         })
       end
-      
+
       setup_neotest_float_highlights()
       vim.api.nvim_create_autocmd("ColorScheme", {
         callback = setup_neotest_float_highlights,
