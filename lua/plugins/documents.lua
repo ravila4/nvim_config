@@ -19,12 +19,42 @@ return {
         markdown = {
           headings = {
             enable = true,
-            heading_1 = { style = "icon", icon = "# ", sign = "" },
-            heading_2 = { style = "icon", icon = "## ", sign = "" },
-            heading_3 = { style = "icon", icon = "### ", sign = "" },
-            heading_4 = { style = "icon", icon = "#### ", sign = "" },
-            heading_5 = { style = "icon", icon = "##### ", sign = "" },
-            heading_6 = { style = "icon", icon = "###### ", sign = "" },
+            heading_1 = {
+              style = "icon",
+              icon = "# ",
+              sign = "",
+              hl = "MarkviewPalette1Bg", -- Full line background
+            },
+            heading_2 = {
+              style = "icon",
+              icon = "## ",
+              sign = "",
+              hl = "MarkviewPalette2Bg", -- Full line background
+            },
+            heading_3 = {
+              style = "icon",
+              icon = "### ",
+              sign = "",
+              hl = "MarkviewPalette3Bg", -- Full line background
+            },
+            heading_4 = {
+              style = "icon",
+              icon = "#### ",
+              sign = "",
+              hl = "MarkviewPalette4Bg", -- Full line background
+            },
+            heading_5 = {
+              style = "icon",
+              icon = "##### ",
+              sign = "",
+              hl = "MarkviewPalette5Bg", -- Full line background
+            },
+            heading_6 = {
+              style = "icon",
+              icon = "###### ",
+              sign = "",
+              hl = "MarkviewPalette6Bg", -- Full line background
+            },
           },
           code_blocks = {
             enable = true,
@@ -202,9 +232,18 @@ return {
           },
         },
         buffers = {
-          set_filetype = true,
+          set_filetype = true, -- Essential for LSP features and syntax highlighting
         },
         handle_leading_whitespace = true,
+      })
+
+      -- Automatically activate otter for markdown and quarto files
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = { "markdown", "quarto" },
+        callback = function()
+          -- Activate otter for all detected languages (python, r, julia, etc.)
+          require("otter").activate()
+        end,
       })
     end,
   },

@@ -87,6 +87,12 @@ return {
           map("n", "<leader>jr", run_markdown_cell, "[Unified] Run cell (smart)")
           map("v", "<leader>jr", ":<C-u>MoltenEvaluateVisual<CR>gv", "[Unified] Run selection")
           map("n", "<leader>ji", ":MoltenInit<CR>", "[Unified] Initialize")
+          
+          -- Note: Use ]b and [b for cell navigation (treesitter text objects)
+          
+          -- Full output viewing
+          map("n", "<leader>jo", ":noautocmd MoltenEnterOutput<CR>", "[Output] View full output")
+          map("n", "<leader>jh", ":MoltenHideOutput<CR>", "[Output] Hide output")
         end,
       })
     end,
