@@ -34,6 +34,24 @@ return {
         indent = {
           enable = true,
         },
+        textobjects = {
+          select = {
+            enable = true,
+            keymaps = {
+              ["ib"] = { query = "@code_cell.inner", desc = "in block" },
+              ["ab"] = { query = "@code_cell.outer", desc = "around block" },
+            },
+          },
+          move = {
+            enable = true,
+            goto_next_start = {
+              ["]b"] = { query = "@code_cell.inner", desc = "next code block" },
+            },
+            goto_previous_start = {
+              ["[b"] = { query = "@code_cell.inner", desc = "previous code block" },
+            },
+          },
+        },
       })
     end,
   },

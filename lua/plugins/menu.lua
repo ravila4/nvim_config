@@ -168,15 +168,8 @@ return {
 
         jupyter_menu = {
           { name = "🚀 Initialize Kernel", cmd = "MoltenInit", rtxt = "mi" },
-          { name = "🔧 Select Kernel", cmd = "MoltenSelectKernel", rtxt = "mk" },
           { name = "separator" },
-          { name = "▶️ Run Cell", cmd = "MoltenEvaluateLine", rtxt = "jr" },
-          { name = "🔄 Re-run Cell", cmd = "MoltenReevaluateCell", rtxt = "mc" },
           { name = "📊 Run Selection", cmd = "MoltenEvaluateVisual", rtxt = "mr" },
-          { name = "separator" },
-          { name = "👁 Show Output", cmd = "MoltenShowOutput", rtxt = "ms" },
-          { name = "🙈 Hide Output", cmd = "MoltenHideOutput", rtxt = "mh" },
-          { name = "🗑️ Delete Cell", cmd = "MoltenDelete", rtxt = "md" },
           { name = "separator" },
           { name = "🛑 Quit Kernel", cmd = "MoltenDeinit", rtxt = "mq" },
         },

@@ -216,14 +216,14 @@ return {
       "jmbuhr/otter.nvim",
       "nvim-treesitter/nvim-treesitter",
     },
-    ft = { "quarto" },
+    ft = { "quarto", "markdown" }, -- Add markdown support
     config = function()
       require("quarto").setup({
         debug = false,
         closePreviewOnExit = true,
         lspFeatures = {
           enabled = true,
-          chunks = "curly",
+          chunks = "all", -- Changed from "curly" to "all" to support markdown
           languages = { "r", "python", "julia", "bash", "html" },
           diagnostics = {
             enabled = true,
@@ -235,7 +235,7 @@ return {
         },
         codeRunner = {
           enabled = true,
-          default_method = "slime",
+          default_method = "molten", -- Changed from "slime" to "molten"
           ft_runners = {},
           never_run = { "yaml" },
         },

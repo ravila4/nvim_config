@@ -39,92 +39,37 @@ return {
       vim.g.molten_limit_output_chars = 1000000 -- 1MB limit for large genomics outputs
       vim.g.molten_copy_output = false -- Don't auto-copy to clipboard
       
-      -- Kernel selection with Telescope integration
-      local function select_kernel()
-        local pickers = require("telescope.pickers")
-        local finders = require("telescope.finders")
-        local conf = require("telescope.config").values
-        local actions = require("telescope.actions")
-        local action_state = require("telescope.actions.state")
-        
-        -- Get available kernels
-        local handle = io.popen("jupyter kernelspec list --json 2>/dev/null")
-        if not handle then
-          vim.notify("Failed to get kernel list", vim.log.levels.ERROR)
-          return
-        end
-        
-        local result = handle:read("*all")
-        handle:close()
-        
-        if result == "" then
-          vim.notify("No kernels found. Install with: python -m ipykernel install --user", vim.log.levels.WARN)
-          return
-        end
-        
-        local ok, kernels_data = pcall(vim.json.decode, result)
-        if not ok or not kernels_data.kernelspecs then
-          vim.notify("Failed to parse kernel list", vim.log.levels.ERROR)
-          return
-        end
-        
-        local kernels = {}
-        for name, spec in pairs(kernels_data.kernelspecs) do
-          table.insert(kernels, {
-            name = name,
-            display_name = spec.spec.display_name or name,
-            language = spec.spec.language or "unknown"
-          })
-        end
-        
-        if #kernels == 0 then
-          vim.notify("No kernels available", vim.log.levels.WARN)
-          return
-        end
-        
-        pickers.new({}, {
-          prompt_title = "Select Jupyter Kernel",
-          finder = finders.new_table({
-            results = kernels,
-            entry_maker = function(entry)
-              return {
-                value = entry.name,
-                display = string.format("%s (%s)", entry.display_name, entry.language),
-                ordinal = entry.display_name
-              }
-            end
-          }),
-          sorter = conf.generic_sorter({}),
-          attach_mappings = function(prompt_bufnr, map)
-            actions.select_default:replace(function()
-              local selection = action_state.get_selected_entry()
-              actions.close(prompt_bufnr)
-              if selection then
-                vim.cmd("MoltenInit " .. selection.value)
-                vim.notify("Initialized kernel: " .. selection.display, vim.log.levels.INFO)
-              end
-            end)
-            return true
-          end,
-        }):find()
-      end
-      
-      -- Create user command for kernel selection
-      vim.api.nvim_create_user_command("MoltenSelectKernel", select_kernel, { 
-        desc = "Select Jupyter kernel with Telescope" 
-      })
 
       -- Molten keybindings (unified with other Jupyter tools)
       local function map(mode, key, cmd, desc)
         vim.keymap.set(mode, key, cmd, { desc = desc, buffer = true })
       end
 
+      -- Function to run markdown code blocks as cells using quarto
+      local function run_markdown_cell()
+        -- Try to use quarto runner first for markdown files
+        local success = pcall(function()
+          local quarto = require("quarto")
+          local runner = require("quarto.runner")
+          if vim.bo.filetype == "markdown" then
+            runner.run_cell()
+          else
+            -- Fallback to molten for non-markdown files
+            vim.cmd("MoltenEvaluateLine")
+          end
+        end)
+        
+        if not success then
+          -- Final fallback to line-based evaluation
+          vim.cmd("MoltenEvaluateLine")
+        end
+      end
+
       vim.api.nvim_create_autocmd("FileType", {
-        pattern = { "python", "julia", "r", "ipynb" },
+        pattern = { "python", "julia", "r", "ipynb", "markdown" },
         callback = function()
           -- Molten-specific mappings (prefix: <leader>m)
           map("n", "<leader>mi", ":MoltenInit<CR>", "[Molten] Initialize kernel")
-          map("n", "<leader>mk", ":MoltenSelectKernel<CR>", "[Molten] Select kernel")
           map("n", "<leader>mr", ":MoltenEvaluateOperator<CR>", "[Molten] Run operator")
           map("n", "<leader>ml", ":MoltenEvaluateLine<CR>", "[Molten] Run line")
           map("n", "<leader>mc", ":MoltenReevaluateCell<CR>", "[Molten] Re-run cell")
@@ -134,8 +79,12 @@ return {
           map("n", "<leader>ms", ":MoltenShowOutput<CR>", "[Molten] Show output")
           map("n", "<leader>mq", ":MoltenDeinit<CR>", "[Molten] Quit kernel")
 
-          -- Unified Jupyter mappings (work with any active tool)
-          map("n", "<leader>jr", ":MoltenEvaluateLine<CR>", "[Unified] Run line/cell")
+          -- Smart cell execution - detects markdown code blocks
+          -- Multiple keybindings for different terminal setups
+          map("n", "<S-CR>", run_markdown_cell, "[Molten] Run cell (smart)")
+          map("n", "<C-CR>", run_markdown_cell, "[Molten] Run cell (smart - alt)")
+          map("n", "<leader><CR>", run_markdown_cell, "[Molten] Run cell (smart - leader)")
+          map("n", "<leader>jr", run_markdown_cell, "[Unified] Run cell (smart)")
           map("v", "<leader>jr", ":<C-u>MoltenEvaluateVisual<CR>gv", "[Unified] Run selection")
           map("n", "<leader>ji", ":MoltenInit<CR>", "[Unified] Initialize")
         end,
