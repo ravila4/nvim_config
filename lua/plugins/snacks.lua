@@ -593,7 +593,8 @@ return {
             })
             -- Focused scope with arrow - theme-appropriate accent color
             vim.api.nvim_set_hl(0, "SnacksIndentChunk", {
-              fg = is_dark and "#df610e" or "#df610e",
+              -- fg = is_dark and "#df610e" or "#df610e",
+              fg = is_dark and "#569cd6" or "#1c71d8",
             })
           end
 

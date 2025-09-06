@@ -46,9 +46,7 @@ return {
                 return ""
               end,
               cond = function()
-                return vim.bo.filetype == "ipynb" or 
-                       vim.bo.filetype == "python" or
-                       (vim.fn.expand("%:e") == "ipynb")
+                return vim.bo.filetype == "ipynb" or vim.bo.filetype == "python" or (vim.fn.expand("%:e") == "ipynb")
               end,
               color = { fg = "#228787" }, -- Teal color for kernel status
               icon = "",
@@ -649,7 +647,6 @@ return {
         show_duplicate_prefix = true,
         persist_buffer_sort = true,
         move_wraps_at_ends = false,
-        separator_style = "thick",
         enforce_regular_tabs = false,
         always_show_bufferline = false, -- Hide on single buffer/dashboard
         hover = {
@@ -678,7 +675,11 @@ return {
             fill = { bg = "NONE" },
             background = { bg = "#d8d7d4", fg = "#5e5c64" },
             buffer_visible = { bg = "#d8d7d4", fg = "#5e5c64" },
-            buffer_selected = { bg = "#ffffff", fg = "#2e3436", bold = true },
+            buffer_selected = {
+              bg = "#ffffff",
+              fg = "#2e3436",
+              bold = true,
+            },
           }
         end
 
@@ -696,7 +697,7 @@ return {
             fg = "NONE",
           },
           close_button = {
-            bg = colors.background.bg,
+            bg = colors.buffer_selected.bg,
             fg = is_dark and "#858585" or "#9a9996",
           },
           close_button_visible = {
@@ -705,7 +706,7 @@ return {
           },
           close_button_selected = {
             bg = colors.buffer_selected.bg,
-            fg = is_dark and "#569cd6" or "#613583",
+            fg = is_dark and "#569cd6" or "#1c71d8",
           },
           modified = {
             bg = colors.background.bg,
