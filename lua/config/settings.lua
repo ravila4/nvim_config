@@ -5,6 +5,9 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
+-- Python provider (use homebrew Python 3.12 for molten-nvim compatibility)
+vim.g.python3_host_prog = "/opt/homebrew/bin/python3.12"
+
 local opt = vim.opt
 
 -- Line Numbers

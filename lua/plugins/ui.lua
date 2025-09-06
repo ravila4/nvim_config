@@ -33,6 +33,26 @@ return {
             { "filename", path = 1 },
           },
           lualine_x = {
+            -- Molten kernel status for Jupyter notebooks
+            {
+              function()
+                local molten_status = require("molten.status")
+                if molten_status.initialized() == "Molten" then
+                  local kernel_name = molten_status.kernels()
+                  if kernel_name and kernel_name ~= "" then
+                    return "🐍 " .. kernel_name
+                  end
+                end
+                return ""
+              end,
+              cond = function()
+                return vim.bo.filetype == "ipynb" or 
+                       vim.bo.filetype == "python" or
+                       (vim.fn.expand("%:e") == "ipynb")
+              end,
+              color = { fg = "#228787" }, -- Teal color for kernel status
+              icon = "",
+            },
             "encoding",
             "fileformat",
             "filetype",

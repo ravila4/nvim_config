@@ -280,6 +280,7 @@ Your IDE provides **seamless Jupyter notebook editing** with automatic conversio
 | Key | Action | Description |
 |-----|--------|-------------|
 | `<leader>mi` | Initialize kernel | Start Jupyter kernel for notebook |
+| `<leader>mk` | Select kernel | Choose kernel with Telescope picker |
 | `<leader>jr` | Run cell | Execute cell at cursor |
 | `<leader>ml` | Run line | Execute current line |
 | `<leader>mc` | Re-run cell | Re-execute current cell |
@@ -288,6 +289,11 @@ Your IDE provides **seamless Jupyter notebook editing** with automatic conversio
 | `<leader>mh` | Hide output | Hide cell output |
 | `<leader>md` | Delete cell | Remove cell and output |
 | `<leader>mq` | Quit kernel | Stop kernel session |
+
+#### Kernel Management
+- **Telescope Picker**: `:MoltenSelectKernel` or `<leader>mk` opens a beautiful Telescope interface
+- **Status Display**: Active kernel shown in statusline with 🐍 icon (notebooks/Python files only)
+- **Auto-Detection**: Available kernels discovered via `jupyter kernelspec list`
 
 #### Setup Requirements
 - **Jupytext**: Installed globally with `uv tool install jupytext`

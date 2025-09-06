@@ -168,6 +168,8 @@ return {
 
         jupyter_menu = {
           { name = "🚀 Initialize Kernel", cmd = "MoltenInit", rtxt = "mi" },
+          { name = "🔧 Select Kernel", cmd = "MoltenSelectKernel", rtxt = "mk" },
+          { name = "separator" },
           { name = "▶️ Run Cell", cmd = "MoltenEvaluateLine", rtxt = "jr" },
           { name = "🔄 Re-run Cell", cmd = "MoltenReevaluateCell", rtxt = "mc" },
           { name = "📊 Run Selection", cmd = "MoltenEvaluateVisual", rtxt = "mr" },
