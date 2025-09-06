@@ -169,15 +169,22 @@ return {
     end,
   },
 
-  -- Jupytext.vim for .ipynb file conversion to readable text format
+  -- Jupytext.nvim for .ipynb file conversion to readable text format
   {
-    "goerz/jupytext.vim",
+    "goerz/jupytext.nvim",
     lazy = false, -- Must load immediately to handle .ipynb file conversion
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+    },
     config = function()
-      -- Basic configuration for jupytext.vim
-      vim.g.jupytext_enable = 1
-      vim.g.jupytext_fmt = "py:percent" -- Convert to Python with %% cell markers
-      vim.g.jupytext_command = "jupytext"
+      require("jupytext").setup({
+        -- Use markdown format with python code blocks instead of %% cells
+        format = "md:markdown",
+        -- Set filetype to markdown so LSP doesn't try to parse as pure Python
+        filetype = function(path, format, metadata)
+          return "markdown"
+        end,
+      })
     end,
   },
 
