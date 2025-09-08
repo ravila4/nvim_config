@@ -96,15 +96,16 @@ return {
           ignore_buftypes = { "nofile", "terminal" }, -- Buffer types to ignore
           callbacks = {
             on_enable = function()
-              -- Disable conflicting plugins temporarily
-              vim.cmd("TSBufDisable highlight") -- Avoid conflicts
+              -- Keep treesitter highlight enabled for code block syntax highlighting
+              -- Only disable additional_vim_regex_highlighting to avoid conflicts
+              vim.opt_local.additional_vim_regex_highlighting = false
               -- Enable line wrapping for markdown
               vim.opt_local.wrap = true
               vim.opt_local.linebreak = true
             end,
             on_disable = function()
-              -- Re-enable when markview is disabled
-              vim.cmd("TSBufEnable highlight")
+              -- Restore original highlighting settings
+              vim.opt_local.additional_vim_regex_highlighting = false
             end,
           },
         },
@@ -235,6 +236,9 @@ return {
           set_filetype = true, -- Essential for LSP features and syntax highlighting
         },
         handle_leading_whitespace = true,
+        verbose = {
+          no_code_found = true, -- Debug: notify if no code blocks found
+        },
       })
 
       -- Automatically activate otter for markdown and quarto files
