@@ -104,18 +104,104 @@ All menu items are clickable with mouse and mapped to actual commands; items tha
 - **Split Terminals**: Multiple terminals for complex workflows
 - **Quick File Navigation**: Perfect for large bioinformatics projects
 
-## Claude Code AI Integration
+## AI Integration
 
-### Overview
+### Sidekick.nvim - AI Coding Assistant
+
+#### Overview
+Sidekick.nvim provides dual AI capabilities: automatic Next Edit Suggestions (NES) from Copilot LSP and direct CLI access to Claude and Gemini without leaving Neovim.
+
+#### Next Edit Suggestions (NES)
+
+**Automatic AI Refactorings**: Copilot LSP analyzes your code and suggests multi-line improvements with rich diff visualization.
+
+**Features**:
+- Word-level diff highlighting showing exactly what changes
+- Automatic suggestions when you pause or move cursor
+- Hunk-by-hunk navigation through suggested edits
+- Accept/reject individual changes or entire suggestions
+
+**Key Bindings**:
+| Key | Action | Description |
+|-----|--------|-------------|
+| `<Tab>` | Jump/Apply | Navigate to next suggestion or apply current edit |
+| `<leader>an` | Update NES | Manually trigger suggestion update |
+| `<leader>aN` | Toggle NES | Enable/disable automatic suggestions |
+
+#### AI CLI Terminal Integration
+
+**Direct CLI Access**: Built-in terminal for Claude and Gemini with context-aware prompts and file watching.
+
+**Supported Tools**:
+- Claude Code CLI (`claude`)
+- Gemini CLI (`gemini`)
+
+**Core Features**:
+- Context variables: `{this}`, `{file}`, `{diagnostics}`, `{function}`, `{buffers}`
+- File watching: Automatically reload files modified by AI
+- Session persistence: Maintains CLI sessions across terminal multiplexers
+- Beautiful picker integration via snacks.nvim
+
+#### Quick Access Key Bindings
+
+| Key | Action | Description |
+|-----|--------|-------------|
+| `<leader>aa` | Toggle CLI | Open/close AI CLI terminal |
+| `<leader>ac` | Toggle Claude | Open Claude CLI directly |
+| `<leader>ag` | Toggle Gemini | Open Gemini CLI directly |
+| `<leader>as` | Select Tool | Choose which AI tool to use |
+| `<leader>ap` | Select Prompt | Choose from predefined prompts |
+
+#### Context Sending
+
+| Key | Mode | Action | Description |
+|-----|------|--------|-------------|
+| `<leader>at` | n, v | Send Context | Send cursor position or selection |
+| `<leader>af` | n | Send File | Send entire current file |
+| `<leader>av` | v | Send Selection | Send visual selection |
+| `<leader>ad` | n | Send Diagnostics | Send current diagnostics/errors |
+
+#### Predefined Prompts
+
+Built-in prompts optimized for bioinformatics workflows:
+
+- **code_review**: Review code for bugs and best practices
+- **explain**: Detailed explanation of code behavior
+- **optimize**: Performance optimization suggestions
+- **bioinformatics_review**: Scientific accuracy and data handling review
+- **debug**: Help debug with diagnostics context
+- **document**: Generate comprehensive documentation
+- **test**: Generate test cases
+
+**Usage**: Press `<leader>ap`, select prompt, AI receives your code with the prompt template.
+
+#### Integration with Existing Workflow
+
+- **Theme-aware**: Diff colors adapt to light/dark Adwaita theme
+- **Teal accents**: Sign column uses your `#228787` teal color
+- **snacks.nvim picker**: Consistent UI with rest of configuration
+- **Non-intrusive**: NES appears only when helpful, easy to dismiss
+
+#### Setup Requirements
+
+1. **Copilot LSP**: Installed automatically via Mason
+2. **Copilot Authentication**: Run `:LspCopilotSignIn` after first launch
+3. **Claude CLI**: Already installed at `/opt/homebrew/bin/claude`
+4. **Gemini CLI**: Already installed at `/opt/homebrew/bin/gemini`
+5. **Health Check**: Run `:checkhealth sidekick` to verify setup
+
+### Claude Code AI Integration
+
+#### Overview
 Seamless integration with Claude Code for AI-assisted development directly within Neovim.
 
-### Core Features
+#### Core Features
 - **Smart Context Detection**: Automatically detects what to send based on cursor position
 - **Telescope Integration**: Beautiful picker for selecting context to send
 - **Diff Management**: Accept/deny AI suggestions with visual diff
 - **Menu Integration**: Full integration with existing menu system
 
-### Key Bindings
+#### Key Bindings
 | Key | Action | Description |
 |-----|--------|-------------|
 | `<leader>cc` | Toggle Claude Code | Open/close Claude Code terminal |
@@ -127,7 +213,7 @@ Seamless integration with Claude Code for AI-assisted development directly withi
 | `<leader>cd` | Deny Diff | Reject AI suggestions |
 | `<leader>mc` | Claude Menu | Open Claude Code menu |
 
-### Smart Context Features
+#### Smart Context Features
 The smart context system (`<leader>cs`) intelligently determines what to send:
 
 1. **Visual Selection**: If text is selected, sends the selection
@@ -135,13 +221,13 @@ The smart context system (`<leader>cs`) intelligently determines what to send:
 3. **Symbol Context**: If cursor is on a function/variable, sends relevant code
 4. **Fallback**: Opens context picker for manual selection
 
-### Context Picker Options
+#### Context Picker Options
 The telescope context picker (`<leader>cp`) provides:
 
-- **📄 Current file**: Send currently open file
-- **🔍 Current function/symbol**: Send code around cursor
-- **👁 Visual selection**: Send currently selected text
-- **📚 All open buffers**: Send all open files for project context
+- **Current file**: Send currently open file
+- **Current function/symbol**: Send code around cursor
+- **Visual selection**: Send currently selected text
+- **All open buffers**: Send all open files for project context
 - **📊 Git diff (staged)**: Send staged changes for review
 - **📊 Git diff (working)**: Send working tree changes
 - **📦 Project files**: Auto-detected config files (package.json, requirements.txt, etc.)

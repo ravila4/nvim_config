@@ -9,19 +9,6 @@ return {
     end,
   },
 
-  -- Copilot moved to lua/plugins/ai.lua
-
-  -- REPL integration
-  {
-    "jpalardy/vim-slime",
-    ft = { "python", "r", "julia", "bash" },
-    config = function()
-      vim.g.slime_target = "tmux"
-      vim.g.slime_paste_file = vim.fn.expand("$HOME/.slime_paste")
-      vim.g.slime_default_config = { socket_name = "default", target_pane = "{last}" }
-    end,
-  },
-
   -- Modern formatting and linting with conform.nvim
   {
     "stevearc/conform.nvim",
@@ -95,15 +82,4 @@ return {
     },
   },
 
-  -- Markdown preview
-  {
-    "iamcco/markdown-preview.nvim",
-    cmd = { "MarkdownPreview", "MarkdownPreviewStop" },
-    ft = { "markdown" },
-    build = "cd app && yarn install",
-    config = function()
-      vim.g.mkdp_auto_start = 0
-      vim.g.mkdp_auto_close = 1
-    end,
-  },
 }

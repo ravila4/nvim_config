@@ -28,6 +28,8 @@ return {
         "yaml-language-server",
         -- R
         "r-languageserver",
+        -- AI
+        "copilot",
       },
     },
     config = function(_, opts)
