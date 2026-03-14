@@ -228,6 +228,8 @@ end, {
 -- Add a mapping for convenience
 vim.keymap.set("n", "<leader>dw", "<cmd>DeleteTrailingSpaces<cr>", { desc = "Delete trailing spaces" })
 
+-- [No Name] and directory buffers are hidden from bufferline via custom_filter in plugins/ui.lua
+
 -- Session persistence and layout management
 vim.api.nvim_create_augroup("SessionLayout", { clear = true })
 

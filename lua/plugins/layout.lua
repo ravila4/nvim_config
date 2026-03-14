@@ -176,12 +176,59 @@ return {
       "MunifTanjim/nui.nvim",
     },
     config = function()
+      -- Open file in the main editing window, not in neo-tree's window
+      local function open_in_main_window(state)
+        local node = state.tree:get_node()
+        if node.type == "directory" then
+          require("neo-tree.sources.filesystem.commands").toggle_node(state)
+          return
+        end
+        if node.type ~= "file" then
+          return
+        end
+        local path = node:get_id()
+        -- Load the buffer, then directly assign it to the main window
+        -- using nvim_win_set_buf to avoid edgy's autocmd-based layout restoration
+        local buf = vim.fn.bufadd(path)
+        vim.fn.bufload(buf)
+        vim.schedule(function()
+          for _, win in ipairs(vim.api.nvim_list_wins()) do
+            local wbuf = vim.api.nvim_win_get_buf(win)
+            local ft = vim.bo[wbuf].filetype
+            local bt = vim.bo[wbuf].buftype
+            if
+              ft ~= "neo-tree"
+              and ft ~= "Outline"
+              and ft ~= "neotest-summary"
+              and bt == ""
+              and vim.api.nvim_win_get_config(win).relative == ""
+            then
+              vim.api.nvim_win_set_buf(win, buf)
+              vim.api.nvim_set_current_win(win)
+              vim.bo[buf].buflisted = true
+              vim.cmd("doautocmd BufWinEnter")
+              return
+            end
+          end
+        end)
+      end
+
       require("neo-tree").setup({
         close_if_last_window = false,
         popup_border_style = "rounded",
         enable_git_status = true,
         enable_diagnostics = true,
         use_popups_for_input = false,
+        open_files_in_last_window = true,
+        open_files_do_not_replace_types = { "terminal", "Trouble", "trouble", "qf", "edgy", "Outline" },
+        window = {
+          position = "left",
+          width = 30,
+          mapping_options = {
+            noremap = true,
+            nowait = true,
+          },
+        },
         default_component_configs = {
           name = {
             use_git_status_colors = false,
@@ -217,19 +264,14 @@ return {
               conflict = "~",
             },
           },
-          window = {
-            position = "left",
-            width = 30,
-            mapping_options = {
-              noremap = true,
-              nowait = true,
-            },
-          },
         },
         filesystem = {
           use_libuv_file_watcher = true,
           window = {
             mappings = {
+              ["<cr>"] = open_in_main_window,
+              ["<2-LeftMouse>"] = open_in_main_window,
+              ["o"] = open_in_main_window,
               ["<bs>"] = "navigate_up",
               ["."] = "set_root",
               ["H"] = "toggle_hidden",

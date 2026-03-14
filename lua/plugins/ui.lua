@@ -639,6 +639,19 @@ return {
         truncate_names = true,
         tab_size = 21,
         diagnostics = false, -- Disable diagnostic indicators
+        -- Hide empty [No Name] and directory buffers from the tab bar
+        custom_filter = function(buf_number)
+          local name = vim.api.nvim_buf_get_name(buf_number)
+          -- Hide unnamed empty buffers
+          if name == "" and not vim.bo[buf_number].modified then
+            return false
+          end
+          -- Hide directory buffers (created when nvim opens a directory)
+          if name ~= "" and vim.fn.isdirectory(name) == 1 then
+            return false
+          end
+          return true
+        end,
         color_icons = true,
         show_buffer_icons = true,
         show_buffer_close_icons = true,
