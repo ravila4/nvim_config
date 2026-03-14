@@ -112,7 +112,7 @@ return {
       })
 
       -- Keybindings for markview
-      vim.keymap.set("n", "<leader>mv", ":Markview toggleAll<CR>", { desc = "Toggle Markview" })
+      vim.keymap.set("n", "<leader>mv", ":Markview Toggle<CR>", { desc = "Toggle Markview" })
       vim.keymap.set("n", "<leader>ms", ":Markview splitToggle<CR>", { desc = "Markview split toggle" })
     end,
   },
