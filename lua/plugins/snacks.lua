@@ -37,91 +37,7 @@ return {
             { icon = " ", key = "f", desc = "Find File", action = ":lua Snacks.dashboard.pick('files')" },
             { icon = " ", key = "n", desc = "New File", action = ":ene | startinsert" },
             { icon = " ", key = "g", desc = "Find Text", action = ":lua Snacks.dashboard.pick('live_grep')" },
-            {
-              icon = " ",
-              key = "c",
-              desc = "Config",
-              action = ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})",
-            },
-            {
-              icon = " ",
-              key = "S",
-              desc = "Select Session",
-              action = function()
-                require("persistence").select()
-              end,
-            },
-            {
-              icon = " ",
-              key = "l",
-              desc = "Last Session",
-              action = function()
-                require("persistence").load({ last = true })
-              end,
-            },
-            {
-              icon = " ",
-              key = "x",
-              desc = "Close Session",
-              action = function()
-                local current = vim.api.nvim_get_current_buf()
-                local buffers = vim.api.nvim_list_bufs()
-                for _, buf in ipairs(buffers) do
-                  if buf ~= current and vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].buftype == "" then
-                    vim.api.nvim_buf_delete(buf, { force = false })
-                  end
-                end
-                vim.notify("Session closed - keeping dashboard")
-              end,
-            },
-            {
-              icon = " ",
-              key = "n",
-              desc = "Save Named Session",
-              action = function()
-                vim.ui.input({ prompt = "Session name: " }, function(name)
-                  if name and name ~= "" then
-                    local session_dir = vim.fn.expand(vim.fn.stdpath("state") .. "/sessions/")
-                    local session_file = session_dir .. name .. ".vim"
-                    vim.cmd("mksession! " .. vim.fn.fnameescape(session_file))
-                    vim.notify("Session '" .. name .. "' saved!")
-                  end
-                end)
-              end,
-            },
-            {
-              icon = " ",
-              key = "R",
-              desc = "Restore Named Session",
-              action = function()
-                local session_dir = vim.fn.expand(vim.fn.stdpath("state") .. "/sessions/")
-                local sessions = {}
-
-                for name, type in vim.fs.dir(session_dir) do
-                  if type == "file" and name:match("%.vim$") then
-                    local session_name = name:gsub("%.vim$", "")
-                    if not session_name:match("^[a-f0-9-]+$") then
-                      table.insert(sessions, session_name)
-                    end
-                  end
-                end
-
-                if #sessions == 0 then
-                  vim.notify("No named sessions found")
-                  return
-                end
-
-                vim.ui.select(sessions, { prompt = "Select session:" }, function(choice)
-                  if choice then
-                    local session_file = session_dir .. choice .. ".vim"
-                    vim.cmd("source " .. vim.fn.fnameescape(session_file))
-                    vim.notify("Session '" .. choice .. "' restored!")
-                  end
-                end)
-              end,
-            },
             { icon = "󰒲 ", key = "L", desc = "Lazy", action = ":Lazy", enabled = package.loaded.lazy ~= nil },
-            { icon = " ", key = "q", desc = "Quit", action = ":qa" },
           },
           header = [[
 
@@ -135,15 +51,7 @@ return {
         },
         sections = {
           { section = "header", hl = "SnacksDashboardHeader" },
-          {
-            section = "terminal",
-            cmd = vim.fn.stdpath("config") .. "/scripts/bio-greeting.sh",
-            hl = "SnacksDashboardDesc",
-            height = 3,
-            ttl = 300, -- Cache for 5 minutes
-            align = "center",
-          },
-          { section = "keys", gap = 1, padding = 1 },
+          { section = "keys", gap = 0, padding = 1 },
           {
             pane = 2,
             icon = " ",
