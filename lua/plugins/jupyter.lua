@@ -69,7 +69,7 @@ return {
         pattern = { "python", "julia", "r", "ipynb", "markdown" },
         callback = function()
           -- Molten-specific mappings (prefix: <leader>m)
-          map("n", "<leader>mi", ":MoltenInit<CR>", "[Molten] Initialize kernel")
+          map("n", "<leader>mK", ":MoltenInit<CR>", "[Molten] Initialize kernel")
           map("n", "<leader>mr", ":MoltenEvaluateOperator<CR>", "[Molten] Run operator")
           map("n", "<leader>ml", ":MoltenEvaluateLine<CR>", "[Molten] Run line")
           map("n", "<leader>mc", ":MoltenReevaluateCell<CR>", "[Molten] Re-run cell")
@@ -86,7 +86,7 @@ return {
           map("n", "<leader><CR>", run_markdown_cell, "[Molten] Run cell (smart - leader)")
           map("n", "<leader>jr", run_markdown_cell, "[Unified] Run cell (smart)")
           map("v", "<leader>jr", ":<C-u>MoltenEvaluateVisual<CR>gv", "[Unified] Run selection")
-          map("n", "<leader>ji", ":MoltenInit<CR>", "[Unified] Initialize")
+          map("n", "<leader>jK", ":MoltenInit<CR>", "[Unified] Initialize kernel")
           
           -- Note: Use ]b and [b for cell navigation (treesitter text objects)
           
@@ -107,11 +107,7 @@ return {
         backend = "kitty", -- Ghostty supports kitty graphics protocol
         integrations = {
           markdown = {
-            enabled = true,
-            clear_in_insert_mode = false,
-            download_remote_images = true,
-            only_render_image_at_cursor = false,
-            filetypes = { "markdown", "vimwiki", "quarto" },
+            enabled = false, -- Disabled: use Snacks.image.hover() (<leader>mi) instead
           },
         },
         max_width = nil,

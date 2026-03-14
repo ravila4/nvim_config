@@ -130,27 +130,16 @@ return {
         },
       },
 
-      -- Native image display for markdown, obsidian, and notebooks
+      -- Image display for markdown/quarto (hover-only, no inline rendering)
       image = {
         enabled = true,
-        backend = "kitty", -- Good for Ghostty terminal
-        integrations = {
-          markdown = {
-            enabled = true,
-            clear_in_insert_mode = false,
-            only_render_image_at_cursor = false,
-            filetypes = { "markdown", "quarto", "rmd" },
-          },
-        },
-        max_width = 120, -- Match your zen mode width
-        max_height_window_percentage = 50,
-        window_overlap_clear_enabled = true, -- Prevent overlapping text
-        window_overlap_clear_ft_ignore = { "cmp_menu", "cmp_docs", "" },
-        -- Document-specific sizing to prevent whitespace issues
+        backend = "kitty",
         doc = {
-          max_width = 80, -- Reasonable inline width
-          max_height = 40, -- Prevent excessive height
+          inline = false, -- Don't render images inline (causes scroll jank)
+          float = false, -- Don't auto-float either
         },
+        max_width = 120,
+        max_height_window_percentage = 50,
         -- Image scaling and conversion options
         convert = {
           magick = {
@@ -428,6 +417,14 @@ return {
         desc = "which_key_ignore",
       },
       {
+        "<leader>mi",
+        function()
+          Snacks.image.hover()
+        end,
+        desc = "Preview image at cursor",
+        ft = { "markdown", "quarto", "rmd" },
+      },
+      {
         "]]",
         function()
           Snacks.words.jump(vim.v.count1)
@@ -445,14 +442,6 @@ return {
       },
     },
     init = function()
-      -- Initialize image resolver early
-      vim.defer_fn(function()
-        if package.loaded["snacks"] and package.loaded["snacks"].image then
-          -- Force image module initialization
-          require("snacks").image.setup()
-        end
-      end, 100)
-
       vim.api.nvim_create_autocmd("User", {
         pattern = "VeryLazy",
         callback = function()
@@ -571,15 +560,6 @@ return {
             end,
           })
 
-          -- Ensure snacks.image is ready for markdown files
-          vim.api.nvim_create_autocmd("FileType", {
-            pattern = { "markdown", "quarto", "rmd" },
-            callback = function()
-              if package.loaded["snacks"] and require("snacks").image then
-                require("snacks").image.setup()
-              end
-            end,
-          })
         end,
       })
     end,

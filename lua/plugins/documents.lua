@@ -62,10 +62,19 @@ return {
           },
           horizontal_rules = presets.horizontal_rules.thin,
         },
-        -- Disable markview's image handling - let snacks.image handle it
+        -- Show image links with a camera icon for easy scanning
         markdown_inline = {
           images = {
-            enable = false,
+            enable = true,
+            default = {
+              icon = "󰥶 ",
+              icon_hl = "DiagnosticInfo",
+              hl = "DiagnosticInfo",
+              corner_left = "",
+              corner_right = "",
+              padding_left = "",
+              padding_right = "",
+            },
           },
         },
         -- Enable LaTeX math rendering
