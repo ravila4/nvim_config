@@ -52,7 +52,7 @@ return {
         json = { "prettier" },
         jsonc = { "prettier" },
         yaml = { "prettier" },
-        markdown = { "prettier" },
+        markdown = { "rumdl" },
         -- Other languages
         lua = { "stylua" },
         sh = { "shfmt" },
@@ -83,6 +83,12 @@ return {
         prettier = {
           command = "prettier",
           args = { "--stdin-filepath", "$FILENAME" },
+          stdin = true,
+        },
+        -- rumdl for markdown formatting
+        rumdl = {
+          command = "rumdl",
+          args = { "fmt", "-" },
           stdin = true,
         },
         -- Stylua with 2-space indentation
