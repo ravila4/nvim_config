@@ -286,6 +286,13 @@ return {
             #context_menu,
             { name = "󰍔 Toggle Markview", cmd = "Markview Toggle", rtxt = "mv" }
           )
+          table.insert(context_menu, #context_menu, {
+            name = (vim.wo.wrap and "󰖶 Disable" or "󰖶 Enable") .. " Line Wrap",
+            cmd = function()
+              vim.wo.wrap = not vim.wo.wrap
+            end,
+            rtxt = "tw",
+          })
         end
 
         menu.open(normalize_menu(context_menu), _G.ide_menus._menu_opts())
