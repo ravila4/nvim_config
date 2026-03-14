@@ -279,6 +279,15 @@ return {
           )
         end
 
+        local ft = vim.bo.filetype
+        if ft == "markdown" or ft == "quarto" or ft == "rmd" then
+          table.insert(
+            context_menu,
+            #context_menu,
+            { name = "󰍔 Toggle Markview", cmd = "Markview Toggle", rtxt = "mv" }
+          )
+        end
+
         menu.open(normalize_menu(context_menu), _G.ide_menus._menu_opts())
       end, {})
     end,
