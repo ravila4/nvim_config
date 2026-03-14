@@ -5,8 +5,12 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
--- Python provider (use homebrew Python 3.12 for molten-nvim compatibility)
-vim.g.python3_host_prog = "/opt/homebrew/bin/python3.12"
+-- Python provider for molten-nvim (requires: pip install --user pynvim)
+if vim.fn.has("mac") == 1 then
+  vim.g.python3_host_prog = "/opt/homebrew/bin/python3.12"
+else
+  vim.g.python3_host_prog = vim.fn.exepath("python3")
+end
 
 local opt = vim.opt
 

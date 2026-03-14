@@ -167,7 +167,7 @@ return {
         },
 
         jupyter_menu = {
-          { name = "🚀 Initialize Kernel", cmd = "MoltenInit", rtxt = "mi" },
+          { name = "🚀 Initialize Kernel", cmd = "MoltenInit", rtxt = "mK" },
           { name = "separator" },
           { name = "📊 Run Selection", cmd = "MoltenEvaluateVisual", rtxt = "mr" },
           { name = "separator" },

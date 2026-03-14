@@ -146,7 +146,7 @@ return {
           -- Enable treesitter highlighting
           vim.defer_fn(function()
             if vim.bo.filetype == "markdown" then
-              vim.cmd("TSBufEnable highlight")
+              vim.treesitter.start()
               -- Trigger markview if available
               if pcall(require, "markview") then
                 vim.cmd("Markview enable")

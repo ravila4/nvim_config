@@ -2,6 +2,32 @@
 
 Leader key is `Space`.
 
+## External Dependencies
+
+| Dependency | Install | Required by |
+|-----------|---------|-------------|
+| `luarocks` | System package manager | Some Neovim plugins |
+| Kitty graphics protocol | Ghostty / Kitty terminal | Image rendering (`snacks.image`, `image.nvim`) |
+| `jupytext` | `uv tool install jupytext` | Notebook `.ipynb` conversion |
+| `pynvim` | `pip install --user pynvim` | Neovim Python provider (Molten) |
+| `jupyter_client` | `pip install --user jupyter_client` | Molten kernel communication |
+| `ipykernel` | `pip install --user ipykernel` | Molten kernel execution |
+
+### Molten setup
+
+Molten requires the Neovim Python provider. After installing the pip dependencies above:
+
+```bash
+# 1. Install Python deps (must be visible to system Python, not a venv)
+pip install --user pynvim jupyter_client ipykernel
+
+# 2. Register the remote plugin (run inside Neovim)
+:UpdateRemotePlugins
+
+# 3. Restart Neovim, then initialize a kernel
+#    <leader>mK  or  :MoltenInit
+```
+
 ## General
 
 | Key | Action |
@@ -107,12 +133,18 @@ Leader key is `Space`.
 | `<leader>ca` / `<leader>cd` | Accept / deny diff |
 | `<leader>mc` | Claude menu |
 
+## Markdown / Documents
+
+| Key | Action |
+|-----|--------|
+| `<leader>mi` | Preview image at cursor (float) |
+| `<leader>mv` | Toggle Markview rendering |
+| `<leader>ms` | Markview split toggle |
+
 ## Jupyter Notebooks
 
-Opening `.ipynb` files auto-converts them to Python with `# %%` cell markers via jupytext.
+Opening `.ipynb` files auto-converts them to markdown via jupytext.
 Changes save back to `.ipynb` format. Full LSP support in the converted view.
-
-**Requirements**: `uv tool install jupytext`, Kitty terminal (for inline images)
 
 ### Molten (inline execution)
 
@@ -120,7 +152,7 @@ Inline plots and output display, similar to VSCode notebooks.
 
 | Key | Action |
 |-----|--------|
-| `<leader>mi` | Initialize kernel |
+| `<leader>mK` | Initialize kernel |
 | `<leader>mk` | Select kernel (Telescope) |
 | `<leader>mr` | Run selection |
 | `<leader>ml` | Run line |
