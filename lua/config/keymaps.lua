@@ -19,12 +19,7 @@ map("n", "<leader>E", ":Neotree focus<CR>", { desc = "Focus file explorer" })
 -- Buffer navigation (safe keymaps that don't override system shortcuts)
 map("n", "<leader>bn", ":bnext<CR>", { desc = "Next buffer" })
 map("n", "<leader>bp", ":bprev<CR>", { desc = "Previous buffer" })
-map("n", "<leader>bd", ":bdelete<CR>", { desc = "Delete buffer" })
 map("n", "<leader>bb", ":buffers<CR>", { desc = "List buffers" })
-
--- Alternative: Use ] and [ for buffer navigation (common Vim convention)
-map("n", "]b", ":bnext<CR>", { desc = "Next buffer" })
-map("n", "[b", ":bprev<CR>", { desc = "Previous buffer" })
 
 -- Enhanced search with beautiful UI
 map("n", "<leader>ff", ":Telescope find_files<CR>", { desc = "Find files" })
@@ -58,13 +53,6 @@ map("t", "<Esc><Esc>", "<C-\\><C-N>", { desc = "Exit terminal mode", silent = tr
 
 -- Line wrapping toggle
 map("n", "<leader>tw", ":set wrap!<CR>", { desc = "Toggle line wrapping" })
-
--- ClaudeCode keymaps
-map("n", "<leader>cc", "<cmd>ClaudeCode<cr>", { desc = "Toggle Claude Code" })
-map("n", "<leader>cf", "<cmd>ClaudeCodeFocus<cr>", { desc = "Focus Claude Code" })
-map("v", "<leader>cs", "<cmd>ClaudeCodeSend<cr>", { desc = "Send selection to Claude" })
-map("n", "<leader>ca", "<cmd>ClaudeCodeDiffAccept<cr>", { desc = "Accept diff" })
-map("n", "<leader>cd", "<cmd>ClaudeCodeDiffDeny<cr>", { desc = "Deny diff" })
 
 -- Layout management keymaps
 map("n", "<leader>ll", function()

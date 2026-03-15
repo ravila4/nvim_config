@@ -68,13 +68,6 @@ return {
         desc = "Stop Tests",
       },
       {
-        "<leader>tw",
-        function()
-          require("neotest").watch.toggle(vim.fn.expand("%"))
-        end,
-        desc = "Toggle Test Watch",
-      },
-      {
         "<leader>td",
         function()
           require("neotest").run.run({ strategy = "dap" })
