@@ -135,7 +135,7 @@ return {
     },
     dependencies = {
       "nvim-lua/plenary.nvim",
-      "hrsh7th/nvim-cmp",
+      "saghen/blink.cmp",
       "nvim-telescope/telescope.nvim", -- For picker functionality
     },
     config = function()
@@ -147,9 +147,10 @@ return {
           },
         },
 
-        -- Enhanced completion configuration
+        -- Completion configuration (blink.cmp)
         completion = {
-          nvim_cmp = true,
+          nvim_cmp = false,
+          blink = true,
           min_chars = 2,
         },
 
