@@ -28,6 +28,22 @@ return {
         ["Q"] = function()
           require("edgy").goto_main()
         end,
+        -- Increase width
+        ["<c-Right>"] = function(win)
+          win:resize("width", 2)
+        end,
+        -- Decrease width
+        ["<c-Left>"] = function(win)
+          win:resize("width", -2)
+        end,
+        -- Increase height
+        ["<c-Up>"] = function(win)
+          win:resize("height", 2)
+        end,
+        -- Decrease height
+        ["<c-Down>"] = function(win)
+          win:resize("height", -2)
+        end,
       },
       bottom = {
         -- Terminal at bottom (like RStudio console)
@@ -108,24 +124,6 @@ return {
           ft = "dbui",
           size = { width = 0.2 },
         },
-      },
-      keys = {
-        -- Increase width
-        ["<c-Right>"] = function(win)
-          win:resize("width", 2)
-        end,
-        -- Decrease width
-        ["<c-Left>"] = function(win)
-          win:resize("width", -2)
-        end,
-        -- Increase height
-        ["<c-Up>"] = function(win)
-          win:resize("height", 2)
-        end,
-        -- Decrease height
-        ["<c-Down>"] = function(win)
-          win:resize("height", -2)
-        end,
       },
     },
   },
