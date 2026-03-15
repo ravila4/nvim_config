@@ -58,56 +58,56 @@ return {
       _G.ide_menus = {
         buffer_menu = {
           { name = " Close Buffer", cmd = "bdelete", rtxt = "" },
-          { name = " Close Others", cmd = "BufferLineCloseOthers", rtxt = "" },
+          { name = "  Close Others", cmd = "BufferLineCloseOthers", rtxt = "" },
           { name = "separator" },
           { name = "󰤻 Split Horizontal", cmd = "split", rtxt = "" },
           { name = "󰤼 Split Vertical", cmd = "vsplit", rtxt = "" },
           { name = "separator" },
           { name = "󰐃 Pin Tab", cmd = "BufferLineTogglePin", rtxt = "" },
-          { name = " Pick Buffer", cmd = "BufferLinePick", rtxt = "" },
+          { name = "  Pick Buffer", cmd = "BufferLinePick", rtxt = "" },
         },
 
         lsp_menu = {
           { name = "󰊕 Go to Definition", cmd = "lua vim.lsp.buf.definition()", rtxt = "gd" },
-          { name = " Go to References", cmd = "lua vim.lsp.buf.references()", rtxt = "gr" },
-          { name = " Go to Implementation", cmd = "lua vim.lsp.buf.implementation()", rtxt = "gi" },
-          { name = " Go to Type Definition", cmd = "lua vim.lsp.buf.type_definition()", rtxt = "gt" },
+          { name = "  Go to References", cmd = "lua vim.lsp.buf.references()", rtxt = "gr" },
+          { name = "  Go to Implementation", cmd = "lua vim.lsp.buf.implementation()", rtxt = "gi" },
+          { name = "  Go to Type Definition", cmd = "lua vim.lsp.buf.type_definition()", rtxt = "gt" },
           { name = "separator" },
           { name = " Rename Symbol", cmd = "lua vim.lsp.buf.rename()", rtxt = "rn" },
-          { name = " Code Action", cmd = "lua vim.lsp.buf.code_action()", rtxt = "cd" },
-          { name = "󰊄 Format Document", cmd = "lua vim.lsp.buf.format()", rtxt = "fm" },
+          { name = "  Code Action", cmd = "lua vim.lsp.buf.code_action()", rtxt = "cd" },
+          { name = "  Format Document", cmd = "lua vim.lsp.buf.format()", rtxt = "fm" },
           { name = "separator" },
           { name = " Show Diagnostics", cmd = "lua vim.diagnostic.open_float()", rtxt = "df" },
-          { name = " Toggle Diagnostic Lines", cmd = "lua require('lsp_lines').toggle()", rtxt = "ld" },
+          { name = "  Toggle Diagnostic Lines", cmd = "lua require('lsp_lines').toggle()", rtxt = "ld" },
         },
 
         git_menu = {
           { name = "󰊢 Git Status", cmd = "Neotree float git_status git_base=main", rtxt = "gS" },
-          { name = " Open Diffview", cmd = "DiffviewOpen", rtxt = "gd" },
-          { name = " Diff Last Commit", cmd = "DiffviewOpen HEAD~1", rtxt = "gD" },
-          { name = " File History", cmd = "DiffviewFileHistory %", rtxt = "gh" },
+          { name = "  Open Diffview", cmd = "DiffviewOpen", rtxt = "gd" },
+          { name = "  Diff Last Commit", cmd = "DiffviewOpen HEAD~1", rtxt = "gD" },
+          { name = "  File History", cmd = "DiffviewFileHistory %", rtxt = "gh" },
           { name = " Close Diffview", cmd = "DiffviewClose", rtxt = "gc" },
           { name = "separator" },
-          { name = "󰊢 Git Blame Line", cmd = "lua Snacks.git.blame_line()", rtxt = "gB" },
+          { name = "  Git Blame Line", cmd = "lua Snacks.git.blame_line()", rtxt = "gB" },
         },
 
         terminal_menu = {
           { name = "󰆍 Toggle Terminal", cmd = "lua Snacks.terminal()", rtxt = "tt" },
-          { name = "󰆍 Floating Terminal", cmd = "lua Snacks.terminal.toggle()", rtxt = "" },
+          { name = "  Floating Terminal", cmd = "lua Snacks.terminal.toggle()", rtxt = "" },
           { name = "separator" },
           { name = " Python REPL", cmd = "lua Snacks.terminal.toggle('python3')", rtxt = "" },
-          { name = " R Console", cmd = "lua Snacks.terminal.toggle('R')", rtxt = "" },
-          { name = "📓 IPython", cmd = "lua Snacks.terminal.toggle('ipython')", rtxt = "" },
+          { name = "  R Console", cmd = "lua Snacks.terminal.toggle('R')", rtxt = "" },
+          { name = "  IPython", cmd = "lua Snacks.terminal.toggle('ipython')", rtxt = "" },
         },
 
         file_menu = {
           { name = "󰈞 Find Files", cmd = "Telescope find_files", rtxt = "ff" },
-          { name = "󱋡 Recent Files", cmd = "Telescope oldfiles", rtxt = "fr" },
-          { name = "󰈬 Live Grep", cmd = "Telescope live_grep", rtxt = "fg" },
+          { name = "  Recent Files", cmd = "Telescope oldfiles", rtxt = "fr" },
+          { name = "  Live Grep", cmd = "Telescope live_grep", rtxt = "fg" },
           { name = "separator" },
           { name = "󰝒 New File", cmd = "ene", rtxt = "" },
           { name = "󰙅 File Explorer", cmd = "Neotree toggle", rtxt = "e" },
-          { name = "󰘎 Code Outline", cmd = "Outline", rtxt = "s" },
+          { name = "  Code Outline", cmd = "Outline", rtxt = "s" },
           { name = "separator" },
           { name = " Save", cmd = "w", rtxt = "" },
           { name = " Save All", cmd = "wa", rtxt = "" },
@@ -132,12 +132,11 @@ return {
           { name = " Step Into", cmd = "echo 'Debug: Step Into (nvim-dap needed)'", rtxt = "" },
           { name = " Step Out", cmd = "echo 'Debug: Step Out (nvim-dap needed)'", rtxt = "" },
           { name = " Stop Debugging", cmd = "echo 'Debug: Stop (nvim-dap needed)'", rtxt = "" },
-          { name = "separator" },
         },
 
         test_menu = {
-          { name = " Run File Tests", cmd = "lua require('neotest').run.run(vim.fn.expand('%'))", rtxt = "tf" },
-          { name = " Run All Tests", cmd = "lua require('neotest').run.run(vim.fn.getcwd())", rtxt = "ta" },
+          { name = "  Run File Tests", cmd = "lua require('neotest').run.run(vim.fn.expand('%'))", rtxt = "tf" },
+          { name = "  Run All Tests", cmd = "lua require('neotest').run.run(vim.fn.getcwd())", rtxt = "ta" },
           { name = "separator" },
           { name = "  Test Summary", cmd = "lua require('neotest').summary.toggle()", rtxt = "ts" },
           {
@@ -158,20 +157,21 @@ return {
         },
 
         claude_menu = {
-          { name = "󰛄 Toggle Claude Code", cmd = "ClaudeCode", rtxt = "cc" },
-          { name = "󰛄 Focus Claude Code", cmd = "ClaudeCodeFocus", rtxt = "cf" },
+          { name = "Toggle Claude Code", cmd = "ClaudeCode", rtxt = "cc" },
+          { name = "Focus Claude Code", cmd = "ClaudeCodeFocus", rtxt = "cf" },
           { name = "separator" },
-          { name = "󰛸 Select Model", cmd = "ClaudeCodeSelectModel", rtxt = "cm" },
+          { name = "Select Model", cmd = "ClaudeCodeSelectModel", rtxt = "cm" },
           { name = " Accept Diff", cmd = "ClaudeCodeDiffAccept", rtxt = "cd" },
           { name = "󰜺 Deny Diff", cmd = "ClaudeCodeDiffDeny", rtxt = "cr" },
         },
 
         jupyter_menu = {
-          { name = "🚀 Initialize Kernel", cmd = "MoltenInit", rtxt = "mK" },
+          { name = " Initialize Kernel", cmd = "MoltenInit", rtxt = "mK" },
           { name = "separator" },
-          { name = "📊 Run Selection", cmd = "MoltenEvaluateVisual", rtxt = "mr" },
+          { name = "  Run Selection", cmd = "MoltenEvaluateVisual", rtxt = "mr" },
+          { name = "  Delete Cell", cmd = "MoltenDelete", rtxt = "mD" },
           { name = "separator" },
-          { name = "🛑 Quit Kernel", cmd = "MoltenDeinit", rtxt = "mq" },
+          { name = " Stop Kernel", cmd = "MoltenDeinit", rtxt = "mq" },
         },
 
         context_menu = {
@@ -275,7 +275,7 @@ return {
           table.insert(
             context_menu,
             #context_menu,
-            { name = "📓 Jupyter Notebook", cmd = "JupyterMenu", rtxt = "mj" }
+            { name = " Jupyter Notebook", cmd = "JupyterMenu", rtxt = "mj" }
           )
         end
 
