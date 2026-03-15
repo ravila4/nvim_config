@@ -12,6 +12,22 @@ else
   vim.g.python3_host_prog = vim.fn.exepath("python3")
 end
 
+-- Check pynvim availability on first Python provider use
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "markdown", "quarto" },
+  once = true,
+  callback = function()
+    local python = vim.g.python3_host_prog or "python3"
+    local result = vim.fn.system(python .. ' -c "import pynvim"')
+    if vim.v.shell_error ~= 0 then
+      vim.notify(
+        "pynvim not found in: " .. python .. "\nRun: pip install pynvim (in your active venv)",
+        vim.log.levels.WARN
+      )
+    end
+  end,
+})
+
 local opt = vim.opt
 
 -- Line Numbers
