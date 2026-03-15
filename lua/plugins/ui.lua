@@ -154,20 +154,20 @@ return {
           vim.api.nvim_set_hl(0, "GitSignsStagedTopdelete", { fg = "#c16a5a" })
           vim.api.nvim_set_hl(0, "GitSignsStagedChangedelete", { fg = "#a67350" })
         else
-          -- Dark theme - softer colors for better visibility
-          vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#4ec9b0" }) -- Teal green
-          vim.api.nvim_set_hl(0, "GitSignsChange", { fg = "#dcdcaa" }) -- Light yellow
-          vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#f48771" }) -- Light red
-          vim.api.nvim_set_hl(0, "GitSignsTopdelete", { fg = "#f48771" }) -- Light red
-          vim.api.nvim_set_hl(0, "GitSignsChangedelete", { fg = "#d19a66" }) -- Orange
-          vim.api.nvim_set_hl(0, "GitSignsUntracked", { fg = "#569cd6" }) -- Light blue
+          -- Light theme - Adwaita-inspired colors
+          vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#26a269" }) -- GNOME green
+          vim.api.nvim_set_hl(0, "GitSignsChange", { fg = "#e5a50a" }) -- GNOME yellow
+          vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#c01c28" }) -- GNOME red
+          vim.api.nvim_set_hl(0, "GitSignsTopdelete", { fg = "#c01c28" }) -- GNOME red
+          vim.api.nvim_set_hl(0, "GitSignsChangedelete", { fg = "#e66100" }) -- GNOME orange
+          vim.api.nvim_set_hl(0, "GitSignsUntracked", { fg = "#1c71d8" }) -- GNOME blue
 
-          -- Staged versions (50% opacity effect)
-          vim.api.nvim_set_hl(0, "GitSignsStagedAdd", { fg = "#3a9688" })
-          vim.api.nvim_set_hl(0, "GitSignsStagedChange", { fg = "#a6a677" })
-          vim.api.nvim_set_hl(0, "GitSignsStagedDelete", { fg = "#c16a5a" })
-          vim.api.nvim_set_hl(0, "GitSignsStagedTopdelete", { fg = "#c16a5a" })
-          vim.api.nvim_set_hl(0, "GitSignsStagedChangedelete", { fg = "#a67350" })
+          -- Staged versions (muted)
+          vim.api.nvim_set_hl(0, "GitSignsStagedAdd", { fg = "#57c28b" })
+          vim.api.nvim_set_hl(0, "GitSignsStagedChange", { fg = "#e5c76b" })
+          vim.api.nvim_set_hl(0, "GitSignsStagedDelete", { fg = "#d56c6c" })
+          vim.api.nvim_set_hl(0, "GitSignsStagedTopdelete", { fg = "#d56c6c" })
+          vim.api.nvim_set_hl(0, "GitSignsStagedChangedelete", { fg = "#e69a5a" })
         end
       end
 
@@ -346,7 +346,6 @@ return {
             local is_dark = vim.o.background == "dark"
 
             -- Force window separators to be transparent with theme-appropriate colors
-            local is_dark = vim.o.background == "dark"
             local separator_fg = is_dark and "#484a4a" or "#cacac9"
 
             vim.api.nvim_set_hl(0, "VertSplit", { bg = "NONE", fg = separator_fg })
