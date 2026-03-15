@@ -40,7 +40,7 @@ return {
                 if molten_status.initialized() == "Molten" then
                   local kernel_name = molten_status.kernels()
                   if kernel_name and kernel_name ~= "" then
-                    return "🐍 " .. kernel_name
+                    return " " .. kernel_name
                   end
                 end
                 return ""

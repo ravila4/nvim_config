@@ -47,21 +47,25 @@ return {
 
       -- Function to run markdown code blocks as cells using quarto
       local function run_markdown_cell()
-        -- Try to use quarto runner first for markdown files
         local success = pcall(function()
-          local quarto = require("quarto")
           local runner = require("quarto.runner")
           if vim.bo.filetype == "markdown" then
             runner.run_cell()
           else
-            -- Fallback to molten for non-markdown files
             vim.cmd("MoltenEvaluateLine")
           end
         end)
-        
         if not success then
-          -- Final fallback to line-based evaluation
           vim.cmd("MoltenEvaluateLine")
+        end
+      end
+
+      local function run_cell_and_advance()
+        run_markdown_cell()
+        -- Jump to next code block via treesitter textobjects
+        local ok, move = pcall(require, "nvim-treesitter-textobjects.move")
+        if ok then
+          move.goto_next_start("@block.inner")
         end
       end
 
@@ -80,15 +84,14 @@ return {
           map("n", "<leader>mq", ":MoltenDeinit<CR>", "[Molten] Quit kernel")
 
           -- Smart cell execution - detects markdown code blocks
-          -- Multiple keybindings for different terminal setups
-          map("n", "<S-CR>", run_markdown_cell, "[Molten] Run cell (smart)")
-          map("n", "<C-CR>", run_markdown_cell, "[Molten] Run cell (smart - alt)")
-          map("n", "<leader><CR>", run_markdown_cell, "[Molten] Run cell (smart - leader)")
+          map("n", "<S-CR>", run_cell_and_advance, "[Molten] Run cell + advance")
+          map("n", "<C-CR>", run_markdown_cell, "[Molten] Run cell")
+          map("n", "<leader><CR>", run_markdown_cell, "[Molten] Run cell")
           map("n", "<leader>jr", run_markdown_cell, "[Unified] Run cell (smart)")
           map("v", "<leader>jr", ":<C-u>MoltenEvaluateVisual<CR>gv", "[Unified] Run selection")
           map("n", "<leader>jK", ":MoltenInit<CR>", "[Unified] Initialize kernel")
           
-          -- Note: Use ]b and [b for cell navigation (treesitter text objects)
+          -- Cell navigation: ]c / [c (treesitter textobjects in treesitter.lua)
           
           -- Full output viewing
           map("n", "<leader>jo", ":noautocmd MoltenEnterOutput<CR>", "[Output] View full output")
