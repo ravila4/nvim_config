@@ -108,6 +108,23 @@ if vim.fn.system("uname -r"):match("Microsoft") then
   })
 end
 
+-- Filetypes to skip for trailing space highlighting/deletion
+local trailing_skip_filetypes = {
+  "lazy",
+  "mason",
+  "neo-tree",
+  "telescope",
+  "dashboard",
+  "snacks_dashboard",
+  "help",
+  "terminal",
+  "qf",
+  "trouble",
+  "fugitive",
+  "defx",
+  "",
+}
+
 -- Highlight trailing spaces (theme-aware and startup-safe)
 vim.api.nvim_create_augroup("TrailingSpace", { clear = true })
 
@@ -132,24 +149,7 @@ vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
       local buftype = vim.bo.buftype
       local filetype = vim.bo.filetype
 
-      -- Skip special buffers and floating windows
-      local skip_filetypes = {
-        "lazy",
-        "mason",
-        "neo-tree",
-        "telescope",
-        "dashboard",
-        "snacks_dashboard",
-        "help",
-        "terminal",
-        "qf",
-        "trouble",
-        "fugitive",
-        "defx",
-        "",
-      }
-
-      if buftype == "" and not vim.tbl_contains(skip_filetypes, filetype) and filetype ~= "" then
+      if buftype == "" and not vim.tbl_contains(trailing_skip_filetypes, filetype) and filetype ~= "" then
         -- Clear any existing matches first
         vim.fn.clearmatches()
         -- Add the trailing space match
@@ -162,20 +162,7 @@ vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
 -- Clear trailing space highlighting for special filetypes
 vim.api.nvim_create_autocmd("FileType", {
   group = "TrailingSpace",
-  pattern = {
-    "lazy",
-    "mason",
-    "neo-tree",
-    "telescope",
-    "dashboard",
-    "snacks_dashboard",
-    "help",
-    "terminal",
-    "qf",
-    "trouble",
-    "fugitive",
-    "defx",
-  },
+  pattern = trailing_skip_filetypes,
   callback = function()
     vim.fn.clearmatches()
   end,
@@ -194,24 +181,7 @@ vim.api.nvim_create_user_command("DeleteTrailingSpaces", function()
   local buftype = vim.bo.buftype
   local filetype = vim.bo.filetype
 
-  -- Skip special buffers (same logic as highlighting)
-  local skip_filetypes = {
-    "lazy",
-    "mason",
-    "neo-tree",
-    "telescope",
-    "dashboard",
-    "snacks_dashboard",
-    "help",
-    "terminal",
-    "qf",
-    "trouble",
-    "fugitive",
-    "defx",
-    "",
-  }
-
-  if buftype ~= "" or vim.tbl_contains(skip_filetypes, filetype) or filetype == "" then
+  if buftype ~= "" or vim.tbl_contains(trailing_skip_filetypes, filetype) or filetype == "" then
     print("DeleteTrailingSpaces: Skipping special buffer")
     return
   end
