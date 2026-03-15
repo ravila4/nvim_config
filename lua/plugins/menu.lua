@@ -54,6 +54,21 @@ return {
         return normalized
       end
 
+      -- Helper: run a neo-tree command by refocusing the neo-tree window first.
+      -- The menu steals focus, so we stash the neo-tree win ID before opening
+      -- and restore it before invoking the command.
+      local function neotree_cmd(cmd_name)
+        return function()
+          local nt_win = _G._neotree_menu_win
+          if not nt_win or not vim.api.nvim_win_is_valid(nt_win) then
+            return
+          end
+          vim.api.nvim_set_current_win(nt_win)
+          local state = require("neo-tree.sources.manager").get_state("filesystem")
+          require("neo-tree.sources.filesystem.commands")[cmd_name](state)
+        end
+      end
+
       -- Store menu configurations globally for access
       _G.ide_menus = {
         buffer_menu = {
@@ -173,6 +188,94 @@ return {
           { name = " Stop Kernel", cmd = "MoltenDeinit", rtxt = "mq" },
         },
 
+        neotree_menu = {
+          { name = "󰝒 Add File/Directory", cmd = neotree_cmd("add"), rtxt = "a" },
+          { name = " Rename", cmd = neotree_cmd("rename"), rtxt = "r" },
+          { name = " Move", cmd = neotree_cmd("move"), rtxt = "m" },
+          { name = "󰆴 Delete", cmd = neotree_cmd("delete"), rtxt = "d" },
+          { name = "separator" },
+          { name = " Copy File", cmd = neotree_cmd("copy_to_clipboard"), rtxt = "c" },
+          { name = " Paste", cmd = neotree_cmd("paste_from_clipboard"), rtxt = "p" },
+          { name = "separator" },
+          {
+            name = " Copy Absolute Path",
+            cmd = function()
+              local state = require("neo-tree.sources.manager").get_state("filesystem")
+              local node = state.tree:get_node()
+              if node then
+                local path = node:get_id()
+                vim.fn.setreg("+", path)
+                vim.notify("Copied: " .. path)
+              end
+            end,
+            rtxt = "",
+          },
+          {
+            name = " Copy Relative Path",
+            cmd = function()
+              local state = require("neo-tree.sources.manager").get_state("filesystem")
+              local node = state.tree:get_node()
+              if node then
+                local path = vim.fn.fnamemodify(node:get_id(), ":.")
+                vim.fn.setreg("+", path)
+                vim.notify("Copied: " .. path)
+              end
+            end,
+            rtxt = "",
+          },
+          { name = "separator" },
+          {
+            name = "󰤻 Open in Horizontal Split",
+            cmd = function()
+              local state = require("neo-tree.sources.manager").get_state("filesystem")
+              local node = state.tree:get_node()
+              if not node or node.type ~= "file" then
+                return
+              end
+              local path = node:get_id()
+              -- Find main editing window and split it
+              for _, win in ipairs(vim.api.nvim_list_wins()) do
+                local wbuf = vim.api.nvim_win_get_buf(win)
+                local ft = vim.bo[wbuf].filetype
+                local bt = vim.bo[wbuf].buftype
+                if ft ~= "neo-tree" and ft ~= "Outline" and ft ~= "neotest-summary" and bt == "" and vim.api.nvim_win_get_config(win).relative == "" then
+                  vim.api.nvim_set_current_win(win)
+                  vim.cmd("split " .. vim.fn.fnameescape(path))
+                  return
+                end
+              end
+            end,
+            rtxt = "",
+          },
+          {
+            name = "󰤼 Open in Vertical Split",
+            cmd = function()
+              local state = require("neo-tree.sources.manager").get_state("filesystem")
+              local node = state.tree:get_node()
+              if not node or node.type ~= "file" then
+                return
+              end
+              local path = node:get_id()
+              for _, win in ipairs(vim.api.nvim_list_wins()) do
+                local wbuf = vim.api.nvim_win_get_buf(win)
+                local ft = vim.bo[wbuf].filetype
+                local bt = vim.bo[wbuf].buftype
+                if ft ~= "neo-tree" and ft ~= "Outline" and ft ~= "neotest-summary" and bt == "" and vim.api.nvim_win_get_config(win).relative == "" then
+                  vim.api.nvim_set_current_win(win)
+                  vim.cmd("vsplit " .. vim.fn.fnameescape(path))
+                  return
+                end
+              end
+            end,
+            rtxt = "",
+          },
+          { name = "separator" },
+          { name = " File Operations", cmd = "FileMenu", rtxt = "mf" },
+          { name = " Layout Control", cmd = "LayoutMenu", rtxt = "mp" },
+          { name = " Terminal/REPL", cmd = "TerminalMenu", rtxt = "mt" },
+          { name = "󰊢 Git Operations", cmd = "GitMenu", rtxt = "mg" },
+        },
+
         context_menu = {
           { name = " File Operations", cmd = "FileMenu", rtxt = "mf" },
           { name = "separator" },
@@ -260,8 +363,18 @@ return {
       end, {})
 
       -- Right-click context menu with copy/paste + IDE entries
+      vim.api.nvim_create_user_command("NeotreeMenu", function()
+        -- Stash the neo-tree window so commands can refocus it after the menu closes
+        _G._neotree_menu_win = vim.api.nvim_get_current_win()
+        menu.open(normalize_menu(_G.ide_menus.neotree_menu), _G.ide_menus._menu_opts())
+      end, {})
       vim.api.nvim_create_user_command("RightClickMenu", function()
         if vim.bo.filetype == "snacks_dashboard" or vim.bo.filetype == "dashboard" then
+          return
+        end
+
+        if vim.bo.filetype == "neo-tree" then
+          vim.cmd("NeotreeMenu")
           return
         end
 
@@ -304,6 +417,10 @@ return {
           if vim.bo.filetype == "snacks_dashboard" or vim.bo.filetype == "dashboard" then
             return
           end
+          if vim.bo.filetype == "neo-tree" then
+            vim.cmd("NeotreeMenu")
+            return
+          end
           vim.cmd("ContextMenu")
         end,
         desc = "Open Context Menu",
@@ -312,6 +429,10 @@ return {
         "<leader>m",
         function()
           if vim.bo.filetype == "snacks_dashboard" or vim.bo.filetype == "dashboard" then
+            return
+          end
+          if vim.bo.filetype == "neo-tree" then
+            vim.cmd("NeotreeMenu")
             return
           end
           vim.cmd("ContextMenu")
