@@ -51,9 +51,18 @@ opt.ignorecase = true
 opt.smartcase = true
 
 -- Text wrapping
-opt.wrap = false -- Disable line wrapping by default
+opt.wrap = false -- Disable line wrapping by default (enabled for prose via autocmd)
 opt.linebreak = true -- When wrapping is enabled, break at word boundaries
 opt.showbreak = "↳ " -- Visual indicator for wrapped lines
+
+-- Enable line wrapping for prose filetypes
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "markdown", "quarto", "rmd" },
+  callback = function()
+    vim.opt_local.wrap = true
+    vim.opt_local.linebreak = true
+  end,
+})
 
 -- Misc
 opt.encoding = "utf8"
