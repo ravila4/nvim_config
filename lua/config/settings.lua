@@ -79,8 +79,8 @@ opt.foldlevel = 99
 -- Conceal level for markdown
 opt.conceallevel = 2
 
--- Clipboard
-opt.clipboard = "unnamed"
+-- Clipboard (unnamedplus works on both macOS and Linux)
+opt.clipboard = "unnamedplus"
 
 -- Completion
 opt.completeopt = { "menuone", "noinsert", "noselect" }
