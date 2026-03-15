@@ -78,7 +78,6 @@ return {
           map("n", "<leader>ml", ":MoltenEvaluateLine<CR>", "[Molten] Run line")
           map("n", "<leader>mc", ":MoltenReevaluateCell<CR>", "[Molten] Re-run cell")
           map("v", "<leader>mr", ":<C-u>MoltenEvaluateVisual<CR>gv", "[Molten] Run selection")
-          map("n", "<leader>mD", ":MoltenDelete<CR>", "[Molten] Delete cell")
           map("n", "<leader>mh", ":MoltenHideOutput<CR>", "[Molten] Hide output")
           map("n", "<leader>ms", ":MoltenShowOutput<CR>", "[Molten] Show output")
           map("n", "<leader>mq", ":MoltenDeinit<CR>", "[Molten] Quit kernel")

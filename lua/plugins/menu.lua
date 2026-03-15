@@ -169,7 +169,6 @@ return {
           { name = " Initialize Kernel", cmd = "MoltenInit", rtxt = "mK" },
           { name = "separator" },
           { name = "  Run Selection", cmd = "MoltenEvaluateVisual", rtxt = "mr" },
-          { name = "  Delete Cell", cmd = "MoltenDelete", rtxt = "mD" },
           { name = "separator" },
           { name = " Stop Kernel", cmd = "MoltenDeinit", rtxt = "mq" },
         },
