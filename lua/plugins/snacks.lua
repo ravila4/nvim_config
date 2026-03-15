@@ -27,11 +27,6 @@ return {
       dashboard = {
         enabled = true,
         disable_move = true,
-        sections = {
-          { section = "header" },
-          { section = "keys", gap = 1, padding = 1 },
-          { section = "startup" },
-        },
         preset = {
           keys = {
             { icon = " ", key = "f", desc = "Find File", action = ":lua Snacks.dashboard.pick('files')" },
@@ -228,55 +223,6 @@ return {
           patterns = { "GitSign", "MiniDiffSign" },
         },
         refresh = 50,
-      },
-
-      -- Snacks explorer (disabled - using neo-tree instead)
-      explorer = {
-        enabled = false,
-        width = 35,
-        position = "left",
-        follow = true,
-        sort = "name",
-        show_hidden = false,
-        show_icons = true,
-        -- Better styling to match your theme
-        style = {
-          border = "rounded",
-          title = "Files",
-          title_pos = "center",
-        },
-        icons = {
-          folder_closed = "",
-          folder_open = "",
-          file = "",
-          git_add = "",
-          git_change = "",
-          git_delete = "",
-          git_ignore = "",
-          git_rename = "",
-          git_stage = "",
-          git_unstage = "",
-          git_untrack = "",
-        },
-        keys = {
-          ["<cr>"] = "open",
-          ["o"] = "open",
-          ["<bs>"] = "parent",
-          ["K"] = "parent",
-          ["-"] = "parent",
-          ["H"] = "toggle_hidden",
-          ["R"] = "refresh",
-          ["a"] = "create",
-          ["d"] = "delete",
-          ["r"] = "rename",
-          ["y"] = "copy",
-          ["x"] = "cut",
-          ["p"] = "paste",
-          ["q"] = "close",
-          ["<esc>"] = "close",
-          ["/"] = "search",
-          ["?"] = "help",
-        },
       },
 
       -- Scope highlighting
