@@ -138,7 +138,7 @@ return {
         -- Image scaling and conversion options
         convert = {
           magick = {
-            default = { "-scale", "1920x1080>", "-quality", "85" }, -- Scale down large images
+            default = { "{src}", "-scale", "1920x1080>", "-quality", "85" }, -- Scale down large images
             vector = { "-density", 300, "{src}[0]" }, -- Higher quality SVG rendering
           },
         },
