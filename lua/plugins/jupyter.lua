@@ -84,7 +84,7 @@ return {
 
           -- Smart cell execution - detects markdown code blocks
           map("n", "<S-CR>", run_cell_and_advance, "[Molten] Run cell + advance")
-          map("n", "<C-CR>", run_markdown_cell, "[Molten] Run cell")
+          map("n", "<C-CR>", run_cell_and_advance, "[Molten] Run cell + advance")
           map("n", "<leader><CR>", run_markdown_cell, "[Molten] Run cell")
           map("n", "<leader>jr", run_markdown_cell, "[Unified] Run cell (smart)")
           map("v", "<leader>jr", ":<C-u>MoltenEvaluateVisual<CR>gv", "[Unified] Run selection")
