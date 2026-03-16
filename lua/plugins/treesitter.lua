@@ -1,11 +1,12 @@
 return {
   {
     "nvim-treesitter/nvim-treesitter",
+    branch = "main",
     build = ":TSUpdate",
     lazy = false, -- nvim-treesitter does not support lazy-loading
     dependencies = {
       "OXY2DEV/markview.nvim", -- Ensure markview loads before treesitter
-      "nvim-treesitter/nvim-treesitter-textobjects",
+      { "nvim-treesitter/nvim-treesitter-textobjects", branch = "main" },
     },
     config = function()
       require("nvim-treesitter").setup()
