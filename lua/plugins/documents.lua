@@ -247,7 +247,7 @@ return {
         },
         handle_leading_whitespace = true,
         verbose = {
-          no_code_found = true, -- Debug: notify if no code blocks found
+          no_code_found = false,
         },
       })
 
