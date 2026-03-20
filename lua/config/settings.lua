@@ -5,28 +5,8 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
--- Python provider for molten-nvim (requires: pip install --user pynvim)
-if vim.fn.has("mac") == 1 then
-  vim.g.python3_host_prog = "/opt/homebrew/bin/python3.12"
-else
-  vim.g.python3_host_prog = vim.fn.exepath("python3")
-end
-
--- Check pynvim availability on first Python provider use
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "markdown", "quarto" },
-  once = true,
-  callback = function()
-    local python = vim.g.python3_host_prog or "python3"
-    local result = vim.fn.system(python .. ' -c "import pynvim"')
-    if vim.v.shell_error ~= 0 then
-      vim.notify(
-        "pynvim not found in: " .. python .. "\nRun: pip install pynvim (in your active venv)",
-        vim.log.levels.WARN
-      )
-    end
-  end,
-})
+-- Python provider for molten-nvim (installed via: uv tool install pynvim)
+vim.g.python3_host_prog = vim.fn.exepath("pynvim-python")
 
 local opt = vim.opt
 

@@ -11,7 +11,7 @@ Leader key is `Space`.
 | `yarn` | `brew install yarn` | `markdown-preview.nvim` |
 | Kitty graphics protocol | Ghostty / Kitty terminal | Image rendering (`snacks.image`, `image.nvim`) |
 | `jupytext` | `uv tool install jupytext` | Notebook `.ipynb` conversion |
-| `pynvim` | `uv tool install pynvim-python` | Neovim Python provider (Molten) |
+| `pynvim` | `uv tool install pynvim` | Neovim Python provider (Molten) |
 | `jupyter_client` | `pip install --user jupyter_client` | Molten kernel communication |
 | `ipykernel` | `pip install --user ipykernel` | Molten kernel execution |
 
@@ -21,7 +21,7 @@ Molten requires the Neovim Python provider. After installing the pip dependencie
 
 ```bash
 # 1. Install Python deps
-uv tool install pynvim-python
+uv tool install pynvim
 pip install --user jupyter_client ipykernel
 
 # 2. Register the remote plugin (run inside Neovim)
