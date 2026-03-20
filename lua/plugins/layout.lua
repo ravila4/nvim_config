@@ -192,8 +192,9 @@ return {
           local img_w, img_h = out:match("(%d+) (%d+)")
           if img_w and img_h then
             img_w, img_h = tonumber(img_w), tonumber(img_h)
-            -- Terminal cells are ~2x taller than wide, so adjust aspect ratio
-            local cell_ratio = 2.0
+            -- Query actual terminal cell dimensions from snacks
+            local term = Snacks.image.terminal.size()
+            local cell_ratio = term.cell_height / term.cell_width
             local aspect = (img_w / img_h) * cell_ratio
             if aspect > max_cols / max_rows then
               -- Image is wider than available space
