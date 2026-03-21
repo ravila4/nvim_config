@@ -188,6 +188,7 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
         vim.bo[buf].bufhidden = "wipe"
         vim.bo[buf].filetype = "markdown"
         vim.bo[buf].modifiable = false
+        vim.diagnostic.enable(false, { bufnr = buf })
 
         local width = math.min(120, math.floor(vim.o.columns * 0.8))
         -- Estimate wrapped line count: each line may wrap across multiple rows
