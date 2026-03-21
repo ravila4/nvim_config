@@ -1,4 +1,4 @@
--- Inline LLM code editing: select code, type instruction, get inline diff
+-- Inline LLM code editing and questions: select code, type instruction or question
 -- Uses Snacks.input() for prompt, mini.diff for inline overlay, XML-structured responses
 
 return {
@@ -10,25 +10,62 @@ return {
         source = require("mini.diff").gen_source.none(),
       })
 
-      -- Quick Edit: inline LLM code editing
+      -- Quick Edit: inline LLM code editing and questions
       local M = {
         provider = "claude", -- "claude" or "ollama"
         claude_model = "haiku", -- fast model for quick edits
         ollama_model = "qwen2.5-coder:14b",
       }
 
-      local system_prompt = [[You are a code editing assistant. Apply the user's instruction to the provided code.
-Return ONLY the modified code region (the lines shown below), not the entire file.
-Respond with EXACTLY this format, nothing else:
+      local system_prompt = [[You are a code assistant. You receive a code snippet and an instruction.
+
+If the instruction asks you to MODIFY the code, respond with:
 
 <code>
 [the complete modified code for the specified region]
 </code>
 <summary>
 [one-line description of changes]
-</summary>]]
+</summary>
+
+If the instruction asks a QUESTION about the code (explanation, review, analysis), respond with:
+
+<response>
+[your answer in markdown]
+</response>
+
+Use your judgement to determine which format is appropriate. If unsure, prefer <response>.]]
+
+      -- Shorthand expansions
+      local shorthands = {
+        ["/explain"] = "Explain what this code does, step by step.",
+        ["/simplify"] = "Simplify this code while preserving behavior.",
+        ["/docstring"] = "Add a docstring to this function.",
+        ["/types"] = "Add type annotations.",
+        ["/review"] = "Review this code for bugs, edge cases, and improvements.",
+        ["/test"] = "Write unit tests for this code.",
+      }
+
+      local function expand_instruction(instruction)
+        local cmd = instruction:match("^(/[%w_]+)")
+        if cmd and shorthands[cmd] then
+          local extra = instruction:sub(#cmd + 1):gsub("^%s+", "")
+          if extra ~= "" then
+            return shorthands[cmd] .. " " .. extra
+          end
+          return shorthands[cmd]
+        end
+        return instruction
+      end
 
       local function parse_response(response)
+        -- Check for question/explanation response first
+        local text_response = response:match("<response>\n?(.-)\n?</response>")
+        if text_response then
+          return { mode = "ask", text = text_response }
+        end
+
+        -- Check for code edit
         local code = response:match("<code>\n?(.-)\n?</code>")
         local summary = response:match("<summary>\n?(.-)\n?</summary>")
 
@@ -36,13 +73,49 @@ Respond with EXACTLY this format, nothing else:
           code = response:match("```%w*\n(.-)\n```")
         end
 
-        if not code then
-          code = response
-          summary = "Raw response (no structured format detected)"
+        if code then
+          code = code:gsub("^%s*\n", ""):gsub("\n%s*$", "")
+          return { mode = "edit", code = code, summary = summary or "Changes applied" }
         end
 
-        code = code:gsub("^%s*\n", ""):gsub("\n%s*$", "")
-        return code, summary or "Changes applied"
+        -- No structured format: treat as a text response
+        return { mode = "ask", text = response }
+      end
+
+      local function show_floating_response(text, filepath, start_line, end_line)
+        local lines = vim.split(text, "\n")
+        local buf = vim.api.nvim_create_buf(false, true)
+        vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+        vim.bo[buf].buftype = "nofile"
+        vim.bo[buf].bufhidden = "wipe"
+        vim.bo[buf].filetype = "markdown"
+        vim.bo[buf].modifiable = false
+
+        local width = math.min(120, math.floor(vim.o.columns * 0.8))
+        local height = math.min(#lines + 2, math.floor(vim.o.lines * 0.5))
+
+        local win = vim.api.nvim_open_win(buf, true, {
+          relative = "editor",
+          row = math.floor((vim.o.lines - height) / 2),
+          col = math.floor((vim.o.columns - width) / 2),
+          width = width,
+          height = height,
+          style = "minimal",
+          border = "rounded",
+          title = " LLM ",
+          title_pos = "center",
+        })
+
+        vim.wo[win].wrap = true
+        vim.wo[win].linebreak = true
+
+        -- Close with q or Esc
+        vim.keymap.set("n", "q", function()
+          vim.api.nvim_win_close(win, true)
+        end, { buffer = buf, nowait = true })
+        vim.keymap.set("n", "<Esc>", function()
+          vim.api.nvim_win_close(win, true)
+        end, { buffer = buf, nowait = true })
       end
 
       -- Track active quickedit state per buffer
@@ -55,12 +128,10 @@ Respond with EXACTLY this format, nothing else:
         end
         active_edits[buf] = nil
 
-        -- Remove buffer-local keymaps
         pcall(vim.keymap.del, "n", "<CR>", { buffer = buf })
         pcall(vim.keymap.del, "n", "<Esc>", { buffer = buf })
         pcall(vim.keymap.del, "n", "<Tab>", { buffer = buf })
 
-        -- Clear mini.diff overlay
         pcall(function()
           require("mini.diff").set_ref_text(buf, {})
         end)
@@ -76,37 +147,28 @@ Respond with EXACTLY this format, nothing else:
         if not state then
           return
         end
-        -- Undo the LLM replacement
         vim.cmd("silent undo")
         cleanup_edit(buf)
         vim.notify("[Quick Edit] Rejected")
       end
 
       local function apply_inline_diff(new_code, buf, start_line, end_line)
-        -- Snapshot the entire buffer as reference for mini.diff
         local snapshot = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
 
-        -- Replace the selected region with LLM output
         local new_lines = vim.split(new_code, "\n")
         vim.api.nvim_buf_set_lines(buf, start_line - 1, end_line, false, new_lines)
 
-        -- Tell mini.diff to use the snapshot as reference
         require("mini.diff").set_ref_text(buf, snapshot)
 
-        -- Enable overlay to show the inline diff
-        -- toggle_overlay shows virtual text for deleted lines and highlights for added
         pcall(function()
           require("mini.diff").toggle_overlay(buf)
         end)
 
-        -- Track state
         active_edits[buf] = { snapshot = snapshot }
 
-        -- Jump cursor to the start of the changed region so it's visible
         pcall(vim.api.nvim_win_set_cursor, 0, { start_line, 0 })
-        vim.cmd("normal! zz") -- center the changes on screen
+        vim.cmd("normal! zz")
 
-        -- Buffer-local keymaps
         vim.keymap.set("n", "<CR>", function()
           accept(buf)
         end, { buffer = buf, nowait = true, desc = "Accept quick edit" })
@@ -119,7 +181,6 @@ Respond with EXACTLY this format, nothing else:
           require("mini.diff").toggle_overlay(buf)
         end, { buffer = buf, nowait = true, desc = "Toggle diff overlay" })
 
-        -- Clean up if buffer is deleted
         vim.api.nvim_create_autocmd({ "BufDelete", "BufWipeout" }, {
           buffer = buf,
           once = true,
@@ -132,18 +193,14 @@ Respond with EXACTLY this format, nothing else:
       end
 
       function M.quickedit()
-        -- Capture visual bounds while still in visual mode
-        -- "v" mark = start of visual selection, "." = cursor (end)
         local s = vim.fn.getpos("v")[2]
         local e = vim.fn.getpos(".")[2]
         local start_line = math.min(s, e)
         local end_line = math.max(s, e)
         local buf = vim.api.nvim_get_current_buf()
 
-        -- Exit visual mode first, then read lines
         vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "nx", false)
 
-        -- Highlight selected lines as feedback while LLM runs
         local ns = vim.api.nvim_create_namespace("quickedit_highlight")
         for i = start_line - 1, end_line - 1 do
           vim.api.nvim_buf_add_highlight(buf, ns, "Visual", i, 0, -1)
@@ -165,6 +222,8 @@ Respond with EXACTLY this format, nothing else:
             vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
             return
           end
+
+          instruction = expand_instruction(instruction)
 
           local prompt = string.format(
             "%s\n\nFile: %s\nLines %d-%d:\n```\n%s\n```\n\nInstruction: %s",
@@ -202,7 +261,6 @@ Respond with EXACTLY this format, nothing else:
             end,
             on_exit = function(_, exit_code)
               vim.schedule(function()
-                -- Clear the selection highlight
                 vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
 
                 if exit_code ~= 0 then
@@ -214,16 +272,20 @@ Respond with EXACTLY this format, nothing else:
                   return
                 end
 
-                local response = table.concat(stdout, "\n")
-                local code, summary = parse_response(response)
-
                 if not vim.api.nvim_buf_is_valid(buf) then
                   vim.notify("[Quick Edit] Buffer no longer valid", vim.log.levels.ERROR)
                   return
                 end
 
-                apply_inline_diff(code, buf, start_line, end_line)
-                vim.notify("[Quick Edit] " .. (summary or "Done"))
+                local response = table.concat(stdout, "\n")
+                local result = parse_response(response)
+
+                if result.mode == "ask" then
+                  show_floating_response(result.text, filepath, start_line, end_line)
+                else
+                  apply_inline_diff(result.code, buf, start_line, end_line)
+                  Snacks.notify(result.summary or "Done", { title = "Quick Edit", timeout = 5000 })
+                end
               end)
             end,
           })
