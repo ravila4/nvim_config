@@ -11,11 +11,67 @@ return {
       })
 
       -- Quick Edit: inline LLM code editing and questions
+      -- Default provider/model (change these to taste)
       local M = {
-        provider = "claude", -- "claude" or "ollama"
-        claude_model = "haiku", -- fast model for quick edits
-        ollama_model = "qwen2.5-coder:14b",
+        provider = "ollama", -- "claude" or "ollama"
+        claude_model = "haiku",
+        ollama_model = "qwen2.5-coder:7b",
       }
+
+      function M.select_model()
+        -- Claude models are static
+        local items = {}
+        for _, m in ipairs({ "haiku", "sonnet", "opus" }) do
+          table.insert(items, { label = "claude:" .. m, provider = "claude", model = m })
+        end
+
+        -- Query Ollama asynchronously
+        vim.fn.jobstart({ "ollama", "list" }, {
+          stdout_buffered = true,
+          on_stdout = function(_, data)
+            if not data then
+              return
+            end
+            for i, line in ipairs(data) do
+              -- Skip header line
+              if i > 1 and line ~= "" then
+                local model_name = line:match("^(%S+)")
+                if model_name then
+                  table.insert(items, { label = "ollama:" .. model_name, provider = "ollama", model = model_name })
+                end
+              end
+            end
+          end,
+          on_exit = function()
+            vim.schedule(function()
+              vim.ui.select(items, {
+                prompt = "Quick Edit Model:",
+                format_item = function(item)
+                  local current = (item.provider == M.provider)
+                    and ((item.provider == "claude" and item.model == M.claude_model)
+                      or (item.provider == "ollama" and item.model == M.ollama_model))
+                  return (current and "* " or "  ") .. item.label
+                end,
+              }, function(choice)
+                if not choice then
+                  return
+                end
+                M.provider = choice.provider
+                if choice.provider == "claude" then
+                  M.claude_model = choice.model
+                else
+                  M.ollama_model = choice.model
+                end
+                vim.notify("[Quick Edit] Using " .. choice.label)
+              end)
+            end)
+          end,
+        })
+      end
+
+      vim.api.nvim_create_user_command("QuickEditModel", function()
+        M.select_model()
+      end, {})
 
       local system_prompt = [[You are a code assistant. You receive a code snippet and an instruction.
 
@@ -33,6 +89,12 @@ If the instruction asks a QUESTION about the code (explanation, review, analysis
 <response>
 [your answer in markdown]
 </response>
+
+When explaining code:
+- Break it down step by step
+- Use ASCII diagrams to illustrate data flow or logic where helpful
+- Show example inputs and outputs when relevant
+- Be concise but thorough
 
 Use your judgement to determine which format is appropriate. If unsure, prefer <response>.]]
 
@@ -60,14 +122,15 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
 
       local function parse_response(response)
         -- Check for question/explanation response first
-        local text_response = response:match("<response>\n?(.-)\n?</response>")
+        local text_response = response:match("<response>(.-)</response>")
         if text_response then
+          text_response = text_response:gsub("^%s+", ""):gsub("%s+$", "")
           return { mode = "ask", text = text_response }
         end
 
         -- Check for code edit
-        local code = response:match("<code>\n?(.-)\n?</code>")
-        local summary = response:match("<summary>\n?(.-)\n?</summary>")
+        local code = response:match("<code>(.-)</code>")
+        local summary = response:match("<summary>(.-)</summary>")
 
         if not code then
           code = response:match("```%w*\n(.-)\n```")
@@ -75,6 +138,9 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
 
         if code then
           code = code:gsub("^%s*\n", ""):gsub("\n%s*$", "")
+          if summary then
+            summary = summary:gsub("^%s+", ""):gsub("%s+$", "")
+          end
           return { mode = "edit", code = code, summary = summary or "Changes applied" }
         end
 
@@ -82,7 +148,7 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
         return { mode = "ask", text = response }
       end
 
-      local function show_floating_response(text, filepath, start_line, end_line)
+      local function show_floating_response(text)
         local lines = vim.split(text, "\n")
         local buf = vim.api.nvim_create_buf(false, true)
         vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
@@ -92,7 +158,12 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
         vim.bo[buf].modifiable = false
 
         local width = math.min(120, math.floor(vim.o.columns * 0.8))
-        local height = math.min(#lines + 2, math.floor(vim.o.lines * 0.5))
+        -- Estimate wrapped line count: each line may wrap across multiple rows
+        local wrapped = 0
+        for _, l in ipairs(lines) do
+          wrapped = wrapped + math.max(1, math.ceil(#l / width))
+        end
+        local height = math.min(math.max(wrapped + 2, 15), math.floor(vim.o.lines * 0.8))
 
         local win = vim.api.nvim_open_win(buf, true, {
           relative = "editor",
@@ -109,7 +180,6 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
         vim.wo[win].wrap = true
         vim.wo[win].linebreak = true
 
-        -- Close with q or Esc
         vim.keymap.set("n", "q", function()
           vim.api.nvim_win_close(win, true)
         end, { buffer = buf, nowait = true })
@@ -185,12 +255,15 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
           buffer = buf,
           once = true,
           callback = function()
-            active_edits[buf] = nil
+            cleanup_edit(buf)
           end,
         })
 
         vim.notify("[Quick Edit] <CR> accept | <Esc> reject | <Tab> toggle overlay")
       end
+
+      -- nvim_create_namespace is idempotent: returns same ID for same name
+      local ns = vim.api.nvim_create_namespace("quickedit_highlight")
 
       function M.quickedit()
         local s = vim.fn.getpos("v")[2]
@@ -199,9 +272,13 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
         local end_line = math.max(s, e)
         local buf = vim.api.nvim_get_current_buf()
 
+        -- Clean up any active edit on this buffer before starting a new one
+        if active_edits[buf] then
+          reject(buf)
+        end
+
         vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "nx", false)
 
-        local ns = vim.api.nvim_create_namespace("quickedit_highlight")
         for i = start_line - 1, end_line - 1 do
           vim.api.nvim_buf_add_highlight(buf, ns, "Visual", i, 0, -1)
         end
@@ -236,17 +313,19 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
           )
 
           local cmd
+          local stdin_data = nil
           if M.provider == "claude" then
             cmd = { "claude", "-p", prompt, "--model", M.claude_model }
           else
-            cmd = { "ollama", "run", M.ollama_model, prompt }
+            cmd = { "ollama", "run", M.ollama_model }
+            stdin_data = prompt
           end
 
-          vim.notify("[Quick Edit] Waiting for LLM...")
+          vim.notify("[Quick Edit] Waiting for " .. M.provider .. "...")
 
           local stdout = {}
           local stderr = {}
-          vim.fn.jobstart(cmd, {
+          local job_id = vim.fn.jobstart(cmd, {
             stdout_buffered = true,
             stderr_buffered = true,
             on_stdout = function(_, data)
@@ -281,7 +360,7 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
                 local result = parse_response(response)
 
                 if result.mode == "ask" then
-                  show_floating_response(result.text, filepath, start_line, end_line)
+                  show_floating_response(result.text)
                 else
                   apply_inline_diff(result.code, buf, start_line, end_line)
                   Snacks.notify(result.summary or "Done", { title = "Quick Edit", timeout = 5000 })
@@ -289,16 +368,40 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
               end)
             end,
           })
+
+          -- Write prompt to stdin for ollama, then close
+          if job_id > 0 and stdin_data then
+            vim.fn.chansend(job_id, stdin_data)
+            vim.fn.chanclose(job_id, "stdin")
+          elseif job_id <= 0 then
+            vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
+            vim.notify("[Quick Edit] Failed to start " .. M.provider, vim.log.levels.ERROR)
+          end
         end)
       end
 
+      -- Warm up ollama model by loading it into memory
+      function M.warmup()
+        if M.provider == "ollama" then
+          vim.fn.jobstart({
+            "curl", "-s", "-X", "POST", "http://localhost:11434/api/generate",
+            "-d", vim.fn.json_encode({ model = M.ollama_model }),
+          }, { on_stdout = function() end, on_exit = function() end })
+        end
+      end
+
       vim.keymap.set("v", "<leader>k", function()
+        M.warmup()
         M.quickedit()
       end, { desc = "Quick Edit with LLM" })
 
       vim.api.nvim_create_user_command("QuickEdit", function()
         M.quickedit()
       end, { range = true })
+
+      vim.api.nvim_create_user_command("QuickEditModel", function()
+        M.select_model()
+      end, {})
 
       _G.quickedit = M
     end,
