@@ -11,7 +11,9 @@ return {
     },
     config = function()
       require("claudecode").setup({
-        -- Use vim split (default behavior)
+        diff_opts = {
+          open_in_new_tab = true,
+        },
       })
 
       -- Enhanced keybindings

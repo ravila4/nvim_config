@@ -238,7 +238,13 @@ return {
                 local wbuf = vim.api.nvim_win_get_buf(win)
                 local ft = vim.bo[wbuf].filetype
                 local bt = vim.bo[wbuf].buftype
-                if ft ~= "neo-tree" and ft ~= "Outline" and ft ~= "neotest-summary" and bt == "" and vim.api.nvim_win_get_config(win).relative == "" then
+                if
+                  ft ~= "neo-tree"
+                  and ft ~= "Outline"
+                  and ft ~= "neotest-summary"
+                  and bt == ""
+                  and vim.api.nvim_win_get_config(win).relative == ""
+                then
                   vim.api.nvim_set_current_win(win)
                   vim.cmd("split " .. vim.fn.fnameescape(path))
                   return
@@ -260,7 +266,13 @@ return {
                 local wbuf = vim.api.nvim_win_get_buf(win)
                 local ft = vim.bo[wbuf].filetype
                 local bt = vim.bo[wbuf].buftype
-                if ft ~= "neo-tree" and ft ~= "Outline" and ft ~= "neotest-summary" and bt == "" and vim.api.nvim_win_get_config(win).relative == "" then
+                if
+                  ft ~= "neo-tree"
+                  and ft ~= "Outline"
+                  and ft ~= "neotest-summary"
+                  and bt == ""
+                  and vim.api.nvim_win_get_config(win).relative == ""
+                then
                   vim.api.nvim_set_current_win(win)
                   vim.cmd("vsplit " .. vim.fn.fnameescape(path))
                   return
@@ -368,6 +380,19 @@ return {
         _G._neotree_menu_win = vim.api.nvim_get_current_win()
         menu.open(normalize_menu(_G.ide_menus.neotree_menu), _G.ide_menus._menu_opts())
       end, {})
+
+      -- Diff context menu - shown when right-clicking in a claudecode diff buffer
+      _G.ide_menus.diff_menu = {
+        { name = " Accept Diff", cmd = "ClaudeCodeDiffAccept", rtxt = "cd" },
+        { name = "󰜺 Deny Diff", cmd = "ClaudeCodeDiffDeny", rtxt = "cr" },
+        { name = "separator" },
+        { name = "󰛄 Focus Claude Code", cmd = "ClaudeCodeFocus", rtxt = "cf" },
+      }
+
+      vim.api.nvim_create_user_command("DiffMenu", function()
+        menu.open(normalize_menu(_G.ide_menus.diff_menu), _G.ide_menus._menu_opts())
+      end, {})
+
       vim.api.nvim_create_user_command("RightClickMenu", function()
         if vim.bo.filetype == "snacks_dashboard" or vim.bo.filetype == "dashboard" then
           return
@@ -378,17 +403,19 @@ return {
           return
         end
 
+        -- Show diff menu when in a claudecode diff buffer
+        if vim.b.claudecode_diff_tab_name then
+          vim.cmd("DiffMenu")
+          return
+        end
+
         -- Create dynamic context menu - add Jupyter submenu for .ipynb files
         local context_menu = vim.deepcopy(_G.ide_menus.context_menu)
         local filename = vim.fn.expand("%:t")
 
         if filename:match("%.ipynb$") then
           -- Add Jupyter menu item to the context menu for notebook files
-          table.insert(
-            context_menu,
-            #context_menu,
-            { name = " Jupyter Notebook", cmd = "JupyterMenu", rtxt = "mj" }
-          )
+          table.insert(context_menu, #context_menu, { name = " Jupyter Notebook", cmd = "JupyterMenu", rtxt = "mj" })
         end
 
         local ft = vim.bo.filetype
