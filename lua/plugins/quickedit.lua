@@ -143,6 +143,12 @@ Respond with EXACTLY this format, nothing else:
         -- Exit visual mode first, then read lines
         vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "nx", false)
 
+        -- Highlight selected lines as feedback while LLM runs
+        local ns = vim.api.nvim_create_namespace("quickedit_highlight")
+        for i = start_line - 1, end_line - 1 do
+          vim.api.nvim_buf_add_highlight(buf, ns, "Visual", i, 0, -1)
+        end
+
         local lines = vim.api.nvim_buf_get_lines(buf, start_line - 1, end_line, false)
         local sel_text = table.concat(lines, "\n")
         local filepath = vim.fn.expand("%:p")
@@ -156,6 +162,7 @@ Respond with EXACTLY this format, nothing else:
           },
         }, function(instruction)
           if not instruction or instruction == "" then
+            vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
             return
           end
 
@@ -195,6 +202,9 @@ Respond with EXACTLY this format, nothing else:
             end,
             on_exit = function(_, exit_code)
               vim.schedule(function()
+                -- Clear the selection highlight
+                vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
+
                 if exit_code ~= 0 then
                   local err_msg = table.concat(stderr, "\n")
                   vim.notify(
