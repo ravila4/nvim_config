@@ -93,6 +93,8 @@ return {
           { name = "  Format Document", cmd = "lua vim.lsp.buf.format()", rtxt = "fm" },
           { name = "separator" },
           { name = " Show Diagnostics", cmd = "lua vim.diagnostic.open_float()", rtxt = "df" },
+          { name = "  Next Diagnostic", cmd = "lua vim.diagnostic.goto_next()", rtxt = "]d" },
+          { name = "  Prev Diagnostic", cmd = "lua vim.diagnostic.goto_prev()", rtxt = "[d" },
           { name = "  Toggle Diagnostic Lines", cmd = "lua require('lsp_lines').toggle()", rtxt = "ld" },
         },
 
