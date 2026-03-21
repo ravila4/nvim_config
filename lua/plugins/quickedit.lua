@@ -73,30 +73,26 @@ return {
         M.select_model()
       end, {})
 
-      local system_prompt = [[You are a code assistant. You receive a code snippet and an instruction.
+      local edit_system_prompt = [[You are a code assistant. You receive a code snippet and an instruction.
 
-If the instruction asks you to MODIFY the code, respond with:
+Respond with:
 
 <code>
 [the complete modified code — raw code only, no markdown fences]
 </code>
 <summary>
 [one-line description of changes]
-</summary>
+</summary>]]
 
-If the instruction asks a QUESTION about the code (explanation, review, analysis), respond with:
+      local ask_system_prompt = [[You are a code assistant. You receive a code snippet and a question.
 
-<response>
-[your answer in markdown]
-</response>
-
-When explaining code:
+Respond in markdown. Be concise but thorough.
 - Break it down step by step
 - Use ASCII diagrams to illustrate data flow or logic where helpful
-- Show example inputs and outputs when relevant
-- Be concise but thorough
+- Show example inputs and outputs when relevant]]
 
-Use your judgement to determine which format is appropriate. If unsure, prefer <response>.]]
+      -- Shorthands that should use ask mode (no code editing context)
+      local ask_shorthands = { ["/explain"] = true, ["/review"] = true }
 
       -- Shorthand expansions
       local shorthands = {
@@ -340,15 +336,22 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
             return
           end
 
+          local instruction_raw = instruction
           instruction = expand_instruction(instruction, buf, start_line, end_line)
 
+          -- Pick system prompt based on whether this is an ask or edit command
+          local raw_cmd = instruction_raw:match("^(/[%w_]+)")
+          local is_ask = raw_cmd and ask_shorthands[raw_cmd]
+          local sys_prompt = is_ask and ask_system_prompt or edit_system_prompt
+
           local prompt = string.format(
-            "%s\n\nFile: %s\nLines %d-%d:\n```\n%s\n```\n\nInstruction: %s",
-            system_prompt,
+            "%s\n\nFile: %s\nLines %d-%d:\n```\n%s\n```\n\n%s: %s",
+            sys_prompt,
             rel_path,
             start_line,
             end_line,
             sel_text,
+            is_ask and "Question" or "Instruction",
             instruction
           )
 
@@ -397,7 +400,7 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
                 end
 
                 local response = table.concat(stdout, "\n")
-                local result = parse_response(response)
+                local result = is_ask and { mode = "ask", text = response } or parse_response(response)
 
                 if result.mode == "ask" then
                   show_floating_response(result.text)
