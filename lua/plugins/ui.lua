@@ -134,6 +134,14 @@ return {
         },
       })
 
+      -- Stage/unstage hunks
+      vim.keymap.set({ "n", "v" }, "<leader>gs", function()
+        require("gitsigns").stage_hunk()
+      end, { desc = "Stage hunk" })
+      vim.keymap.set("n", "<leader>gu", function()
+        require("gitsigns").undo_stage_hunk()
+      end, { desc = "Undo stage hunk" })
+
       -- Set theme-aware git sign colors
       local function set_git_colors()
         local is_dark = vim.o.background == "dark"

@@ -126,6 +126,9 @@ return {
           { name = " Close Diffview", cmd = "DiffviewClose", rtxt = "gc" },
           { name = "separator" },
           { name = "  Git Blame Line", cmd = "lua Snacks.git.blame_line()", rtxt = "gB" },
+          { name = "separator" },
+          { name = "  Stage Hunk", cmd = "lua require('gitsigns').stage_hunk()", rtxt = "gs" },
+          { name = "󰕌 Undo Stage Hunk", cmd = "lua require('gitsigns').undo_stage_hunk()", rtxt = "gu" },
         },
 
         terminal_menu = {
