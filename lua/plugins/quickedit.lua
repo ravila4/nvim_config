@@ -78,7 +78,7 @@ return {
 If the instruction asks you to MODIFY the code, respond with:
 
 <code>
-[the complete modified code for the specified region]
+[the complete modified code — raw code only, no markdown fences]
 </code>
 <summary>
 [one-line description of changes]
@@ -108,8 +108,35 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
         ["/test"] = "Write unit tests for this code.",
       }
 
-      local function expand_instruction(instruction)
+      local function expand_instruction(instruction, buf, start_line, end_line)
         local cmd = instruction:match("^(/[%w_]+)")
+        if cmd == "/fix" then
+          local all_diags = vim.diagnostic.get(buf)
+          local diags = {}
+          for _, d in ipairs(all_diags) do
+            if d.lnum >= start_line - 1 and d.lnum <= end_line - 1 then
+              table.insert(diags, d)
+            end
+          end
+          if #diags == 0 then
+            diags = all_diags
+          end
+          local msgs = {}
+          for _, d in ipairs(diags) do
+            local severity = vim.diagnostic.severity[d.severity] or "UNKNOWN"
+            local src = d.source and ("[" .. d.source .. "] ") or ""
+            table.insert(msgs, string.format("- %s%s: %s (line %d)", src, severity, d.message, d.lnum + 1))
+          end
+          if #msgs == 0 then
+            return "Review this code for potential issues and fix any problems."
+          end
+          local extra = instruction:sub(#cmd + 1):gsub("^%s+", "")
+          local base = "Fix the following diagnostics:\n" .. table.concat(msgs, "\n")
+          if extra ~= "" then
+            base = base .. "\n\nAdditional context: " .. extra
+          end
+          return base
+        end
         if cmd and shorthands[cmd] then
           local extra = instruction:sub(#cmd + 1):gsub("^%s+", "")
           if extra ~= "" then
@@ -137,6 +164,11 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
         end
 
         if code then
+          -- Strip fenced code blocks that LLMs sometimes nest inside <code> tags
+          local inner = code:match("```%w*\n(.-)\n```")
+          if inner then
+            code = inner
+          end
           code = code:gsub("^%s*\n", ""):gsub("\n%s*$", "")
           if summary then
             summary = summary:gsub("^%s+", ""):gsub("%s+$", "")
@@ -289,7 +321,7 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
         local rel_path = vim.fn.fnamemodify(filepath, ":.")
 
         -- Build sorted shorthand list for completion
-        local shorthand_keys = {}
+        local shorthand_keys = { "/fix" }
         for k in pairs(shorthands) do
           table.insert(shorthand_keys, k)
         end
@@ -307,7 +339,7 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
             return
           end
 
-          instruction = expand_instruction(instruction)
+          instruction = expand_instruction(instruction, buf, start_line, end_line)
 
           local prompt = string.format(
             "%s\n\nFile: %s\nLines %d-%d:\n```\n%s\n```\n\nInstruction: %s",
@@ -398,7 +430,7 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
             vim.api.nvim_buf_clear_namespace(input_buf, input_ns, 0, -1)
             local line = vim.api.nvim_get_current_line()
             local cmd = line:match("^(/[%w_]+)")
-            if cmd and shorthands[cmd] then
+            if cmd and (shorthands[cmd] or cmd == "/fix") then
               vim.api.nvim_buf_add_highlight(input_buf, input_ns, "Function", 0, 0, #cmd)
             end
           end,
