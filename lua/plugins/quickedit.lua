@@ -48,8 +48,10 @@ return {
                 prompt = "Quick Edit Model:",
                 format_item = function(item)
                   local current = (item.provider == M.provider)
-                    and ((item.provider == "claude" and item.model == M.claude_model)
-                      or (item.provider == "ollama" and item.model == M.ollama_model))
+                    and (
+                      (item.provider == "claude" and item.model == M.claude_model)
+                      or (item.provider == "ollama" and item.model == M.ollama_model)
+                    )
                   return (current and "* " or "  ") .. item.label
                 end,
               }, function(choice)
@@ -387,10 +389,7 @@ Respond in markdown. Be concise but thorough.
 
                 if exit_code ~= 0 then
                   local err_msg = table.concat(stderr, "\n")
-                  vim.notify(
-                    "[Quick Edit] Failed (exit " .. exit_code .. "): " .. err_msg,
-                    vim.log.levels.ERROR
-                  )
+                  vim.notify("[Quick Edit] Failed (exit " .. exit_code .. "): " .. err_msg, vim.log.levels.ERROR)
                   return
                 end
 
@@ -435,7 +434,8 @@ Respond in markdown. Be concise but thorough.
             local line = vim.api.nvim_get_current_line()
             local cmd = line:match("^(/[%w_]+)")
             if cmd and (shorthands[cmd] or cmd == "/fix") then
-              vim.api.nvim_buf_add_highlight(input_buf, input_ns, "Function", 0, 0, #cmd)
+              vim.api.nvim_set_hl(0, "QuickEditCommand", { fg = "#62a0ea", bold = true })
+              vim.api.nvim_buf_add_highlight(input_buf, input_ns, "QuickEditCommand", 0, 0, #cmd)
             end
           end,
         })
@@ -460,8 +460,13 @@ Respond in markdown. Be concise but thorough.
       function M.warmup()
         if M.provider == "ollama" then
           vim.fn.jobstart({
-            "curl", "-s", "-X", "POST", "http://localhost:11434/api/generate",
-            "-d", vim.fn.json_encode({ model = M.ollama_model, keep_alive = "10m" }),
+            "curl",
+            "-s",
+            "-X",
+            "POST",
+            "http://localhost:11434/api/generate",
+            "-d",
+            vim.fn.json_encode({ model = M.ollama_model, keep_alive = "10m" }),
           }, { on_stdout = function() end, on_exit = function() end })
         end
       end
