@@ -248,7 +248,7 @@ Respond in markdown. Be concise but thorough.
         if not state then
           return
         end
-        vim.cmd("silent undo")
+        vim.api.nvim_buf_set_lines(buf, 0, -1, false, state.snapshot)
         cleanup_edit(buf)
         vim.notify("[Quick Edit] Rejected")
       end
@@ -479,10 +479,6 @@ Respond in markdown. Be concise but thorough.
       vim.api.nvim_create_user_command("QuickEdit", function()
         M.quickedit()
       end, { range = true })
-
-      vim.api.nvim_create_user_command("QuickEditModel", function()
-        M.select_model()
-      end, {})
 
       -- Toggle inline git diff overlay for current buffer
       vim.keymap.set("n", "<leader>gi", function()

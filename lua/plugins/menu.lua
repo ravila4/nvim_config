@@ -347,16 +347,8 @@ return {
       }
 
       -- Add test runner and Claude Code to context menu
-      table.insert(
-        _G.ide_menus.context_menu,
-        #_G.ide_menus.context_menu,
-        { name = "󰙨 Test Runner", cmd = "TestMenu", rtxt = "mk" }
-      )
-      table.insert(
-        _G.ide_menus.context_menu,
-        #_G.ide_menus.context_menu,
-        { name = "󰛄 Claude Code", cmd = "ClaudeMenu", rtxt = "mC" }
-      )
+      table.insert(_G.ide_menus.context_menu, { name = "󰙨 Test Runner", cmd = "TestMenu", rtxt = "mk" })
+      table.insert(_G.ide_menus.context_menu, { name = "󰛄 Claude Code", cmd = "ClaudeMenu", rtxt = "mC" })
 
       -- Make menu utility functions globally available
       _G.ide_menus._normalize_menu = normalize_menu
@@ -460,17 +452,13 @@ return {
 
         if filename:match("%.ipynb$") then
           -- Add Jupyter menu item to the context menu for notebook files
-          table.insert(context_menu, #context_menu, { name = " Jupyter Notebook", cmd = "JupyterMenu", rtxt = "mj" })
+          table.insert(context_menu, { name = " Jupyter Notebook", cmd = "JupyterMenu", rtxt = "mj" })
         end
 
         local ft = vim.bo.filetype
         if ft == "markdown" or ft == "quarto" or ft == "rmd" then
-          table.insert(
-            context_menu,
-            #context_menu,
-            { name = "󰍔 Toggle Markview", cmd = "Markview Toggle", rtxt = "mv" }
-          )
-          table.insert(context_menu, #context_menu, {
+          table.insert(context_menu, { name = "󰍔 Toggle Markview", cmd = "Markview Toggle", rtxt = "mv" })
+          table.insert(context_menu, {
             name = (vim.wo.wrap and "󰖶 Disable" or "󰖶 Enable") .. " Line Wrap",
             cmd = function()
               vim.wo.wrap = not vim.wo.wrap
