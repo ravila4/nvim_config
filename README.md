@@ -26,9 +26,6 @@ pip install --user jupyter_client ipykernel
 
 # 2. Register the remote plugin (run inside Neovim)
 :UpdateRemotePlugins
-
-# 3. Restart Neovim, then initialize a kernel
-#    <leader>mK  or  :MoltenInit
 ```
 
 ## General
