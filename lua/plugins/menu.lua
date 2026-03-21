@@ -127,10 +127,9 @@ return {
           { name = "separator" },
           { name = "  Git Blame Line", cmd = "lua Snacks.git.blame_line()", rtxt = "gB" },
           { name = "separator" },
-          { name = " Stage Hunk", cmd = "lua require('gitsigns').stage_hunk()", rtxt = "gs" },
-          { name = "󰕌 Undo Stage Hunk", cmd = "lua require('gitsigns').undo_stage_hunk()", rtxt = "gu" },
+          { name = " Stage/Unstage Hunk", cmd = "lua require('gitsigns').stage_hunk()", rtxt = "gs" },
           { name = "  Review Staged", cmd = "DiffviewOpen --staged", rtxt = "" },
-          { name = "󰕍 Unstage All", cmd = "!git reset", rtxt = "" },
+          { name = "󰕍 Unstage All", cmd = "!git reset", rtxt = "gu" },
           { name = "separator" },
           {
             name = "  Quick Commit",

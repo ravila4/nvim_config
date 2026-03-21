@@ -132,6 +132,7 @@ return {
           changedelete = { text = "~" },
           untracked = { text = "┆" },
         },
+        signs_staged_enable = true,
       })
 
       -- Stage/unstage hunks
@@ -139,8 +140,8 @@ return {
         require("gitsigns").stage_hunk()
       end, { desc = "Stage hunk" })
       vim.keymap.set("n", "<leader>gu", function()
-        require("gitsigns").undo_stage_hunk()
-      end, { desc = "Undo stage hunk" })
+        vim.cmd("!git reset")
+      end, { desc = "Unstage all" })
       vim.keymap.set("n", "<leader>gC", function()
         Snacks.terminal("git commit")
       end, { desc = "Git commit (editor)" })
@@ -150,20 +151,21 @@ return {
         local is_dark = vim.o.background == "dark"
 
         if is_dark then
-          -- Dark theme - softer colors for better visibility
-          vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#4ec9b0" }) -- Teal green
-          vim.api.nvim_set_hl(0, "GitSignsChange", { fg = "#dcdcaa" }) -- Light yellow
-          vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#f48771" }) -- Light red
-          vim.api.nvim_set_hl(0, "GitSignsTopdelete", { fg = "#f48771" }) -- Light red
-          vim.api.nvim_set_hl(0, "GitSignsChangedelete", { fg = "#d19a66" }) -- Orange
-          vim.api.nvim_set_hl(0, "GitSignsUntracked", { fg = "#569cd6" }) -- Light blue
+          -- Dark theme - Adwaita palette
+          -- Unstaged: dim gutter sign
+          vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#2e7d4a" })
+          vim.api.nvim_set_hl(0, "GitSignsChange", { fg = "#3565a0" })
+          vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#8c1d23" })
+          vim.api.nvim_set_hl(0, "GitSignsTopdelete", { fg = "#8c1d23" })
+          vim.api.nvim_set_hl(0, "GitSignsChangedelete", { fg = "#8c4a00" })
+          vim.api.nvim_set_hl(0, "GitSignsUntracked", { fg = "#3565a0" })
 
-          -- Staged versions (50% opacity effect)
-          vim.api.nvim_set_hl(0, "GitSignsStagedAdd", { fg = "#3a9688" })
-          vim.api.nvim_set_hl(0, "GitSignsStagedChange", { fg = "#a6a677" })
-          vim.api.nvim_set_hl(0, "GitSignsStagedDelete", { fg = "#c16a5a" })
-          vim.api.nvim_set_hl(0, "GitSignsStagedTopdelete", { fg = "#c16a5a" })
-          vim.api.nvim_set_hl(0, "GitSignsStagedChangedelete", { fg = "#a67350" })
+          -- Staged: bright gutter sign + colored line numbers
+          vim.api.nvim_set_hl(0, "GitSignsStagedAdd", { fg = "#57e389" }) -- @green_3
+          vim.api.nvim_set_hl(0, "GitSignsStagedChange", { fg = "#62a0ea" }) -- @blue_3
+          vim.api.nvim_set_hl(0, "GitSignsStagedDelete", { fg = "#ed333b" }) -- @red_3
+          vim.api.nvim_set_hl(0, "GitSignsStagedTopdelete", { fg = "#ed333b" }) -- @red_3
+          vim.api.nvim_set_hl(0, "GitSignsStagedChangedelete", { fg = "#ff7800" }) -- @orange_3
         else
           -- Light theme - Adwaita-inspired colors
           vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#26a269" }) -- GNOME green
