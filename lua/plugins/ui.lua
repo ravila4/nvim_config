@@ -141,6 +141,9 @@ return {
       vim.keymap.set("n", "<leader>gu", function()
         require("gitsigns").undo_stage_hunk()
       end, { desc = "Undo stage hunk" })
+      vim.keymap.set("n", "<leader>gC", function()
+        Snacks.terminal("git commit")
+      end, { desc = "Git commit (editor)" })
 
       -- Set theme-aware git sign colors
       local function set_git_colors()

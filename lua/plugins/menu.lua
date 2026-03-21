@@ -149,7 +149,7 @@ return {
             end,
             rtxt = "",
           },
-          { name = "  Commit (editor)", cmd = "lua Snacks.terminal('git commit')", rtxt = "" },
+          { name = "  Commit (editor)", cmd = "lua Snacks.terminal('git commit')", rtxt = "gC" },
         },
 
         terminal_menu = {
