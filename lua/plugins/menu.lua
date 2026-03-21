@@ -98,6 +98,28 @@ return {
 
         git_menu = {
           { name = "󰊢 Git Status", cmd = "Neotree float git_status git_base=main", rtxt = "gS" },
+          {
+            name = "  Toggle Inline Diff",
+            cmd = function()
+              local buf = vim.api.nvim_get_current_buf()
+              local md = require("mini.diff")
+              local buf_data = md.get_buf_data(buf)
+              if buf_data and buf_data.ref_text then
+                md.set_ref_text(buf, {})
+              else
+                local rel = vim.fn.expand("%:.")
+                local ref = vim.fn.system({ "git", "show", "HEAD:./" .. rel })
+                if vim.v.shell_error ~= 0 then
+                  vim.notify("[Diff] File not in git HEAD", vim.log.levels.WARN)
+                  return
+                end
+                md.set_ref_text(buf, ref)
+                md.toggle_overlay(buf)
+              end
+            end,
+            rtxt = "gi",
+          },
+          { name = "separator" },
           { name = "  Open Diffview", cmd = "DiffviewOpen", rtxt = "gd" },
           { name = "  Diff Last Commit", cmd = "DiffviewOpen HEAD~1", rtxt = "gD" },
           { name = "  File History", cmd = "DiffviewFileHistory %", rtxt = "gh" },
