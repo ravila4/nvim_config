@@ -22,37 +22,37 @@ return {
             heading_1 = {
               style = "icon",
               icon = "# ",
-              sign = "",
+              sign = "󰌖 ",
               hl = "MarkviewPalette1Bg", -- Full line background
             },
             heading_2 = {
               style = "icon",
               icon = "## ",
-              sign = "",
+              sign = "󰌖 ",
               hl = "MarkviewPalette2Bg", -- Full line background
             },
             heading_3 = {
               style = "icon",
               icon = "### ",
-              sign = "",
+              sign = "󰌖 ",
               hl = "MarkviewPalette3Bg", -- Full line background
             },
             heading_4 = {
               style = "icon",
               icon = "#### ",
-              sign = "",
+              sign = "󰌖 ",
               hl = "MarkviewPalette4Bg", -- Full line background
             },
             heading_5 = {
               style = "icon",
               icon = "##### ",
-              sign = "",
+              sign = "󰌖 ",
               hl = "MarkviewPalette5Bg", -- Full line background
             },
             heading_6 = {
               style = "icon",
               icon = "###### ",
-              sign = "",
+              sign = "󰌖 ",
               hl = "MarkviewPalette6Bg", -- Full line background
             },
           },
