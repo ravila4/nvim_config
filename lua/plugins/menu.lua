@@ -127,8 +127,29 @@ return {
           { name = "separator" },
           { name = "  Git Blame Line", cmd = "lua Snacks.git.blame_line()", rtxt = "gB" },
           { name = "separator" },
-          { name = "  Stage Hunk", cmd = "lua require('gitsigns').stage_hunk()", rtxt = "gs" },
+          { name = " Stage Hunk", cmd = "lua require('gitsigns').stage_hunk()", rtxt = "gs" },
           { name = "󰕌 Undo Stage Hunk", cmd = "lua require('gitsigns').undo_stage_hunk()", rtxt = "gu" },
+          { name = "  Review Staged", cmd = "DiffviewOpen --staged", rtxt = "" },
+          { name = "󰕍 Unstage All", cmd = "!git reset", rtxt = "" },
+          { name = "separator" },
+          {
+            name = "  Quick Commit",
+            cmd = function()
+              Snacks.input({ prompt = " Commit message: " }, function(msg)
+                if not msg or msg == "" then
+                  return
+                end
+                local out = vim.fn.system({ "git", "commit", "-m", msg })
+                if vim.v.shell_error ~= 0 then
+                  vim.notify("[Git] " .. out, vim.log.levels.ERROR)
+                else
+                  vim.notify("[Git] " .. out)
+                end
+              end)
+            end,
+            rtxt = "",
+          },
+          { name = "  Commit (editor)", cmd = "lua Snacks.terminal('git commit')", rtxt = "" },
         },
 
         terminal_menu = {
