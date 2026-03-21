@@ -457,7 +457,7 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
         if M.provider == "ollama" then
           vim.fn.jobstart({
             "curl", "-s", "-X", "POST", "http://localhost:11434/api/generate",
-            "-d", vim.fn.json_encode({ model = M.ollama_model }),
+            "-d", vim.fn.json_encode({ model = M.ollama_model, keep_alive = "10m" }),
           }, { on_stdout = function() end, on_exit = function() end })
         end
       end
