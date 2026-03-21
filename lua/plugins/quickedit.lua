@@ -288,6 +288,13 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
         local filepath = vim.fn.expand("%:p")
         local rel_path = vim.fn.fnamemodify(filepath, ":.")
 
+        -- Build sorted shorthand list for completion
+        local shorthand_keys = {}
+        for k in pairs(shorthands) do
+          table.insert(shorthand_keys, k)
+        end
+        table.sort(shorthand_keys)
+
         Snacks.input({
           prompt = " Quick Edit: ",
           win = {
@@ -378,6 +385,39 @@ Use your judgement to determine which format is appropriate. If unsure, prefer <
             vim.notify("[Quick Edit] Failed to start " .. M.provider, vim.log.levels.ERROR)
           end
         end)
+
+        -- Set up Tab completion and syntax highlighting for /commands
+        -- Snacks.input creates the buffer synchronously, so it's current now
+        local input_buf = vim.api.nvim_get_current_buf()
+        local input_ns = vim.api.nvim_create_namespace("quickedit_input_hl")
+
+        -- Highlight recognized /commands as they're typed
+        vim.api.nvim_create_autocmd({ "TextChangedI", "TextChanged" }, {
+          buffer = input_buf,
+          callback = function()
+            vim.api.nvim_buf_clear_namespace(input_buf, input_ns, 0, -1)
+            local line = vim.api.nvim_get_current_line()
+            local cmd = line:match("^(/[%w_]+)")
+            if cmd and shorthands[cmd] then
+              vim.api.nvim_buf_add_highlight(input_buf, input_ns, "Function", 0, 0, #cmd)
+            end
+          end,
+        })
+
+        vim.keymap.set("i", "<Tab>", function()
+          local line = vim.api.nvim_get_current_line()
+          if line:match("^/") then
+            local matches = {}
+            for _, k in ipairs(shorthand_keys) do
+              if k:find(line, 1, true) == 1 then
+                table.insert(matches, k)
+              end
+            end
+            if #matches > 0 then
+              vim.fn.complete(1, matches)
+            end
+          end
+        end, { buffer = input_buf })
       end
 
       -- Warm up ollama model by loading it into memory
