@@ -83,6 +83,8 @@ pip install --user jupyter_client ipykernel
 | `<leader>lb` | Toggle bottom panel (terminal + diagnostics) |
 | `<leader>lL` | Open full IDE layout |
 | `<leader>lc` | Close all panels |
+| `Ctrl-Right` / `Ctrl-Left` | Resize panel width |
+| `Ctrl-Up` / `Ctrl-Down` | Resize panel height |
 
 ## Terminal
 
