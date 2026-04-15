@@ -324,6 +324,7 @@ return {
           },
         },
         filesystem = {
+          follow_current_file = { enabled = true, leave_dirs_open = true },
           use_libuv_file_watcher = true,
           window = {
             mappings = {
@@ -340,6 +341,35 @@ return {
             },
           },
         },
+      })
+
+      -- Swap neo-tree CursorLine: Adwaita blue when unfocused (marks current file),
+      -- subtle when focused (normal navigation)
+      local neotree_augroup = vim.api.nvim_create_augroup("NeoTreeCursorHighlight", { clear = true })
+      vim.api.nvim_create_autocmd("WinLeave", {
+        group = neotree_augroup,
+        callback = function()
+          if vim.bo.filetype == "neo-tree" then
+            local is_dark = vim.o.background == "dark"
+            vim.api.nvim_set_option_value(
+              "winhighlight",
+              "CursorLine:NeoTreeCursorLineUnfocused",
+              { win = 0 }
+            )
+            vim.api.nvim_set_hl(0, "NeoTreeCursorLineUnfocused", {
+              bg = is_dark and "#1c71d8" or "#99c1f1",
+              bold = true,
+            })
+          end
+        end,
+      })
+      vim.api.nvim_create_autocmd("WinEnter", {
+        group = neotree_augroup,
+        callback = function()
+          if vim.bo.filetype == "neo-tree" then
+            vim.api.nvim_set_option_value("winhighlight", "", { win = 0 })
+          end
+        end,
       })
 
       -- Theme-aware folder/file name colors
