@@ -135,6 +135,31 @@ pip install --user jupyter_client ipykernel
 | `<leader>ca` / `<leader>cd` | Accept / deny diff |
 | `<leader>mc` | Claude menu |
 
+### Quick Edit (inline LLM)
+
+Select code in visual mode, type an instruction or question, and get an inline diff overlay (edit mode) or a floating markdown response (ask mode). Default provider is `ollama` with `qwen2.5-coder:7b`; `claude` (haiku/sonnet/opus) also supported.
+
+| Key | Action |
+|-----|--------|
+| `<leader>k` (visual) | Open Quick Edit prompt for selection |
+| `:QuickEdit` | Same, from a range |
+| `:QuickEditModel` | Switch provider / model |
+| `<CR>` | Accept edit |
+| `<Esc>` | Reject edit (restore snapshot) |
+| `<Tab>` | Toggle diff overlay |
+
+Shorthands (tab-complete in the prompt, extra text appended as context):
+
+| Shorthand | Mode | Behavior |
+|-----------|------|----------|
+| `/explain` | ask | Step-by-step explanation |
+| `/review` | ask | Flag bugs, edge cases, improvements |
+| `/simplify` | edit | Simplify while preserving behavior |
+| `/docstring` | edit | Add a docstring |
+| `/types` | edit | Add type annotations |
+| `/test` | edit | Write unit tests |
+| `/fix` | edit | Fix diagnostics overlapping the selection |
+
 ## Markdown / Documents
 
 | Key | Action |
