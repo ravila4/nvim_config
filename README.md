@@ -137,7 +137,7 @@ pip install --user jupyter_client ipykernel
 
 ### Quick Edit (inline LLM)
 
-Select code in visual mode, type an instruction or question, and get an inline diff overlay (edit mode) or a floating markdown response (ask mode). Default provider is `ollama` with `qwen2.5-coder:7b`; `claude` (haiku/sonnet/opus) also supported.
+Select code in visual mode, type an instruction or question, and get an inline diff overlay (edit mode) or a floating markdown response (ask mode). Default provider is `lmstudio` with `qwen2.5-coder-3b-instruct`; `claude` (haiku/sonnet/opus) also supported.
 
 | Key | Action |
 |-----|--------|

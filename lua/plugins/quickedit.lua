@@ -13,9 +13,9 @@ return {
       -- Quick Edit: inline LLM code editing and questions
       -- Default provider/model (change these to taste)
       local M = {
-        provider = "ollama", -- "claude" or "ollama"
+        provider = "lmstudio", -- "claude" or "lmstudio"
         claude_model = "haiku",
-        ollama_model = "qwen2.5-coder:7b",
+        lmstudio_model = "qwen2.5-coder-3b-instruct",
       }
 
       function M.select_model()
@@ -25,32 +25,36 @@ return {
           table.insert(items, { label = "claude:" .. m, provider = "claude", model = m })
         end
 
-        -- Query Ollama asynchronously
-        vim.fn.jobstart({ "ollama", "list" }, {
+        -- Query LM Studio asynchronously (/v1/models returns one JSON blob)
+        local raw = {}
+        vim.fn.jobstart({ "curl", "-s", "--max-time", "3", "http://localhost:1234/v1/models" }, {
           stdout_buffered = true,
           on_stdout = function(_, data)
-            if not data then
-              return
-            end
-            for i, line in ipairs(data) do
-              -- Skip header line
-              if i > 1 and line ~= "" then
-                local model_name = line:match("^(%S+)")
-                if model_name then
-                  table.insert(items, { label = "ollama:" .. model_name, provider = "ollama", model = model_name })
-                end
-              end
+            if data then
+              vim.list_extend(raw, data)
             end
           end,
-          on_exit = function()
+          on_exit = function(_, code)
             vim.schedule(function()
+              if code == 0 then
+                local ok, parsed = pcall(vim.fn.json_decode, table.concat(raw, "\n"))
+                if ok and type(parsed) == "table" and type(parsed.data) == "table" then
+                  for _, m in ipairs(parsed.data) do
+                    if type(m.id) == "string" and not m.id:match("^text%-embedding") then
+                      table.insert(items, { label = "lmstudio:" .. m.id, provider = "lmstudio", model = m.id })
+                    end
+                  end
+                end
+              else
+                vim.notify("[Quick Edit] LM Studio not reachable; claude-only selector", vim.log.levels.WARN)
+              end
               vim.ui.select(items, {
                 prompt = "Quick Edit Model:",
                 format_item = function(item)
                   local current = (item.provider == M.provider)
                     and (
                       (item.provider == "claude" and item.model == M.claude_model)
-                      or (item.provider == "ollama" and item.model == M.ollama_model)
+                      or (item.provider == "lmstudio" and item.model == M.lmstudio_model)
                     )
                   return (current and "* " or "  ") .. item.label
                 end,
@@ -62,7 +66,7 @@ return {
                 if choice.provider == "claude" then
                   M.claude_model = choice.model
                 else
-                  M.ollama_model = choice.model
+                  M.lmstudio_model = choice.model
                 end
                 vim.notify("[Quick Edit] Using " .. choice.label)
               end)
@@ -362,11 +366,25 @@ Respond in markdown. Be concise but thorough.
           if M.provider == "claude" then
             cmd = { "claude", "-p", prompt, "--model", M.claude_model }
           else
-            cmd = { "ollama", "run", M.ollama_model }
-            stdin_data = prompt
+            stdin_data = vim.fn.json_encode({
+              model = M.lmstudio_model,
+              messages = { { role = "user", content = prompt } },
+              stream = false,
+              max_tokens = 4096,
+            })
+            cmd = {
+              "curl", "-s", "--max-time", "120",
+              "-H", "Content-Type: application/json",
+              "-X", "POST",
+              "http://localhost:1234/v1/chat/completions",
+              "-d", "@-",
+            }
           end
 
           vim.notify("[Quick Edit] Waiting for " .. M.provider .. "...")
+
+          -- Snapshot at dispatch time: user may switch providers while request is in-flight
+          local provider_snapshot = M.provider
 
           local stdout = {}
           local stderr = {}
@@ -398,8 +416,35 @@ Respond in markdown. Be concise but thorough.
                   return
                 end
 
-                local response = table.concat(stdout, "\n")
-                local result = is_ask and { mode = "ask", text = response } or parse_response(response)
+                local raw = table.concat(stdout, "\n")
+                local response
+                local degraded_to_ask = false
+                if provider_snapshot == "lmstudio" then
+                  local ok, parsed = pcall(vim.fn.json_decode, raw)
+                  if not ok or type(parsed) ~= "table" or not parsed.choices or not parsed.choices[1] then
+                    vim.notify("[Quick Edit] Invalid JSON: " .. raw:sub(1, 200), vim.log.levels.ERROR)
+                    return
+                  end
+                  local msg = parsed.choices[1].message or {}
+                  response = msg.content or ""
+                  if response == "" and msg.reasoning_content and msg.reasoning_content ~= "" then
+                    response = msg.reasoning_content
+                    degraded_to_ask = not is_ask
+                    local extra = degraded_to_ask and " (edit → ask)" or ""
+                    vim.notify("[Quick Edit] Empty content; showing reasoning_content" .. extra, vim.log.levels.WARN)
+                  end
+                  if response == "" then
+                    vim.notify(
+                      "[Quick Edit] Empty response (finish=" .. (parsed.choices[1].finish_reason or "?") .. ")",
+                      vim.log.levels.ERROR
+                    )
+                    return
+                  end
+                else
+                  response = raw
+                end
+                local route_ask = is_ask or degraded_to_ask
+                local result = route_ask and { mode = "ask", text = response } or parse_response(response)
 
                 if result.mode == "ask" then
                   show_floating_response(result.text)
@@ -411,7 +456,7 @@ Respond in markdown. Be concise but thorough.
             end,
           })
 
-          -- Write prompt to stdin for ollama, then close
+          -- Write JSON body to curl's stdin (-d @-), then close
           if job_id > 0 and stdin_data then
             vim.fn.chansend(job_id, stdin_data)
             vim.fn.chanclose(job_id, "stdin")
@@ -456,18 +501,31 @@ Respond in markdown. Be concise but thorough.
         end, { buffer = input_buf })
       end
 
-      -- Warm up ollama model by loading it into memory
+      -- Warm up LM Studio model by triggering JIT load (resets 1h TTL)
       function M.warmup()
-        if M.provider == "ollama" then
+        if M.provider == "lmstudio" then
+          local body = vim.fn.json_encode({
+            model = M.lmstudio_model,
+            messages = { { role = "user", content = "hi" } },
+            max_tokens = 1,
+            stream = false,
+          })
           vim.fn.jobstart({
-            "curl",
-            "-s",
-            "-X",
-            "POST",
-            "http://localhost:11434/api/generate",
-            "-d",
-            vim.fn.json_encode({ model = M.ollama_model, keep_alive = "10m" }),
-          }, { on_stdout = function() end, on_exit = function() end })
+            "curl", "-s", "--max-time", "30",
+            "-H", "Content-Type: application/json",
+            "-X", "POST",
+            "http://localhost:1234/v1/chat/completions",
+            "-d", body,
+          }, {
+            on_exit = function(_, code)
+              -- curl 7 = connection refused (server down). 28 = timeout (may just be slow first-load; noisy).
+              if code == 7 then
+                vim.schedule(function()
+                  vim.notify("[Quick Edit] Warmup failed — LM Studio server unreachable", vim.log.levels.WARN)
+                end)
+              end
+            end,
+          })
         end
       end
 
