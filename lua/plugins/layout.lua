@@ -326,6 +326,11 @@ return {
         filesystem = {
           follow_current_file = { enabled = true, leave_dirs_open = true },
           use_libuv_file_watcher = true,
+          filtered_items = {
+            visible = false,
+            hide_dotfiles = true,
+            hide_gitignored = true,
+          },
           window = {
             mappings = {
               ["<cr>"] = open_in_main_window,
@@ -333,7 +338,14 @@ return {
               ["o"] = open_in_main_window,
               ["<bs>"] = "navigate_up",
               ["."] = "set_root",
-              ["H"] = "toggle_hidden",
+              ["H"] = function(state)
+                local filters = state.filtered_items or {}
+                local show = filters.hide_dotfiles or filters.hide_gitignored
+                filters.hide_dotfiles = not show
+                filters.hide_gitignored = not show
+                filters.visible = show
+                require("neo-tree.sources.manager").refresh(state.name)
+              end,
               ["/"] = "fuzzy_finder",
               ["f"] = "filter_on_submit",
               ["<c-x>"] = "clear_filter",

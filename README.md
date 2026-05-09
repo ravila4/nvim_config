@@ -57,7 +57,7 @@ pip install --user jupyter_client ipykernel
 |-----|--------|
 | `/` | Fuzzy finder |
 | `f` | Filter by filename |
-| `H` | Toggle hidden files |
+| `H` | Toggle hidden files (dotfiles + gitignored) |
 | `.` | Set root to current dir |
 | `<bs>` | Navigate up |
 
