@@ -45,32 +45,68 @@ return {
         vim.keymap.set(mode, key, cmd, { desc = desc, buffer = true })
       end
 
-      -- Function to run markdown code blocks as cells using quarto
-      local function run_markdown_cell()
-        local success = pcall(function()
-          local runner = require("quarto.runner")
-          if vim.bo.filetype == "markdown" then
-            runner.run_cell()
-          else
-            vim.cmd("MoltenEvaluateLine")
-          end
-        end)
-        if not success then
-          vim.cmd("MoltenEvaluateLine")
-        end
+      local python_cells = require("config.jupyter_cells")
+
+      local function buffer_lines()
+        return vim.api.nvim_buf_get_lines(0, 0, -1, false)
       end
 
-      local function run_cell_and_advance()
-        run_markdown_cell()
-        -- Jump to next code block via treesitter textobjects
+      local function move_python_cell(direction)
+        local lines = buffer_lines()
+        local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
+        local target_line = python_cells[direction .. "_line"](lines, cursor_line)
+        vim.api.nvim_win_set_cursor(0, { target_line, 0 })
+      end
+
+      local function run_current_cell()
+        if vim.bo.filetype == "python" then
+          local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
+          local bounds = python_cells.bounds(buffer_lines(), cursor_line)
+          if bounds[1] <= bounds[2] then
+            vim.fn.MoltenEvaluateRange(bounds[1], bounds[2])
+          end
+          return
+        end
+
+        if vim.tbl_contains({ "markdown", "quarto", "rmd" }, vim.bo.filetype) then
+          require("quarto.runner").run_cell()
+          return
+        end
+
+        vim.cmd("MoltenEvaluateLine")
+      end
+
+      local function move_to_next_cell()
+        if vim.bo.filetype == "python" then
+          move_python_cell("next")
+          return
+        end
+
         local ok, move = pcall(require, "nvim-treesitter-textobjects.move")
         if ok then
           move.goto_next_start("@block.inner")
         end
       end
 
+      local function move_to_previous_cell()
+        if vim.bo.filetype == "python" then
+          move_python_cell("previous")
+          return
+        end
+
+        local ok, move = pcall(require, "nvim-treesitter-textobjects.move")
+        if ok then
+          move.goto_previous_start("@block.inner")
+        end
+      end
+
+      local function run_cell_and_advance()
+        run_current_cell()
+        move_to_next_cell()
+      end
+
       vim.api.nvim_create_autocmd("FileType", {
-        pattern = { "python", "julia", "r", "ipynb", "markdown" },
+        pattern = { "python", "julia", "r", "ipynb", "markdown", "quarto", "rmd" },
         callback = function()
           -- Molten-specific mappings (prefix: <leader>m)
           map("n", "<leader>mK", ":MoltenInit<CR>", "[Molten] Initialize kernel")
@@ -80,17 +116,23 @@ return {
           map("v", "<leader>mr", ":<C-u>MoltenEvaluateVisual<CR>gv", "[Molten] Run selection")
           map("n", "<leader>mh", ":MoltenHideOutput<CR>", "[Molten] Hide output")
           map("n", "<leader>ms", ":MoltenShowOutput<CR>", "[Molten] Show output")
+          map("n", "<leader>x", ":MoltenInterrupt<CR>", "[Molten] Interrupt execution")
           map("n", "<leader>mq", ":MoltenDeinit<CR>", "[Molten] Quit kernel")
 
           -- Smart cell execution - detects markdown code blocks
           map("n", "<S-CR>", run_cell_and_advance, "[Molten] Run cell + advance")
           map("n", "<C-CR>", run_cell_and_advance, "[Molten] Run cell + advance")
-          map("n", "<leader><CR>", run_markdown_cell, "[Molten] Run cell")
-          map("n", "<leader>jr", run_markdown_cell, "[Unified] Run cell (smart)")
+          map("n", "<leader><CR>", run_current_cell, "[Molten] Run cell")
+          map("n", "<leader>jr", run_current_cell, "[Unified] Run cell (smart)")
           map("v", "<leader>jr", ":<C-u>MoltenEvaluateVisual<CR>gv", "[Unified] Run selection")
           map("n", "<leader>jK", ":MoltenInit<CR>", "[Unified] Initialize kernel")
+          map("n", "<leader>]", move_to_next_cell, "[Unified] Next cell")
+          map("n", "<leader>[", move_to_previous_cell, "[Unified] Previous cell")
           
-          -- Cell navigation: ]c / [c (treesitter textobjects in treesitter.lua)
+          if vim.bo.filetype == "python" then
+            map("n", "]c", function() move_python_cell("next") end, "Next Python cell")
+            map("n", "[c", function() move_python_cell("previous") end, "Previous Python cell")
+          end
           
           -- Full output viewing
           map("n", "<leader>jo", ":noautocmd MoltenEnterOutput<CR>", "[Output] View full output")
@@ -191,15 +233,12 @@ return {
           map("n", "<leader>ss", ":SlimeSend<CR>", "[Slime] Send operator")
           map("n", "<leader>st", ":SlimeConfig<CR>", "[Slime] Configure target")
 
-          -- IPython cell mappings (unified across tools)
-          map("n", "<leader>jr", ":IPythonCellExecuteCell<CR>", "[Unified] Run cell")
-          map("n", "<leader>jR", ":IPythonCellExecuteCellJump<CR>", "[Unified] Run cell + jump")
+          -- IPython terminal cell mappings
+          map("n", "<leader>se", ":IPythonCellExecuteCell<CR>", "[Slime] Run cell")
+          map("n", "<leader>sE", ":IPythonCellExecuteCellJump<CR>", "[Slime] Run cell + jump")
           map("n", "<leader>ja", ":IPythonCellExecuteAll<CR>", "[Unified] Run all above")
           map("n", "<leader>jA", ":IPythonCellExecuteAllBelow<CR>", "[Unified] Run all below")
           map("n", "<leader>jc", ":IPythonCellClear<CR>", "[Unified] Clear terminal")
-          map("n", "<leader>jn", ":IPythonCellNextCell<CR>", "[Unified] Next cell")
-          map("n", "<leader>jp", ":IPythonCellPrevCell<CR>", "[Unified] Previous cell")
-
           -- Terminal shortcuts
           map("n", "<leader>js", ":IPythonCellRestart<CR>", "[Unified] Start/restart IPython")
           map("n", "<leader>jt", ":terminal ipython<CR>", "[Unified] Open IPython terminal")

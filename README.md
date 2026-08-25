@@ -11,22 +11,25 @@ Leader key is `Space`.
 | `yarn` | `brew install yarn` | `markdown-preview.nvim` |
 | Kitty graphics protocol | Ghostty / Kitty terminal | Image rendering (`snacks.image`, `image.nvim`) |
 | `jupytext` | `uv tool install jupytext` | Notebook `.ipynb` conversion |
-| `pynvim` | `uv tool install pynvim` | Neovim Python provider (Molten) |
-| `jupyter_client` | `pip install --user jupyter_client` | Molten kernel communication |
-| `ipykernel` | `pip install --user ipykernel` | Molten kernel execution |
+| Stable Python host | See Molten setup below | Neovim Python provider and Molten kernel communication |
+| `ipykernel` | Install in each kernel environment | Molten kernel execution |
 
 ### Molten setup
 
-Molten requires the Neovim Python provider. After installing the pip dependencies above:
+Molten uses a stable, editor-owned Python environment so project dependency changes cannot break Neovim's remote-plugin host:
 
 ```bash
-# 1. Install Python deps
-uv tool install pynvim
-pip install --user jupyter_client ipykernel
+# 1. Create the host configured by lua/config/settings.lua
+uv venv ~/.local/share/nvim/python-host
+uv pip install \
+  --python ~/.local/share/nvim/python-host/bin/python \
+  pynvim jupyter_client
 
 # 2. Register the remote plugin (run inside Neovim)
 :UpdateRemotePlugins
 ```
+
+Install `ipykernel` and workload-specific packages in separate project environments, then register those environments as Jupyter kernelspecs.
 
 ## General
 
@@ -184,7 +187,11 @@ Inline plots and output display, similar to VSCode notebooks.
 | `<leader>mr` | Run selection |
 | `<leader>ml` | Run line |
 | `<leader>mc` | Re-run cell |
+| `<S-CR>` / `<C-CR>` | Run cell + move to next cell |
+| `<leader><CR>` / `<leader>jr` | Run cell without moving |
+| `<leader>]` / `<leader>[` or `]c` / `[c` | Next / previous cell |
 | `<leader>ms` / `<leader>mh` | Show / hide output |
+| `<leader>x` | Interrupt the running cell |
 | `<leader>md` | Delete cell output |
 | `<leader>mq` | Quit kernel |
 
@@ -194,10 +201,9 @@ Sends code to a terminal. Works over SSH, minimal dependencies.
 
 | Key | Action |
 |-----|--------|
-| `<leader>jr` | Run cell |
-| `<leader>jR` | Run cell + jump to next |
+| `<leader>se` | Run cell |
+| `<leader>sE` | Run cell + jump to next |
 | `<leader>ja` / `<leader>jA` | Run all above / below cursor |
-| `<leader>jn` / `<leader>jp` | Next / previous cell |
 | `<leader>js` | Start/restart IPython |
 | `<leader>jt` | Open IPython terminal |
 | `<leader>jc` | Clear terminal |

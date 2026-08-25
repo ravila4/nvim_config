@@ -5,8 +5,8 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
--- Python provider for molten-nvim (installed via: uv tool install pynvim)
-vim.g.python3_host_prog = vim.fn.exepath("pynvim-python")
+-- Stable Python provider for molten-nvim remote plugins
+vim.g.python3_host_prog = vim.fn.expand("~/.local/share/nvim/python-host/bin/python")
 
 local opt = vim.opt
 
