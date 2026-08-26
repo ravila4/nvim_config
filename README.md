@@ -184,6 +184,7 @@ Inline plots and output display, similar to VSCode notebooks.
 |-----|--------|
 | `<leader>mK` | Initialize kernel |
 | `<leader>mk` | Select kernel (Telescope) |
+| `<leader>jo` / `<leader>jO` | Create code cell below / above |
 | `<leader>mr` | Run selection |
 | `<leader>ml` | Run line |
 | `<leader>mc` | Re-run cell |
@@ -191,6 +192,7 @@ Inline plots and output display, similar to VSCode notebooks.
 | `<leader><CR>` / `<leader>jr` | Run cell without moving |
 | `<leader>]` / `<leader>[` or `]c` / `[c` | Next / previous cell |
 | `<leader>ms` / `<leader>mh` | Show / hide output |
+| `<leader>jv` | Enter full output view |
 | `<leader>x` | Interrupt the running cell |
 | `<leader>md` | Delete cell output |
 | `<leader>mq` | Quit kernel |

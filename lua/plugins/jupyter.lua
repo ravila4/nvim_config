@@ -2,248 +2,287 @@
 -- Dual strategy: Molten for VSCode-like experience, vim-slime for flexible REPL workflow
 
 return {
-  -- Dependencies
-  {
-    "nvim-lua/plenary.nvim",
-    lazy = true,
-  },
-  {
-    "MunifTanjim/nui.nvim",
-    lazy = true,
-  },
+	-- Dependencies
+	{
+		"nvim-lua/plenary.nvim",
+		lazy = true,
+	},
+	{
+		"MunifTanjim/nui.nvim",
+		lazy = true,
+	},
 
-  -- Molten-nvim for VSCode-like inline Jupyter experience
-  {
-    "benlubas/molten-nvim",
-    version = "^1.0.0", -- Use latest stable
-    build = ":UpdateRemotePlugins",
-    lazy = false, -- Load immediately so commands are always available
-    dependencies = {
-      "3rd/image.nvim", -- For inline image rendering
-    },
-    config = function()
-      -- Global configuration
-      vim.g.molten_image_provider = "image.nvim" -- Use image.nvim for inline images
-      vim.g.molten_output_win_max_height = 20 -- Reasonable output window height
-      vim.g.molten_auto_open_output = false -- Manual control over output
-      vim.g.molten_wrap_output = true -- Wrap long outputs
-      vim.g.molten_virt_text_output = true -- Show outputs as virtual text
-      vim.g.molten_virt_lines_off_by_1 = true -- Better virtual line positioning
+	-- Molten-nvim for VSCode-like inline Jupyter experience
+	{
+		"benlubas/molten-nvim",
+		version = "^1.0.0", -- Use latest stable
+		build = ":UpdateRemotePlugins",
+		lazy = false, -- Load immediately so commands are always available
+		dependencies = {
+			"3rd/image.nvim", -- For inline image rendering
+		},
+		config = function()
+			-- Global configuration
+			vim.g.molten_image_provider = "image.nvim" -- Use image.nvim for inline images
+			vim.g.molten_output_win_max_height = 20 -- Reasonable output window height
+			vim.g.molten_auto_open_output = false -- Manual control over output
+			vim.g.molten_wrap_output = true -- Wrap long outputs
+			vim.g.molten_virt_text_output = true -- Show outputs as virtual text
+			vim.g.molten_virt_lines_off_by_1 = true -- Better virtual line positioning
 
-      -- Theme integration - use your teal accent
-      vim.g.molten_output_crop_border = true
-      vim.g.molten_output_show_more = true
-      vim.g.molten_output_virt_lines = true
+			-- Theme integration - use your teal accent
+			vim.g.molten_output_crop_border = true
+			vim.g.molten_output_show_more = true
+			vim.g.molten_output_virt_lines = true
 
-      -- Performance settings for bioinformatics (large outputs)
-      vim.g.molten_limit_output_chars = 1000000 -- 1MB limit for large genomics outputs
-      vim.g.molten_copy_output = false -- Don't auto-copy to clipboard
-      
+			-- Performance settings for bioinformatics (large outputs)
+			vim.g.molten_limit_output_chars = 1000000 -- 1MB limit for large genomics outputs
+			vim.g.molten_copy_output = false -- Don't auto-copy to clipboard
 
-      -- Molten keybindings (unified with other Jupyter tools)
-      local function map(mode, key, cmd, desc)
-        vim.keymap.set(mode, key, cmd, { desc = desc, buffer = true })
-      end
+			-- Molten keybindings (unified with other Jupyter tools)
+			local function map(mode, key, cmd, desc)
+				vim.keymap.set(mode, key, cmd, { desc = desc, buffer = true })
+			end
 
-      local python_cells = require("config.jupyter_cells")
+			local python_cells = require("config.jupyter_cells")
 
-      local function buffer_lines()
-        return vim.api.nvim_buf_get_lines(0, 0, -1, false)
-      end
+			local function buffer_lines()
+				return vim.api.nvim_buf_get_lines(0, 0, -1, false)
+			end
 
-      local function move_python_cell(direction)
-        local lines = buffer_lines()
-        local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
-        local target_line = python_cells[direction .. "_line"](lines, cursor_line)
-        vim.api.nvim_win_set_cursor(0, { target_line, 0 })
-      end
+			local function move_python_cell(direction)
+				local lines = buffer_lines()
+				local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
+				local target_line = python_cells[direction .. "_line"](lines, cursor_line)
+				vim.api.nvim_win_set_cursor(0, { target_line, 0 })
+			end
 
-      local function run_current_cell()
-        if vim.bo.filetype == "python" then
-          local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
-          local bounds = python_cells.bounds(buffer_lines(), cursor_line)
-          if bounds[1] <= bounds[2] then
-            vim.fn.MoltenEvaluateRange(bounds[1], bounds[2])
-          end
-          return
-        end
+			local function run_current_cell()
+				if vim.bo.filetype == "python" then
+					local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
+					local bounds = python_cells.bounds(buffer_lines(), cursor_line)
+					if bounds[1] <= bounds[2] then
+						vim.fn.MoltenEvaluateRange(bounds[1], bounds[2])
+					end
+					return
+				end
 
-        if vim.tbl_contains({ "markdown", "quarto", "rmd" }, vim.bo.filetype) then
-          require("quarto.runner").run_cell()
-          return
-        end
+				if vim.tbl_contains({ "markdown", "quarto", "rmd" }, vim.bo.filetype) then
+					require("quarto.runner").run_cell()
+					return
+				end
 
-        vim.cmd("MoltenEvaluateLine")
-      end
+				vim.cmd("MoltenEvaluateLine")
+			end
 
-      local function move_to_next_cell()
-        if vim.bo.filetype == "python" then
-          move_python_cell("next")
-          return
-        end
+			local function move_to_next_cell()
+				if vim.bo.filetype == "python" then
+					move_python_cell("next")
+					return
+				end
 
-        local ok, move = pcall(require, "nvim-treesitter-textobjects.move")
-        if ok then
-          move.goto_next_start("@block.inner")
-        end
-      end
+				local ok, move = pcall(require, "nvim-treesitter-textobjects.move")
+				if ok then
+					move.goto_next_start("@block.inner")
+				end
+			end
 
-      local function move_to_previous_cell()
-        if vim.bo.filetype == "python" then
-          move_python_cell("previous")
-          return
-        end
+			local function move_to_previous_cell()
+				if vim.bo.filetype == "python" then
+					move_python_cell("previous")
+					return
+				end
 
-        local ok, move = pcall(require, "nvim-treesitter-textobjects.move")
-        if ok then
-          move.goto_previous_start("@block.inner")
-        end
-      end
+				local ok, move = pcall(require, "nvim-treesitter-textobjects.move")
+				if ok then
+					move.goto_previous_start("@block.inner")
+				end
+			end
 
-      local function run_cell_and_advance()
-        run_current_cell()
-        move_to_next_cell()
-      end
+			local function run_cell_and_advance()
+				run_current_cell()
+				move_to_next_cell()
+			end
 
-      vim.api.nvim_create_autocmd("FileType", {
-        pattern = { "python", "julia", "r", "ipynb", "markdown", "quarto", "rmd" },
-        callback = function()
-          -- Molten-specific mappings (prefix: <leader>m)
-          map("n", "<leader>mK", ":MoltenInit<CR>", "[Molten] Initialize kernel")
-          map("n", "<leader>mr", ":MoltenEvaluateOperator<CR>", "[Molten] Run operator")
-          map("n", "<leader>ml", ":MoltenEvaluateLine<CR>", "[Molten] Run line")
-          map("n", "<leader>mc", ":MoltenReevaluateCell<CR>", "[Molten] Re-run cell")
-          map("v", "<leader>mr", ":<C-u>MoltenEvaluateVisual<CR>gv", "[Molten] Run selection")
-          map("n", "<leader>mh", ":MoltenHideOutput<CR>", "[Molten] Hide output")
-          map("n", "<leader>ms", ":MoltenShowOutput<CR>", "[Molten] Show output")
-          map("n", "<leader>x", ":MoltenInterrupt<CR>", "[Molten] Interrupt execution")
-          map("n", "<leader>mq", ":MoltenDeinit<CR>", "[Molten] Quit kernel")
+			local function cell_representation()
+				if vim.tbl_contains({ "python", "julia", "r" }, vim.bo.filetype) then
+					return "percent", vim.bo.filetype
+				end
+				if vim.tbl_contains({ "quarto", "rmd" }, vim.bo.filetype) then
+					return "fenced", "{python}"
+				end
+				return "fenced", "python"
+			end
 
-          -- Smart cell execution - detects markdown code blocks
-          map("n", "<S-CR>", run_cell_and_advance, "[Molten] Run cell + advance")
-          map("n", "<C-CR>", run_cell_and_advance, "[Molten] Run cell + advance")
-          map("n", "<leader><CR>", run_current_cell, "[Molten] Run cell")
-          map("n", "<leader>jr", run_current_cell, "[Unified] Run cell (smart)")
-          map("v", "<leader>jr", ":<C-u>MoltenEvaluateVisual<CR>gv", "[Unified] Run selection")
-          map("n", "<leader>jK", ":MoltenInit<CR>", "[Unified] Initialize kernel")
-          map("n", "<leader>]", move_to_next_cell, "[Unified] Next cell")
-          map("n", "<leader>[", move_to_previous_cell, "[Unified] Previous cell")
-          
-          if vim.bo.filetype == "python" then
-            map("n", "]c", function() move_python_cell("next") end, "Next Python cell")
-            map("n", "[c", function() move_python_cell("previous") end, "Previous Python cell")
-          end
-          
-          -- Full output viewing
-          map("n", "<leader>jo", ":noautocmd MoltenEnterOutput<CR>", "[Output] View full output")
-          map("n", "<leader>jh", ":MoltenHideOutput<CR>", "[Output] Hide output")
-        end,
-      })
-    end,
-  },
+			local function replace_changed_lines(previous, updated)
+				local change = python_cells.changed_region(previous, updated)
+				vim.api.nvim_buf_set_lines(0, change.start_line, change.end_line, false, change.replacement)
+			end
 
-  -- Image.nvim for inline image rendering (molten-nvim dependency)
-  {
-    "3rd/image.nvim",
-    ft = { "python", "julia", "r", "markdown", "quarto" },
-    config = function()
-      require("image").setup({
-        backend = "kitty", -- Ghostty supports kitty graphics protocol
-        integrations = {
-          markdown = {
-            enabled = false, -- Disabled: use Snacks.image.hover() (<leader>mi) instead
-          },
-        },
-        max_width = nil,
-        max_height = nil,
-        max_width_window_percentage = nil,
-        max_height_window_percentage = 50,
-        window_overlap_clear_enabled = true,
-        window_overlap_clear_ft_ignore = { "cmp_menu", "cmp_docs", "" },
-      })
-    end,
-  },
+			local function create_cell(direction)
+				local previous = buffer_lines()
+				local representation, language = cell_representation()
+				local result = python_cells.insert(
+					previous,
+					vim.api.nvim_win_get_cursor(0)[1],
+					direction,
+					representation,
+					language
+				)
+				replace_changed_lines(previous, result.lines)
+				vim.api.nvim_win_set_cursor(0, { result.cursor_line, 0 })
+				vim.cmd("startinsert")
+			end
 
-  -- Jupytext.nvim for .ipynb file conversion to readable text format
-  {
-    "goerz/jupytext.nvim",
-    lazy = false, -- Must load immediately to handle .ipynb file conversion
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-    },
-    config = function()
-      require("jupytext").setup({
-        -- Use markdown format with python code blocks instead of %% cells
-        format = "md:markdown",
-        -- Set filetype to markdown so LSP doesn't try to parse as pure Python
-        filetype = function(path, format, metadata)
-          return "markdown"
-        end,
-      })
-      
-      -- Ensure proper markdown detection and syntax highlighting for converted notebooks
-      vim.api.nvim_create_autocmd({"BufRead", "BufNewFile"}, {
-        pattern = "*.ipynb",
-        callback = function()
-          -- Force markdown filetype and enable syntax highlighting
-          vim.bo.filetype = "markdown"
-          -- Enable treesitter highlighting
-          vim.defer_fn(function()
-            if vim.bo.filetype == "markdown" then
-              vim.treesitter.start()
-              -- Trigger markview if available
-              if pcall(require, "markview") then
-                vim.cmd("Markview enable")
-              end
-            end
-          end, 100)
-        end,
-      })
-    end,
-  },
+			vim.api.nvim_create_autocmd("FileType", {
+				pattern = { "python", "julia", "r", "ipynb", "markdown", "quarto", "rmd" },
+				callback = function()
+					-- Molten-specific mappings (prefix: <leader>m)
+					map("n", "<leader>mK", ":MoltenInit<CR>", "[Molten] Initialize kernel")
+					map("n", "<leader>mr", ":MoltenEvaluateOperator<CR>", "[Molten] Run operator")
+					map("n", "<leader>ml", ":MoltenEvaluateLine<CR>", "[Molten] Run line")
+					map("n", "<leader>mc", ":MoltenReevaluateCell<CR>", "[Molten] Re-run cell")
+					map("v", "<leader>mr", ":<C-u>MoltenEvaluateVisual<CR>gv", "[Molten] Run selection")
+					map("n", "<leader>mh", ":MoltenHideOutput<CR>", "[Molten] Hide output")
+					map("n", "<leader>ms", ":MoltenShowOutput<CR>", "[Molten] Show output")
+					map("n", "<leader>x", ":MoltenInterrupt<CR>", "[Molten] Interrupt execution")
+					map("n", "<leader>mq", ":MoltenDeinit<CR>", "[Molten] Quit kernel")
 
-  -- Vim-slime for terminal-based REPL workflow
-  {
-    "jpalardy/vim-slime",
-    ft = { "python", "r", "julia", "sh", "bash" },
-    dependencies = {
-      "hanschen/vim-ipython-cell", -- Adds cell-based execution to vim-slime
-    },
-    config = function()
-      -- Configure vim-slime for terminal integration
-      vim.g.slime_target = "neovim" -- Use Neovim terminal
-      vim.g.slime_python_ipython = 1 -- Use IPython when available
-      vim.g.slime_cell_delimiter = "# %%" -- Standard Jupyter cell delimiter
-      vim.g.slime_default_config = { jobid = "terminal" }
+					-- Smart cell execution - detects markdown code blocks
+					map("n", "<S-CR>", run_cell_and_advance, "[Molten] Run cell + advance")
+					map("n", "<C-CR>", run_cell_and_advance, "[Molten] Run cell + advance")
+					map("n", "<leader><CR>", run_current_cell, "[Molten] Run cell")
+					map("n", "<leader>jr", run_current_cell, "[Unified] Run cell (smart)")
+					map("v", "<leader>jr", ":<C-u>MoltenEvaluateVisual<CR>gv", "[Unified] Run selection")
+					map("n", "<leader>jK", ":MoltenInit<CR>", "[Unified] Initialize kernel")
+					map("n", "<leader>jo", function()
+						create_cell("below")
+					end, "[Cell] Create below")
+					map("n", "<leader>jO", function()
+						create_cell("above")
+					end, "[Cell] Create above")
+					map("n", "<leader>]", move_to_next_cell, "[Unified] Next cell")
+					map("n", "<leader>[", move_to_previous_cell, "[Unified] Previous cell")
 
-      -- Don't add newlines automatically
-      vim.g.slime_bracketed_paste = 1
+					if vim.bo.filetype == "python" then
+						map("n", "]c", function()
+							move_python_cell("next")
+						end, "Next Python cell")
+						map("n", "[c", function()
+							move_python_cell("previous")
+						end, "Previous Python cell")
+					end
 
-      -- Slime + IPython Cell keybindings
-      local function map(mode, key, cmd, desc)
-        vim.keymap.set(mode, key, cmd, { desc = desc, buffer = true })
-      end
+					-- Full output viewing
+					map("n", "<leader>jv", ":noautocmd MoltenEnterOutput<CR>", "[Output] View full output")
+					map("n", "<leader>jh", ":MoltenHideOutput<CR>", "[Output] Hide output")
+				end,
+			})
+		end,
+	},
 
-      vim.api.nvim_create_autocmd("FileType", {
-        pattern = { "python", "r", "julia" },
-        callback = function()
-          -- Slime-specific mappings (prefix: <leader>s)
-          map("n", "<leader>sc", ":SlimeSendCurrentLine<CR>", "[Slime] Send line")
-          map("v", "<leader>sc", ":SlimeSend<CR>", "[Slime] Send selection")
-          map("n", "<leader>ss", ":SlimeSend<CR>", "[Slime] Send operator")
-          map("n", "<leader>st", ":SlimeConfig<CR>", "[Slime] Configure target")
+	-- Image.nvim for inline image rendering (molten-nvim dependency)
+	{
+		"3rd/image.nvim",
+		ft = { "python", "julia", "r", "markdown", "quarto" },
+		config = function()
+			require("image").setup({
+				backend = "kitty", -- Ghostty supports kitty graphics protocol
+				integrations = {
+					markdown = {
+						enabled = false, -- Disabled: use Snacks.image.hover() (<leader>mi) instead
+					},
+				},
+				max_width = nil,
+				max_height = nil,
+				max_width_window_percentage = nil,
+				max_height_window_percentage = 50,
+				window_overlap_clear_enabled = true,
+				window_overlap_clear_ft_ignore = { "cmp_menu", "cmp_docs", "" },
+			})
+		end,
+	},
 
-          -- IPython terminal cell mappings
-          map("n", "<leader>se", ":IPythonCellExecuteCell<CR>", "[Slime] Run cell")
-          map("n", "<leader>sE", ":IPythonCellExecuteCellJump<CR>", "[Slime] Run cell + jump")
-          map("n", "<leader>ja", ":IPythonCellExecuteAll<CR>", "[Unified] Run all above")
-          map("n", "<leader>jA", ":IPythonCellExecuteAllBelow<CR>", "[Unified] Run all below")
-          map("n", "<leader>jc", ":IPythonCellClear<CR>", "[Unified] Clear terminal")
-          -- Terminal shortcuts
-          map("n", "<leader>js", ":IPythonCellRestart<CR>", "[Unified] Start/restart IPython")
-          map("n", "<leader>jt", ":terminal ipython<CR>", "[Unified] Open IPython terminal")
-        end,
-      })
-    end,
-  },
+	-- Jupytext.nvim for .ipynb file conversion to readable text format
+	{
+		"goerz/jupytext.nvim",
+		lazy = false, -- Must load immediately to handle .ipynb file conversion
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+		},
+		config = function()
+			require("jupytext").setup({
+				-- Use markdown format with python code blocks instead of %% cells
+				format = "md:markdown",
+				-- Set filetype to markdown so LSP doesn't try to parse as pure Python
+				filetype = function(path, format, metadata)
+					return "markdown"
+				end,
+			})
+
+			-- Ensure proper markdown detection and syntax highlighting for converted notebooks
+			vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+				pattern = "*.ipynb",
+				callback = function()
+					-- Force markdown filetype and enable syntax highlighting
+					vim.bo.filetype = "markdown"
+					-- Enable treesitter highlighting
+					vim.defer_fn(function()
+						if vim.bo.filetype == "markdown" then
+							vim.treesitter.start()
+							-- Trigger markview if available
+							if pcall(require, "markview") then
+								vim.cmd("Markview enable")
+							end
+						end
+					end, 100)
+				end,
+			})
+		end,
+	},
+
+	-- Vim-slime for terminal-based REPL workflow
+	{
+		"jpalardy/vim-slime",
+		ft = { "python", "r", "julia", "sh", "bash" },
+		dependencies = {
+			"hanschen/vim-ipython-cell", -- Adds cell-based execution to vim-slime
+		},
+		config = function()
+			-- Configure vim-slime for terminal integration
+			vim.g.slime_target = "neovim" -- Use Neovim terminal
+			vim.g.slime_python_ipython = 1 -- Use IPython when available
+			vim.g.slime_cell_delimiter = "# %%" -- Standard Jupyter cell delimiter
+			vim.g.slime_default_config = { jobid = "terminal" }
+
+			-- Don't add newlines automatically
+			vim.g.slime_bracketed_paste = 1
+
+			-- Slime + IPython Cell keybindings
+			local function map(mode, key, cmd, desc)
+				vim.keymap.set(mode, key, cmd, { desc = desc, buffer = true })
+			end
+
+			vim.api.nvim_create_autocmd("FileType", {
+				pattern = { "python", "r", "julia" },
+				callback = function()
+					-- Slime-specific mappings (prefix: <leader>s)
+					map("n", "<leader>sc", ":SlimeSendCurrentLine<CR>", "[Slime] Send line")
+					map("v", "<leader>sc", ":SlimeSend<CR>", "[Slime] Send selection")
+					map("n", "<leader>ss", ":SlimeSend<CR>", "[Slime] Send operator")
+					map("n", "<leader>st", ":SlimeConfig<CR>", "[Slime] Configure target")
+
+					-- IPython terminal cell mappings
+					map("n", "<leader>se", ":IPythonCellExecuteCell<CR>", "[Slime] Run cell")
+					map("n", "<leader>sE", ":IPythonCellExecuteCellJump<CR>", "[Slime] Run cell + jump")
+					map("n", "<leader>ja", ":IPythonCellExecuteAll<CR>", "[Unified] Run all above")
+					map("n", "<leader>jA", ":IPythonCellExecuteAllBelow<CR>", "[Unified] Run all below")
+					map("n", "<leader>jc", ":IPythonCellClear<CR>", "[Unified] Clear terminal")
+					-- Terminal shortcuts
+					map("n", "<leader>js", ":IPythonCellRestart<CR>", "[Unified] Start/restart IPython")
+					map("n", "<leader>jt", ":terminal ipython<CR>", "[Unified] Open IPython terminal")
+				end,
+			})
+		end,
+	},
 }
