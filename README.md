@@ -23,7 +23,7 @@ Molten uses a stable, editor-owned Python environment so project dependency chan
 uv venv ~/.local/share/nvim/python-host
 uv pip install \
   --python ~/.local/share/nvim/python-host/bin/python \
-  pynvim jupyter_client
+  pynvim jupyter_client nbformat
 
 # 2. Register the remote plugin (run inside Neovim)
 :UpdateRemotePlugins
@@ -175,6 +175,7 @@ Shorthands (tab-complete in the prompt, extra text appended as context):
 
 Opening `.ipynb` files auto-converts them to markdown via jupytext.
 Changes save back to `.ipynb` format. Full LSP support in the converted view.
+Outputs saved in the notebook are shown on open without re-running it: Molten starts the notebook's kernel (or one named after the active venv) and imports them. If neither kernel is installed, run `:MoltenInit` then `:MoltenImportOutput`.
 
 ### Molten (inline execution)
 

@@ -188,6 +188,9 @@ return {
 		config = function()
 			require("image").setup({
 				backend = "kitty", -- Ghostty supports kitty graphics protocol
+				-- In-process ImageMagick binding. The CLI processor blocks on vim.wait
+				-- per resize/crop, and re-entrant renders during scrolling freeze nvim.
+				processor = "magick_rock",
 				integrations = {
 					markdown = {
 						enabled = false, -- Disabled: use Snacks.image.hover() (<leader>mi) instead
@@ -220,10 +223,40 @@ return {
 				end,
 			})
 
+			local notebook_outputs = require("config.notebook_outputs")
+
+			-- Show the outputs already saved in the .ipynb without re-executing it.
+			-- Molten attaches imported outputs to a kernel, so one is started first
+			-- when the buffer has none.
+			local function import_saved_outputs(path)
+				local ok, notebook = pcall(function()
+					return vim.json.decode(table.concat(vim.fn.readfile(path), "\n"))
+				end)
+				if not ok or not notebook_outputs.has_outputs(notebook) then
+					return
+				end
+				if #vim.fn.MoltenRunningKernels(true) == 0 then
+					local kernel = notebook_outputs.pick_kernel(
+						notebook,
+						vim.fn.MoltenAvailableKernels(),
+						os.getenv("VIRTUAL_ENV") or os.getenv("CONDA_PREFIX")
+					)
+					if not kernel then
+						vim.notify(
+							"Notebook has saved outputs but no matching kernel is installed; run :MoltenInit then :MoltenImportOutput",
+							vim.log.levels.WARN
+						)
+						return
+					end
+					vim.cmd.MoltenInit(kernel)
+				end
+				vim.cmd.MoltenImportOutput()
+			end
+
 			-- Ensure proper markdown detection and syntax highlighting for converted notebooks
 			vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 				pattern = "*.ipynb",
-				callback = function()
+				callback = function(args)
 					-- Force markdown filetype and enable syntax highlighting
 					vim.bo.filetype = "markdown"
 					-- Enable treesitter highlighting
@@ -236,6 +269,27 @@ return {
 							end
 						end
 					end, 100)
+					-- jupytext has replaced the buffer contents by now. Molten commands act
+					-- on the current window, so the import runs in the notebook's window.
+					-- Neo-tree's open_in_main_window loads the buffer before showing it,
+					-- so the import waits for the first window that displays it.
+					vim.schedule(function()
+						local path = vim.api.nvim_buf_get_name(args.buf)
+						local win = vim.fn.bufwinid(args.buf)
+						if win ~= -1 then
+							vim.api.nvim_win_call(win, function()
+								import_saved_outputs(path)
+							end)
+							return
+						end
+						vim.api.nvim_create_autocmd("BufWinEnter", {
+							buffer = args.buf,
+							once = true,
+							callback = function()
+								import_saved_outputs(path)
+							end,
+						})
+					end)
 				end,
 			})
 		end,
