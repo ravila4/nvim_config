@@ -455,6 +455,12 @@ return {
         if filename:match("%.ipynb$") then
           -- Add Jupyter menu item to the context menu for notebook files
           table.insert(context_menu, { name = " Jupyter Notebook", cmd = "JupyterMenu", rtxt = "mj" })
+          -- Right-clicking an image puts copying it first
+          local images = require("config.notebook_images")
+          if #images.clicked() > 0 then
+            table.insert(context_menu, 1, { name = "separator" })
+            table.insert(context_menu, 1, { name = "󰋩 Copy Image", cmd = images.copy_at_cursor, rtxt = "my" })
+          end
         end
 
         local ft = vim.bo.filetype
@@ -518,6 +524,12 @@ return {
         function()
           if vim.bo.filetype == "snacks_dashboard" or vim.bo.filetype == "dashboard" then
             return
+          end
+          -- Act where the click landed, like a right-click in any editor. In
+          -- visual mode the selection is what the menu acts on, so keep it.
+          local mouse = vim.fn.getmousepos()
+          if vim.fn.mode() == "n" and mouse.winid == vim.api.nvim_get_current_win() and mouse.line > 0 then
+            vim.api.nvim_win_set_cursor(0, { mouse.line, math.max(0, mouse.column - 1) })
           end
           vim.cmd("RightClickMenu")
         end,

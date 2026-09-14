@@ -148,6 +148,9 @@ return {
 					map("v", "<leader>mr", ":<C-u>MoltenEvaluateVisual<CR>gv", "[Molten] Run selection")
 					map("n", "<leader>mh", ":MoltenHideOutput<CR>", "[Molten] Hide output")
 					map("n", "<leader>ms", ":MoltenShowOutput<CR>", "[Molten] Show output")
+					map("n", "<leader>my", function()
+						require("config.notebook_images").copy_at_cursor()
+					end, "[Molten] Copy image to clipboard")
 					map("n", "<leader>x", ":MoltenInterrupt<CR>", "[Molten] Interrupt execution")
 					map("n", "<leader>mq", ":MoltenDeinit<CR>", "[Molten] Quit kernel")
 
@@ -212,6 +215,23 @@ return {
 				-- Molten "loaded outputs" / "kernel ready" popup clears all images
 				-- and image.nvim does not re-render them when the popup closes.
 				window_overlap_clear_ft_ignore = { "cmp_menu", "cmp_docs", "snacks_notif", "" },
+			})
+
+			-- The terminal draws images above cell backgrounds, so a float over an
+			-- image is unreadable unless the image is hidden. image.nvim hides it when
+			-- the context menu opens but never brings it back, so redraw on close.
+			vim.api.nvim_create_autocmd("WinClosed", {
+				callback = function(event)
+					local win = tonumber(event.match)
+					if not win or vim.bo[vim.api.nvim_win_get_buf(win)].filetype ~= "NvMenu" then
+						return
+					end
+					vim.schedule(function()
+						for _, img in ipairs(require("image").get_images()) do
+							img:render()
+						end
+					end)
+				end,
 			})
 		end,
 	},
