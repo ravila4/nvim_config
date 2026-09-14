@@ -255,6 +255,7 @@ return {
 					return "markdown"
 				end,
 			})
+			require("config.notebook_save").setup()
 
 			local notebook_outputs = require("config.notebook_outputs")
 

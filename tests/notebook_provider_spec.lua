@@ -1,0 +1,165 @@
+vim.opt.rtp:append(vim.fn.stdpath("data") .. "/lazy/outline.nvim")
+vim.opt.clipboard = ""
+local provider = require("outline.providers.notebook")
+require("outline").setup({ providers = { priority = { "notebook" } }, symbol_folding = { autofold_depth = false } })
+
+describe("Notebook outline provider", function()
+	local buf
+	before_each(function()
+		buf = vim.api.nvim_create_buf(true, false)
+		vim.api.nvim_set_current_buf(buf)
+		vim.bo[buf].filetype = "markdown"
+	end)
+	after_each(function()
+		require("outline").close()
+		require("outline").sidebars = {}
+		vim.api.nvim_buf_delete(buf, { force = true })
+	end)
+
+	it("selects notebooks by filename rather than markdown filetype", function()
+		vim.bo[buf].filetype = "markdown"
+		vim.api.nvim_buf_set_name(buf, "/tmp/outline-spec.ipynb")
+		assert.is_true(provider.supports_buffer(buf))
+		vim.api.nvim_buf_set_name(buf, "/tmp/outline-spec.md")
+		assert.is_false(provider.supports_buffer(buf))
+	end)
+
+	it("renders cells without an initialized kernel and follows the cursor", function()
+		vim.api.nvim_buf_set_name(buf, "/tmp/outline-spec.ipynb")
+		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "# Title", "```python", "x = 1", "```" })
+		require("outline").open()
+		assert.is_true(vim.wait(500, function()
+			return require("outline").is_open()
+		end))
+		require("outline").focus_code()
+		vim.api.nvim_win_set_cursor(0, { 3, 0 })
+		require("outline").follow_cursor()
+		local sidebar = require("outline")._get_sidebar()
+		assert.are.equal("Cell 1: x = 1", sidebar.items[1].children[1].name)
+		assert.are.equal("not run", sidebar.items[1].children[1].detail)
+		assert.is_true(sidebar.items[1].children[1].hovered)
+	end)
+
+	it("refreshes execution status while focused in the outline", function()
+		vim.api.nvim_buf_set_name(buf, "/tmp/outline-spec.ipynb")
+		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "```python", "x = 1", "```" })
+		vim.cmd("function! MoltenCellInfo(buf)\nreturn g:outline_test_info\nendfunction")
+		vim.g.outline_test_info =
+			{ { start_line = 1, end_line = 1, source = "x = 1", status = "running", old = false } }
+		require("outline").open()
+		local sidebar = require("outline")._get_sidebar()
+		assert.is_true(vim.wait(500, function()
+			return sidebar.items[1] ~= nil
+		end))
+		assert.are.equal("running", sidebar.items[1].detail)
+		local outline_win = vim.api.nvim_get_current_win()
+		vim.g.outline_test_info = { { start_line = 1, end_line = 1, source = "x = 1", status = "done", old = false } }
+		vim.api.nvim_exec_autocmds("User", { pattern = "MoltenCellUpdate", data = { buffers = { buf } } })
+		assert.is_true(vim.wait(500, function()
+			return sidebar.items[1].detail == "done"
+		end))
+		assert.are.equal(outline_win, vim.api.nvim_get_current_win())
+		vim.cmd("delfunction MoltenCellInfo")
+	end)
+end)
+
+describe("Notebook outline editing keys", function()
+	local buf, sidebar
+	local function keys(value)
+		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(value, true, false, true), "xt", false)
+		vim.wait(40)
+	end
+	before_each(function()
+		buf = vim.api.nvim_create_buf(true, false)
+		vim.api.nvim_set_current_buf(buf)
+		vim.api.nvim_buf_set_name(buf, "/tmp/outline-keys.ipynb")
+		vim.bo[buf].filetype = "markdown"
+		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "```python", "a = 1", "```", "", "```python", "b = 2", "```" })
+		require("outline").open()
+		sidebar = require("outline")._get_sidebar()
+		vim.wait(100, function()
+			return vim.fn.maparg("p", "n") ~= ""
+		end)
+	end)
+	after_each(function()
+		require("outline").close()
+		require("outline").sidebars = {}
+		vim.api.nvim_buf_delete(buf, { force = true })
+	end)
+	it("copies and pastes a cell with yy and p", function()
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 1, 0 })
+		keys("yy")
+		assert.are.same({ "```python", "a = 1", "```", "" }, vim.fn.getreg('"', 1, true))
+		keys("p")
+		assert.are.same(
+			{ "```python", "a = 1", "```", "", "```python", "a = 1", "```", "", "```python", "b = 2", "```" },
+			vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+		)
+		assert.are.equal(sidebar.view.win, vim.api.nvim_get_current_win())
+	end)
+	it("cuts visual rows and pastes into the empty outline", function()
+		keys("ggVjd")
+		assert.are.same({ "" }, vim.api.nvim_buf_get_lines(buf, 0, -1, false))
+		keys("p")
+		assert.are.equal(7, vim.api.nvim_buf_line_count(buf))
+		keys("u")
+		assert.are.same({ "" }, vim.api.nvim_buf_get_lines(buf, 0, -1, false))
+		keys("<C-r>")
+		assert.are.equal(7, vim.api.nvim_buf_line_count(buf))
+	end)
+	it("supports operator motions", function()
+		keys("ggdj")
+		assert.are.same({ "" }, vim.api.nvim_buf_get_lines(buf, 0, -1, false))
+	end)
+	it("supports a named register with Y and paste before", function()
+		keys('gg"aYj"aP')
+		local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+		assert.are.same(
+			{ "```python", "a = 1", "```", "", "```python", "a = 1", "```", "", "```python", "b = 2", "```" },
+			lines
+		)
+	end)
+	it("supports counts for cutting and pasting", function()
+		keys("gg2dd")
+		assert.are.same({ "" }, vim.api.nvim_buf_get_lines(buf, 0, -1, false))
+		keys("2p")
+		assert.are.equal(14, vim.api.nvim_buf_line_count(buf))
+	end)
+	it("redraws source outputs once when execution updates from the sidebar", function()
+		vim.g.outline_redraws = 0
+		vim.g.outline_redraw_buf = 0
+		vim.cmd([[function! MoltenUpdateInterface()
+let g:outline_redraws+=1
+let g:outline_redraw_buf=bufnr()
+doautocmd User MoltenCellUpdate
+endfunction]])
+		vim.api.nvim_exec_autocmds("User", { pattern = "MoltenCellUpdate", data = { buffers = { buf } } })
+		vim.wait(100)
+		vim.cmd("delfunction MoltenUpdateInterface")
+		assert.are.equal(1, vim.g.outline_redraws)
+		assert.are.equal(buf, vim.g.outline_redraw_buf)
+		assert.are.equal(sidebar.view.win, vim.api.nvim_get_current_win())
+	end)
+	it("preserves the outline cursor during an execution update", function()
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 2, 0 })
+		vim.cmd("function! MoltenCellInfo(buf)\nreturn g:outline_test_info\nendfunction")
+		vim.g.outline_test_info = { { start_line = 1, end_line = 1, source = "a = 1", status = "done" } }
+		vim.api.nvim_exec_autocmds("User", { pattern = "MoltenCellUpdate" })
+		vim.wait(100)
+		assert.are.equal(2, vim.api.nvim_win_get_cursor(sidebar.view.win)[1])
+		vim.cmd("delfunction MoltenCellInfo")
+	end)
+	it("defers execution refresh until visual selection ends", function()
+		vim.cmd("function! MoltenCellInfo(buf)\nreturn g:outline_test_info\nendfunction")
+		vim.g.outline_test_info = { { start_line = 1, end_line = 1, source = "a = 1", status = "done" } }
+		vim.cmd.normal({ args = { "V" }, bang = true })
+		vim.api.nvim_exec_autocmds("User", { pattern = "MoltenCellUpdate" })
+		vim.wait(100)
+		assert.are.equal("not run", sidebar.items[1].detail)
+		keys("<Esc>")
+		assert.is_true(vim.wait(200, function()
+			return sidebar.items[1].detail == "done"
+		end))
+		vim.cmd("delfunction MoltenCellInfo")
+	end)
+end)

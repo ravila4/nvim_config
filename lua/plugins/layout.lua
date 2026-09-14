@@ -421,8 +421,8 @@ return {
       require("outline").setup({
         outline_window = {
           position = "right",
-          width = 25,
-          relative_width = true,
+          width = 40,
+          relative_width = false,
           auto_close = false,
           -- Prevent buffer conflicts
           auto_jump = false,
@@ -434,8 +434,13 @@ return {
           auto_set_cursor = true,
         },
         -- Better buffer handling
-        provider_selector = nil,
+        providers = {
+          priority = { "notebook", "lsp", "coc", "markdown", "norg" },
+        },
         symbols = {
+          icon_fetcher = function(_, _, symbol)
+            return symbol.notebook_icon
+          end,
           filter = {
             "Class",
             "Constructor",

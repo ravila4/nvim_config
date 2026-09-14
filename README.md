@@ -49,7 +49,7 @@ Install `ipykernel` and workload-specific packages in separate project environme
 |-----|--------|
 | `Ctrl-n` | Toggle file explorer (neo-tree) |
 | `<leader>e` / `<leader>E` | Toggle / focus file explorer |
-| `<leader>s` | Toggle symbols/outline |
+| `<leader>s` | Toggle outline (headings and cells in notebooks; code symbols elsewhere) |
 | `Ctrl-h/j/k/l` | Navigate between splits (normal + terminal mode) |
 | `]b` / `[b` | Next / previous buffer |
 | `<leader>bd` | Delete buffer |
@@ -178,6 +178,25 @@ Changes save back to `.ipynb` format. Full LSP support in the converted view.
 Outputs saved in the notebook are shown on open without re-running it: Molten starts the notebook's kernel (or one named after the active venv) and imports them. If neither kernel is installed, run `:MoltenInit` then `:MoltenImportOutput`.
 
 Molten comes from the `ravila4/molten-nvim` fork (branch `fix/virt-image-layout`), which keeps inline plots below the text a cell prints before them. image.nvim comes from the `ravila4/image.nvim` fork (branch `fix/virt-lines-scroll`), which keeps those plots in place when the window is scrolled partway through them and scrolls them with the text horizontally.
+
+`<leader>s` opens the notebook outline: Markdown headings contain numbered code cells, titled from their first nonblank line. Enter jumps to an entry, and the outline highlights the cell containing the editor cursor. Headings represent document sections rather than original Markdown-cell boundaries.
+
+Cell details show `not run`, `queued`, `running`, `done`, or `error`, with the execution count when available. `saved` identifies results from the notebook or loaded output state; it does not imply that the current kernel contains those variables. Editing executed code shows `modified`; executing only a portion of a cell shows `partial`. Live status requires the fork's `MoltenCellInfo` function and `MoltenCellUpdate` event. The kernel continues processing results while the outline is focused.
+
+The notebook outline supports editing whole cells:
+
+| Key | Action |
+|-----|--------|
+| `yy` / `Y` | Copy the current cell or section |
+| `dd` | Cut the current cell or section |
+| `V`, then `j` / `k` | Select outline rows |
+| `y` / `d` | Copy / cut selected rows, or use a motion such as `dj` |
+| `p` / `P` | Paste after / before the current cell or section |
+| `u` / `<C-r>` | Undo / redo the notebook edit |
+
+Counts work (`2dd`, `3p`), as do explicit registers (`"ayy`, `"ap`). A heading includes its entire section, even when folded. Selecting code rows leaves intervening prose in place. Cell fences and trailing blank lines travel with the cell.
+
+Cut/paste within one notebook preserves execution outputs through the fork's `MoltenCellSnapshot` and `MoltenCellRestore` functions. Copies start unexecuted; queued or running cells cannot be cut. After an outline edit, saving tracks cell identity so pasting a copy before its original does not give the copy the original's saved results. Source edits and output locations also follow undo/redo from the notebook buffer.
 
 ### Molten (inline execution)
 
