@@ -269,12 +269,12 @@ return {
 				if not ok or not notebook_outputs.has_outputs(notebook) then
 					return
 				end
+				local venv = notebook_outputs.environment_venv(path, vim.env.VIRTUAL_ENV or vim.env.CONDA_PREFIX)
+				if venv then
+					vim.env.JUPYTER_PATH = notebook_outputs.jupyter_path(vim.env.JUPYTER_PATH, venv)
+				end
 				if #vim.fn.MoltenRunningKernels(true) == 0 then
-					local kernel = notebook_outputs.pick_kernel(
-						notebook,
-						vim.fn.MoltenAvailableKernels(),
-						os.getenv("VIRTUAL_ENV") or os.getenv("CONDA_PREFIX")
-					)
+					local kernel = notebook_outputs.pick_kernel(notebook, vim.fn.MoltenAvailableKernels(), venv)
 					if not kernel then
 						vim.notify(
 							"Notebook has saved outputs but no matching kernel is installed; run :MoltenInit then :MoltenImportOutput",

@@ -27,4 +27,31 @@ function M.pick_kernel(notebook, available, venv_path)
 	return nil
 end
 
+local function has_kernels(venv)
+	return venv and vim.uv.fs_stat(venv .. "/share/jupyter/kernels") ~= nil
+end
+
+function M.environment_venv(notebook_path, active_venv)
+	if has_kernels(active_venv) then
+		return active_venv
+	end
+	local found = vim.fs.find(".venv", { path = vim.fs.dirname(notebook_path), upward = true, type = "directory" })
+	for _, venv in ipairs(found) do
+		if has_kernels(venv) then
+			return venv
+		end
+	end
+end
+
+function M.jupyter_path(current, venv)
+	local path = venv .. "/share/jupyter"
+	local separator = vim.fn.has("win32") == 1 and ";" or ":"
+	for _, existing in ipairs(vim.split(current or "", separator, { plain = true, trimempty = true })) do
+		if existing == path then
+			return current
+		end
+	end
+	return current and current ~= "" and path .. separator .. current or path
+end
+
 return M
