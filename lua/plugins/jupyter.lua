@@ -12,14 +12,17 @@ return {
 		lazy = true,
 	},
 
-	-- Molten-nvim for VSCode-like inline Jupyter experience
+	-- Molten-nvim for VSCode-like inline Jupyter experience.
+	-- Fork of benlubas/molten-nvim: places virtual-text images below the text
+	-- printed before them instead of over it, and fixes the "More Lines" footer
+	-- of the floating output window.
 	{
-		"benlubas/molten-nvim",
-		version = "^1.0.0", -- Use latest stable
+		"ravila4/molten-nvim",
+		branch = "fix/virt-image-layout",
 		build = ":UpdateRemotePlugins",
 		lazy = false, -- Load immediately so commands are always available
 		dependencies = {
-			"3rd/image.nvim", -- For inline image rendering
+			"ravila4/image.nvim", -- For inline image rendering
 		},
 		config = function()
 			-- Global configuration
@@ -181,9 +184,13 @@ return {
 		end,
 	},
 
-	-- Image.nvim for inline image rendering (molten-nvim dependency)
+	-- Image.nvim for inline image rendering (molten-nvim dependency).
+	-- Fork: images on virtual lines stay in place while the window scrolls
+	-- partway through them and scroll with the text horizontally (upstream
+	-- hides or misplaces them).
 	{
-		"3rd/image.nvim",
+		"ravila4/image.nvim",
+		branch = "fix/virt-lines-scroll",
 		ft = { "python", "julia", "r", "markdown", "quarto" },
 		config = function()
 			require("image").setup({
@@ -201,7 +208,10 @@ return {
 				max_width_window_percentage = nil,
 				max_height_window_percentage = 50,
 				window_overlap_clear_enabled = true,
-				window_overlap_clear_ft_ignore = { "cmp_menu", "cmp_docs", "" },
+				-- Notifications float over the notebook; without this entry every
+				-- Molten "loaded outputs" / "kernel ready" popup clears all images
+				-- and image.nvim does not re-render them when the popup closes.
+				window_overlap_clear_ft_ignore = { "cmp_menu", "cmp_docs", "snacks_notif", "" },
 			})
 		end,
 	},

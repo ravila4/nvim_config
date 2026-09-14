@@ -177,6 +177,8 @@ Opening `.ipynb` files auto-converts them to markdown via jupytext.
 Changes save back to `.ipynb` format. Full LSP support in the converted view.
 Outputs saved in the notebook are shown on open without re-running it: Molten starts the notebook's kernel (or one named after the active venv) and imports them. If neither kernel is installed, run `:MoltenInit` then `:MoltenImportOutput`.
 
+Molten comes from the `ravila4/molten-nvim` fork (branch `fix/virt-image-layout`), which keeps inline plots below the text a cell prints before them. image.nvim comes from the `ravila4/image.nvim` fork (branch `fix/virt-lines-scroll`), which keeps those plots in place when the window is scrolled partway through them and scrolls them with the text horizontally.
+
 ### Molten (inline execution)
 
 Inline plots and output display, similar to VSCode notebooks.
