@@ -1,7 +1,7 @@
--- Copy an inline image to the system clipboard. Molten writes every image
--- output to a PNG file and image.nvim places it on virtual lines below the
--- cell's anchor line, so the image is addressed through the cursor and copied
--- from that file.
+-- Copy cell output to the system clipboard. Molten shows output on virtual
+-- lines below the cell's anchor line, which cannot be selected: images are
+-- placed there by image.nvim from the PNG files Molten writes, and text is
+-- kept by Molten itself. Both are addressed through the cursor.
 local M = {}
 
 -- Anchor row (0-indexed) of the image under the cursor line (1-indexed), or nil.
@@ -75,6 +75,73 @@ end
 -- The images whose output block, or anchor line, the cursor is on.
 function M.clicked()
 	return images_by(M.anchor_clicked)
+end
+
+-- Molten's output extmark under the cursor as { row, id }, or nil.
+local function output_by(pick)
+	local buf = vim.api.nvim_get_current_buf()
+	local ns = vim.api.nvim_get_namespaces()["molten-extmarks"]
+	if not ns then
+		return nil
+	end
+	local marks = {}
+	for _, mark in ipairs(vim.api.nvim_buf_get_extmarks(buf, ns, 0, -1, { details = true })) do
+		if mark[4].virt_lines then
+			marks[#marks + 1] = { row = mark[2], id = mark[1] }
+		end
+	end
+	local anchor = pick(
+		vim.tbl_map(function(mark)
+			return mark.row
+		end, marks),
+		vim.api.nvim_win_get_cursor(0)[1]
+	)
+	for _, mark in ipairs(marks) do
+		if mark.row == anchor then
+			return mark
+		end
+	end
+	return nil
+end
+
+-- Output text as it goes on the clipboard, and its line count. Trailing
+-- newlines are dropped so pasting does not add blank lines.
+function M.clip_text(text)
+	text = text:gsub("\n+$", "")
+	if text == "" then
+		return "", 0
+	end
+	return text, select(2, text:gsub("\n", "")) + 1
+end
+
+local function output_text(mark)
+	local ok, text = pcall(vim.fn.MoltenOutputText, vim.api.nvim_get_current_buf(), mark.id)
+	if ok and type(text) == "string" then
+		return text
+	end
+	return ""
+end
+
+-- The text of the output whose block, or anchor line, the cursor is on.
+function M.output_text_clicked()
+	local mark = output_by(M.anchor_clicked)
+	return mark and output_text(mark) or ""
+end
+
+-- Copy the text of the output under the cursor.
+function M.copy_output_at_cursor()
+	local mark = output_by(M.anchor_at)
+	if not mark then
+		vim.notify("No output at or below the cursor", vim.log.levels.WARN)
+		return
+	end
+	local text, lines = M.clip_text(output_text(mark))
+	if text == "" then
+		vim.notify("This output has no text", vim.log.levels.WARN)
+		return
+	end
+	vim.fn.setreg("+", text)
+	vim.notify(("Copied %d line%s of output"):format(lines, lines == 1 and "" or "s"))
 end
 
 -- Copy the image under the cursor. A cell with several images asks which one.

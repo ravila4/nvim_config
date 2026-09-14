@@ -149,8 +149,11 @@ return {
 					map("n", "<leader>mh", ":MoltenHideOutput<CR>", "[Molten] Hide output")
 					map("n", "<leader>ms", ":MoltenShowOutput<CR>", "[Molten] Show output")
 					map("n", "<leader>my", function()
-						require("config.notebook_images").copy_at_cursor()
+						require("config.notebook_copy").copy_at_cursor()
 					end, "[Molten] Copy image to clipboard")
+					map("n", "<leader>mo", function()
+						require("config.notebook_copy").copy_output_at_cursor()
+					end, "[Molten] Copy output text to clipboard")
 					map("n", "<leader>x", ":MoltenInterrupt<CR>", "[Molten] Interrupt execution")
 					map("n", "<leader>mq", ":MoltenDeinit<CR>", "[Molten] Quit kernel")
 

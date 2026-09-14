@@ -1,4 +1,4 @@
-local images = require("config.notebook_images")
+local images = require("config.notebook_copy")
 
 describe("Image under the cursor", function()
 	-- anchors are 0-indexed buffer rows, the cursor line is 1-indexed
@@ -42,6 +42,26 @@ describe("Image clicked with the mouse", function()
 
 	it("is nil when the click is below every image", function()
 		assert.is_nil(images.anchor_clicked({ 21 }, 30))
+	end)
+end)
+
+describe("Output text for the clipboard", function()
+	it("drops trailing newlines and counts the lines", function()
+		local text, lines = images.clip_text("a\nb\n\n")
+		assert.are.equal("a\nb", text)
+		assert.are.equal(2, lines)
+	end)
+
+	it("counts a single line without a newline", function()
+		local text, lines = images.clip_text("only")
+		assert.are.equal("only", text)
+		assert.are.equal(1, lines)
+	end)
+
+	it("is empty for whitespace-only newlines", function()
+		local text, lines = images.clip_text("\n\n")
+		assert.are.equal("", text)
+		assert.are.equal(0, lines)
 	end)
 end)
 

@@ -196,6 +196,7 @@ Inline plots and output display, similar to VSCode notebooks.
 | `<leader>]` / `<leader>[` or `]c` / `[c` | Next / previous cell |
 | `<leader>ms` / `<leader>mh` | Show / hide output |
 | `<leader>my` | Copy the image under the cursor to the clipboard (also in the right-click menu on an image) |
+| `<leader>mo` | Copy the output text under the cursor to the clipboard (also in the right-click menu on an output) |
 | `<leader>jv` | Enter full output view |
 | `<leader>x` | Interrupt the running cell |
 | `<leader>md` | Delete cell output |

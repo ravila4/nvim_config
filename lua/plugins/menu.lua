@@ -455,11 +455,18 @@ return {
         if filename:match("%.ipynb$") then
           -- Add Jupyter menu item to the context menu for notebook files
           table.insert(context_menu, { name = " Jupyter Notebook", cmd = "JupyterMenu", rtxt = "mj" })
-          -- Right-clicking an image puts copying it first
-          local images = require("config.notebook_images")
-          if #images.clicked() > 0 then
+          -- Right-clicking an output puts copying it first
+          local copy = require("config.notebook_copy")
+          local has_image = #copy.clicked() > 0
+          local has_text = copy.output_text_clicked() ~= ""
+          if has_image or has_text then
             table.insert(context_menu, 1, { name = "separator" })
-            table.insert(context_menu, 1, { name = "󰋩 Copy Image", cmd = images.copy_at_cursor, rtxt = "my" })
+          end
+          if has_text then
+            table.insert(context_menu, 1, { name = "󰆏 Copy Output", cmd = copy.copy_output_at_cursor, rtxt = "mo" })
+          end
+          if has_image then
+            table.insert(context_menu, 1, { name = "󰋩 Copy Image", cmd = copy.copy_at_cursor, rtxt = "my" })
           end
         end
 
