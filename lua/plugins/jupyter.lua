@@ -13,13 +13,9 @@ return {
 	},
 
 	-- Molten-nvim for VSCode-like inline Jupyter experience.
-	-- Experimental fork with Snacks image rendering. image.nvim remains installed
-	-- below as a one-line rollback while notebook placement is validated.
 	{
 		"ravila4/molten-nvim",
-		dir = vim.fn.expand("~/.local/share/nvim/lazy/molten-nvim/.worktrees/experiment-snacks-image"),
-		branch = "experiment/snacks-image",
-		commit = "e8c884953673ccaf146131428f260e25a0310247",
+		branch = "fix/virt-image-layout",
 		build = ":UpdateRemotePlugins",
 		lazy = false, -- Load immediately so commands are always available
 		dependencies = {
@@ -202,55 +198,6 @@ return {
 						require("config.notebook_output_view").open()
 					end, "[Output] Open output buffer")
 					map("n", "<leader>jh", ":MoltenHideOutput<CR>", "[Output] Hide output")
-				end,
-			})
-		end,
-	},
-
-	-- Image.nvim for inline image rendering (molten-nvim dependency).
-	-- Fork: images on virtual lines stay in place while the window scrolls
-	-- partway through them and scroll with the text horizontally (upstream
-	-- hides or misplaces them).
-	{
-		"ravila4/image.nvim",
-		branch = "fix/virt-lines-scroll",
-		ft = { "python", "julia", "r", "markdown", "quarto" },
-		config = function()
-			require("image").setup({
-				backend = "kitty", -- Ghostty supports kitty graphics protocol
-				-- In-process ImageMagick binding. The CLI processor blocks on vim.wait
-				-- per resize/crop, and re-entrant renders during scrolling freeze nvim.
-				processor = "magick_rock",
-				integrations = {
-					markdown = {
-						enabled = false, -- Disabled: use Snacks.image.hover() (<leader>mi) instead
-					},
-				},
-				max_width = nil,
-				max_height = nil,
-				max_width_window_percentage = nil,
-				max_height_window_percentage = 50,
-				window_overlap_clear_enabled = true,
-				-- Notifications float over the notebook; without this entry every
-				-- Molten "loaded outputs" / "kernel ready" popup clears all images
-				-- and image.nvim does not re-render them when the popup closes.
-				window_overlap_clear_ft_ignore = { "cmp_menu", "cmp_docs", "snacks_notif", "" },
-			})
-
-			-- The terminal draws images above cell backgrounds, so a float over an
-			-- image is unreadable unless the image is hidden. image.nvim hides it when
-			-- the context menu opens but never brings it back, so redraw on close.
-			vim.api.nvim_create_autocmd("WinClosed", {
-				callback = function(event)
-					local win = tonumber(event.match)
-					if not win or vim.bo[vim.api.nvim_win_get_buf(win)].filetype ~= "NvMenu" then
-						return
-					end
-					vim.schedule(function()
-						for _, img in ipairs(require("image").get_images()) do
-							img:render()
-						end
-					end)
 				end,
 			})
 		end,
