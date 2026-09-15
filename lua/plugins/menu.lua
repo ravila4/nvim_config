@@ -379,6 +379,38 @@ return {
       end
 
       -- Create user commands with theme-aware styling
+      local function notebook_output_item()
+        local buf, line = vim.api.nvim_get_current_buf(), vim.api.nvim_win_get_cursor(0)[1]
+        return {
+          name = "Open Output", rtxt = "<leader>jv",
+          cmd = function() require("config.notebook_output").open(buf, line) end,
+        }
+      end
+
+      local function notebook_kernel_item(name, command)
+        local win = vim.api.nvim_get_current_win()
+        return {
+          name = name,
+          cmd = function()
+            vim.api.nvim_win_call(win, function()
+              vim.cmd(command)
+            end)
+          end,
+        }
+      end
+
+      local function notebook_outline_menu()
+        if vim.bo.filetype ~= "Outline" then
+          return false
+        end
+        local items = require("config.notebook_outline_actions").context_menu()
+        if not items then
+          return false
+        end
+        menu.open(normalize_menu(items), _G.ide_menus._menu_opts())
+        return true
+      end
+
       vim.api.nvim_create_user_command("BufferMenu", function()
         menu.open(normalize_menu(_G.ide_menus.buffer_menu), _G.ide_menus._menu_opts())
       end, {})
@@ -410,7 +442,17 @@ return {
         menu.open(normalize_menu(_G.ide_menus.jupyter_menu), _G.ide_menus._menu_opts())
       end, {})
       vim.api.nvim_create_user_command("ContextMenu", function()
-        menu.open(normalize_menu(_G.ide_menus.context_menu), _G.ide_menus._menu_opts())
+        if notebook_outline_menu() then
+          return
+        end
+        local items = vim.deepcopy(_G.ide_menus.context_menu)
+        if vim.fn.expand("%:t"):match("%.ipynb$") then
+          table.insert(items, 1, { name = "separator" })
+          table.insert(items, 1, notebook_kernel_item("Restart Kernel", "MoltenRestart"))
+          table.insert(items, 1, notebook_kernel_item("Interrupt Kernel", "MoltenInterrupt"))
+          table.insert(items, 1, notebook_output_item())
+        end
+        menu.open(normalize_menu(items), _G.ide_menus._menu_opts())
       end, {})
 
       -- Right-click context menu with copy/paste + IDE entries
@@ -433,6 +475,9 @@ return {
       end, {})
 
       vim.api.nvim_create_user_command("RightClickMenu", function()
+        if notebook_outline_menu() then
+          return
+        end
         if vim.bo.filetype == "snacks_dashboard" or vim.bo.filetype == "dashboard" then
           return
         end
@@ -453,6 +498,10 @@ return {
         local filename = vim.fn.expand("%:t")
 
         if filename:match("%.ipynb$") then
+          table.insert(context_menu, 1, { name = "separator" })
+          table.insert(context_menu, 1, notebook_kernel_item("Restart Kernel", "MoltenRestart"))
+          table.insert(context_menu, 1, notebook_kernel_item("Interrupt Kernel", "MoltenInterrupt"))
+          table.insert(context_menu, 1, notebook_output_item())
           -- Add Jupyter menu item to the context menu for notebook files
           table.insert(context_menu, { name = " Jupyter Notebook", cmd = "JupyterMenu", rtxt = "mj" })
           -- Right-clicking an output puts copying it first
@@ -535,6 +584,11 @@ return {
           -- Act where the click landed, like a right-click in any editor. In
           -- visual mode the selection is what the menu acts on, so keep it.
           local mouse = vim.fn.getmousepos()
+          if vim.fn.mode() == "n" and mouse.winid > 0 and vim.api.nvim_win_is_valid(mouse.winid) then
+            if vim.bo[vim.api.nvim_win_get_buf(mouse.winid)].filetype == "Outline" then
+              vim.api.nvim_set_current_win(mouse.winid)
+            end
+          end
           if vim.fn.mode() == "n" and mouse.winid == vim.api.nvim_get_current_win() and mouse.line > 0 then
             vim.api.nvim_win_set_cursor(0, { mouse.line, math.max(0, mouse.column - 1) })
           end

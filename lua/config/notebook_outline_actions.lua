@@ -55,6 +55,98 @@ function M.operator()
 	yank(vim.fn.line("'["), vim.fn.line("']"), op.register, op.cut)
 end
 
+function M.context_menu()
+	local view = sidebar()
+	if not view then
+		return
+	end
+	local items = {}
+	local selected = view.flats[vim.api.nvim_win_get_cursor(view.view.win)[1]]
+	local function action(name, fn)
+		items[#items + 1] = {
+			name = name,
+			cmd = function()
+				if not vim.api.nvim_win_is_valid(view.view.win) then
+					return
+				end
+				vim.api.nvim_set_current_win(view.view.win)
+				run(fn)
+			end,
+		}
+	end
+	if selected and selected.kind == vim.lsp.protocol.SymbolKind.Function then
+		local buf = view.code.buf
+		local tick = vim.api.nvim_buf_get_changedtick(buf)
+		local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+		local cells = {}
+		local function visit(nodes)
+			for _, node in ipairs(nodes) do
+				if node.kind == vim.lsp.protocol.SymbolKind.Function then
+					cells[#cells + 1] = node
+				end
+				visit(node.children or {})
+			end
+		end
+		visit(view.items)
+		for _, scope in ipairs({ "Cell", "All Above", "All Below" }) do
+			action("Run " .. scope, function(current)
+				assert(
+					current.code.buf == buf
+						and vim.api.nvim_win_get_buf(current.code.win) == buf
+						and vim.api.nvim_buf_get_changedtick(buf) == tick,
+					"Notebook changed; reopen the Outline menu before running cells"
+				)
+				vim.api.nvim_win_call(current.code.win, function()
+					for _, cell in ipairs(cells) do
+						if
+							(scope == "Cell" and cell == selected)
+							or (scope == "All Above" and cell.range_start < selected.range_start)
+							or (scope == "All Below" and cell.range_start > selected.range_start)
+						then
+							local first, last = cell.range_start + 2, cell.range_end
+							local opening = lines[first - 1]:match("^%s*([`~]+)")
+							local closing = lines[last + 1]:match("^%s*([`~]+)%s*$")
+							if not closing or #closing < #opening or closing ~= opening:sub(1, 1):rep(#closing) then
+								last = last + 1
+							end
+							while first <= last and lines[first]:match("^%s*$") do
+								first = first + 1
+							end
+							while last >= first and lines[last]:match("^%s*$") do
+								last = last - 1
+							end
+							if first <= last then
+								vim.fn.MoltenEvaluateRange(first, last)
+							end
+						end
+					end
+				end)
+			end)
+		end
+		action("Open Output", function()
+			require("config.notebook_output").open(buf, selected.range_start + 1)
+		end)
+	end
+	action("Interrupt Kernel", function(current)
+		vim.api.nvim_win_call(current.code.win, function()
+			vim.cmd("MoltenInterrupt")
+		end)
+	end)
+	action("Restart Kernel", function(current)
+		vim.api.nvim_win_call(current.code.win, function()
+			vim.cmd("MoltenRestart")
+		end)
+	end)
+	items[#items + 1] = { name = "separator" }
+	action("Expand All", function(current)
+		current:_set_all_folded(false)
+	end)
+	action("Collapse All", function(current)
+		current:_set_all_folded(true)
+	end)
+	return items
+end
+
 function M.attach()
 	local view = require("outline")._get_sidebar()
 	if not view or not view.view.buf or not vim.api.nvim_buf_is_valid(view.view.buf) then
@@ -63,6 +155,11 @@ function M.attach()
 	local function map(mode, key, fn, desc, expr)
 		vim.keymap.set(mode, key, fn, { buffer = view.view.buf, silent = true, desc = desc, expr = expr })
 	end
+	map("n", "<Space>", function()
+		run(function(current)
+			current:_toggle_fold()
+		end)
+	end, "Expand or collapse notebook group")
 	for _, key in ipairs({ "y", "d" }) do
 		local cut = key == "d"
 		map("n", key, function()

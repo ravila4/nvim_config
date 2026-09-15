@@ -188,7 +188,9 @@ return {
 					end
 
 					-- Full output viewing
-					map("n", "<leader>jv", ":noautocmd MoltenEnterOutput<CR>", "[Output] View full output")
+					map("n", "<leader>jv", function()
+						require("config.notebook_output").open()
+					end, "[Output] Open output buffer")
 					map("n", "<leader>jh", ":MoltenHideOutput<CR>", "[Output] Hide output")
 				end,
 			})

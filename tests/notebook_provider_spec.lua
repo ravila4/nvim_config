@@ -63,6 +63,251 @@ describe("Notebook outline provider", function()
 	end)
 end)
 
+describe("Notebook outline navigation and execution", function()
+	local buf, sidebar
+	local actions = require("config.notebook_outline_actions")
+	local function choose(name)
+		for _, item in ipairs(actions.context_menu()) do
+			if item.name == name then
+				return item.cmd
+			end
+		end
+		error("Missing menu action: " .. name)
+	end
+	before_each(function()
+		buf = vim.api.nvim_create_buf(true, false)
+		vim.api.nvim_set_current_buf(buf)
+		vim.api.nvim_buf_set_name(buf, "/tmp/outline-actions.ipynb")
+		vim.bo[buf].filetype = "markdown"
+		vim.api.nvim_buf_set_lines(buf, 0, -1, false, {
+			"# First",
+			"```python",
+			"a = 1",
+			"```",
+			"# Second",
+			"```python",
+			"",
+			"b = 2",
+			"",
+			"```",
+			"## Nested",
+			"```python",
+			"c = 3",
+			"```",
+			"# Last",
+			"```python",
+			"d = 4",
+			"```",
+		})
+		require("outline").open()
+		sidebar = require("outline")._get_sidebar()
+		vim.wait(100)
+		vim.g.outline_runs = {}
+		vim.g.interrupted_buf = 0
+		vim.api.nvim_create_user_command("MoltenInterrupt", function()
+			vim.g.interrupted_buf = vim.api.nvim_get_current_buf()
+		end, {})
+		vim.cmd([[function! MoltenEvaluateRange(first, last)
+call add(g:outline_runs, [bufnr(), a:first, a:last])
+endfunction]])
+	end)
+	after_each(function()
+		vim.cmd("delfunction MoltenEvaluateRange")
+		vim.api.nvim_del_user_command("MoltenInterrupt")
+		require("outline").close()
+		require("outline").sidebars = {}
+		vim.api.nvim_buf_delete(buf, { force = true })
+	end)
+	it("toggles a group with Space without leaving the outline", function()
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 1, 0 })
+		vim.api.nvim_feedkeys(" ", "xt", false)
+		assert.are.equal(7, #sidebar.flats)
+		assert.are.equal(sidebar.view.win, vim.api.nvim_get_current_win())
+		vim.api.nvim_feedkeys(" ", "xt", false)
+		assert.are.equal(8, #sidebar.flats)
+	end)
+	it("jumps to a cell with Enter", function()
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 4, 0 })
+		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<CR>", true, false, true), "xt", false)
+		assert.are.equal(buf, vim.api.nvim_get_current_buf())
+		assert.are.equal(6, vim.api.nvim_win_get_cursor(0)[1])
+	end)
+	it("expands and collapses every group from the menu", function()
+		choose("Collapse All")()
+		assert.are.equal(3, #sidebar.flats)
+		choose("Expand All")()
+		assert.are.equal(8, #sidebar.flats)
+	end)
+	it("does not offer execution actions for headings", function()
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 1, 0 })
+		local names = vim.tbl_map(function(item)
+			return item.name
+		end, actions.context_menu())
+		assert.are.same({ "Interrupt Kernel", "Restart Kernel", "separator", "Expand All", "Collapse All" }, names)
+	end)
+	it("interrupts the notebook kernel from a heading while retaining outline focus", function()
+		choose("Interrupt Kernel")()
+		assert.are.equal(buf, vim.g.interrupted_buf)
+		assert.are.equal(sidebar.view.win, vim.api.nvim_get_current_win())
+	end)
+	it("runs the selected cell in its source buffer with trimmed bounds", function()
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 4, 0 })
+		local execute = choose("Run Cell")
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 8, 0 })
+		execute()
+		assert.are.same({ { buf, 8, 8 } }, vim.g.outline_runs)
+		assert.are.equal(sidebar.view.win, vim.api.nvim_get_current_win())
+	end)
+	it("includes the final line of an unfinished cell", function()
+		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "```python", "a = 1", "b = 2" })
+		vim.api.nvim_win_call(sidebar.code.win, function()
+			require("outline").refresh()
+		end)
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 1, 0 })
+		choose("Run Cell")()
+		assert.are.same({ { buf, 2, 3 } }, vim.g.outline_runs)
+	end)
+	it("skips an empty cell", function()
+		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "```python", "", "```" })
+		vim.api.nvim_win_call(sidebar.code.win, function()
+			require("outline").refresh()
+		end)
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 1, 0 })
+		choose("Run Cell")()
+		assert.are.same({}, vim.g.outline_runs)
+	end)
+	it("runs all above in notebook order including folded groups", function()
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 1, 0 })
+		sidebar:_toggle_fold()
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 7, 0 })
+		choose("Run All Above")()
+		assert.are.same({ { buf, 3, 3 }, { buf, 8, 8 }, { buf, 13, 13 } }, vim.g.outline_runs)
+	end)
+	it("runs all below in notebook order including folded groups", function()
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 3, 0 })
+		sidebar:_toggle_fold()
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 2, 0 })
+		choose("Run All Below")()
+		assert.are.same({ { buf, 8, 8 }, { buf, 13, 13 }, { buf, 17, 17 } }, vim.g.outline_runs)
+	end)
+	it("does nothing above the first cell or below the last", function()
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 2, 0 })
+		choose("Run All Above")()
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 8, 0 })
+		choose("Run All Below")()
+		assert.are.same({}, vim.g.outline_runs)
+	end)
+	it("rejects execution if the source changes after opening the menu", function()
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 2, 0 })
+		local execute = choose("Run Cell")
+		vim.api.nvim_buf_set_lines(buf, 0, 0, false, { "new text" })
+		execute()
+		assert.are.same({}, vim.g.outline_runs)
+	end)
+	it("opens the selected cell output from the outline menu", function()
+		local ns = vim.api.nvim_create_namespace("molten-extmarks")
+		vim.api.nvim_buf_set_extmark(buf, ns, 2, 0, { virt_lines = { { { "result", "Normal" } } } })
+		vim.cmd("function! MoltenOutputText(buf, id)\nreturn 'result'\nendfunction")
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 2, 0 })
+		local open = choose("Open Output")
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 4, 0 })
+		open()
+		assert.are.same({ "result" }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+		vim.fn.maparg("q", "n", false, true).callback()
+		assert.are.equal(sidebar.view.win, vim.api.nvim_get_current_win())
+		vim.cmd("delfunction MoltenOutputText")
+	end)
+	it("does not provide a notebook menu in the source buffer", function()
+		require("outline").focus_code()
+		assert.is_nil(actions.context_menu())
+	end)
+	for _, command in ipairs({ "RightClickMenu", "ContextMenu" }) do
+		it("offers Interrupt Kernel directly in the notebook " .. command, function()
+			vim.opt.rtp:append(vim.fn.stdpath("data") .. "/lazy/menu")
+			vim.opt.rtp:append(vim.fn.stdpath("data") .. "/lazy/volt")
+			require("plugins.menu")[1].config()
+			local copy = require("config.notebook_copy")
+			local stub = require("luassert.stub")
+			local images = stub(copy, "clicked", function()
+				return {}
+			end)
+			local output = stub(copy, "output_text_clicked", function()
+				return ""
+			end)
+			local opened
+			local open = stub(require("menu"), "open", function(items)
+				opened = items
+			end)
+			require("outline").focus_code()
+			vim.cmd(command)
+			open:revert()
+			images:revert()
+			output:revert()
+			local interrupt
+			for _, item in ipairs(opened) do
+				if item.name == "Interrupt Kernel" then
+					interrupt = item.cmd
+				end
+			end
+			assert.is_function(interrupt)
+			assert.are.equal("Restart Kernel", opened[3].name)
+			assert.are.equal("separator", opened[4].name)
+			vim.api.nvim_create_user_command("MoltenRestart", function()
+				vim.g.restarted_buf = vim.api.nvim_get_current_buf()
+			end, { force = true })
+			require("outline").focus_outline()
+			opened[3].cmd()
+			vim.wait(100)
+			assert.are.equal(buf, vim.g.restarted_buf)
+			vim.api.nvim_del_user_command("MoltenRestart")
+			require("outline").focus_outline()
+			interrupt()
+			vim.wait(100)
+			assert.are.equal(buf, vim.g.interrupted_buf)
+		end)
+		it("opens the notebook actions through " .. command, function()
+			vim.opt.rtp:append(vim.fn.stdpath("data") .. "/lazy/menu")
+			vim.opt.rtp:append(vim.fn.stdpath("data") .. "/lazy/volt")
+			require("plugins.menu")[1].config()
+			local menu = require("menu")
+			local opened
+			local open = require("luassert.stub")(menu, "open", function(items)
+				opened = items
+			end)
+			vim.api.nvim_win_set_cursor(sidebar.view.win, { 4, 0 })
+			vim.cmd(command)
+			open:revert()
+			assert.are.equal("Run Cell", opened[1].name)
+			opened[1].cmd()
+			vim.wait(100)
+			assert.are.same({ { buf, 8, 8 } }, vim.g.outline_runs)
+		end)
+	end
+	it("right-clicks a cell in the outline while the notebook has focus", function()
+		local spec = require("plugins.menu")[1]
+		spec.config()
+		local mouse = require("luassert.stub")(vim.fn, "getmousepos", function()
+			return { winid = sidebar.view.win, line = 4, column = 1 }
+		end)
+		local opened
+		local open = require("luassert.stub")(require("menu"), "open", function(items)
+			opened = items
+		end)
+		require("outline").focus_code()
+		for _, key in ipairs(spec.keys) do
+			if key[1] == "<RightMouse>" then
+				key[2]()
+			end
+		end
+		mouse:revert()
+		open:revert()
+		assert.are.equal("Run Cell", opened[1].name)
+		opened[1].cmd()
+		vim.wait(100)
+		assert.are.same({ { buf, 8, 8 } }, vim.g.outline_runs)
+	end)
+end)
+
 describe("Notebook outline editing keys", function()
 	local buf, sidebar
 	local function keys(value)

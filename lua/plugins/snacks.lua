@@ -94,9 +94,11 @@ return {
         },
         on_open = function()
           vim.opt.wrap = true -- Enable word wrap in zen mode
+          vim.schedule(require("config.notebook_images").refresh)
         end,
         on_close = function()
           vim.opt.wrap = false -- Restore no wrap when exiting zen
+          vim.schedule(require("config.notebook_images").refresh)
         end,
       },
 
