@@ -15,7 +15,7 @@ return {
 	-- Molten-nvim for VSCode-like inline Jupyter experience.
 	{
 		"ravila4/molten-nvim",
-		branch = "fix/snacks-mixed-output-clicks",
+		branch = "fix/virt-image-layout",
 		build = ":UpdateRemotePlugins",
 		lazy = false, -- Load immediately so commands are always available
 		dependencies = {
@@ -233,7 +233,9 @@ return {
 				end,
 			})
 			require("config.notebook_save").setup()
-			require("config.notebook_borders").setup()
+			require("config.notebook_borders").setup({
+				running_indicator = "spinner", -- "spinner", "blink", or "none"; elapsed time stays visible
+			})
 
 			-- Show the outputs already saved in the .ipynb without re-executing it.
 			-- Molten attaches imported outputs to a kernel, so one is started first
