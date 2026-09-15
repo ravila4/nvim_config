@@ -164,7 +164,7 @@ vim.api.nvim_create_user_command("DeleteTrailingSpaces", function()
   local filetype = vim.bo.filetype
 
   if buftype ~= "" or vim.tbl_contains(trailing_skip_filetypes, filetype) or filetype == "" then
-    print("DeleteTrailingSpaces: Skipping special buffer")
+    vim.notify("DeleteTrailingSpaces: Skipping special buffer")
     return
   end
 
@@ -185,7 +185,7 @@ vim.api.nvim_create_user_command("DeleteTrailingSpaces", function()
   end
 
   if total_trailing_chars == 0 then
-    print("No trailing spaces found")
+    vim.notify("No trailing spaces found")
     return
   end
 
@@ -200,7 +200,7 @@ vim.api.nvim_create_user_command("DeleteTrailingSpaces", function()
     update_trailing_spaces(win)
   end, 50)
 
-  print(string.format("Removed %d trailing characters from %d lines", total_trailing_chars, lines_with_trailing))
+  vim.notify(string.format("Removed %d trailing characters from %d lines", total_trailing_chars, lines_with_trailing))
 end, {
   desc = "Delete all trailing spaces in current buffer",
 })

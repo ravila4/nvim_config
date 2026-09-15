@@ -241,24 +241,24 @@ return {
       -- Debug function to check test discovery
       vim.api.nvim_create_user_command("NeotestDebug", function()
         local cwd = vim.fn.getcwd()
-        print("Current working directory: " .. cwd)
+        vim.notify("Current working directory: " .. cwd)
 
         -- Check for test files
         local test_files = vim.fn.glob(cwd .. "/**/test_*.py", false, true)
         local test_files2 = vim.fn.glob(cwd .. "/**/*_test.py", false, true)
         local tests_dir = vim.fn.glob(cwd .. "/tests/*.py", false, true)
 
-        print("Found test_*.py files: " .. vim.inspect(test_files))
-        print("Found *_test.py files: " .. vim.inspect(test_files2))
-        print("Found tests/*.py files: " .. vim.inspect(tests_dir))
+        vim.notify("Found test_*.py files: " .. vim.inspect(test_files))
+        vim.notify("Found *_test.py files: " .. vim.inspect(test_files2))
+        vim.notify("Found tests/*.py files: " .. vim.inspect(tests_dir))
 
         -- Check Python environment
         local python_cmd = require("neotest").adapters[1].python()
-        print("Python executable: " .. python_cmd)
+        vim.notify("Python executable: " .. python_cmd)
 
         -- Check if pytest is available
         local pytest_check = vim.fn.system(python_cmd .. " -c 'import pytest; print(pytest.__version__)'")
-        print("Pytest version: " .. pytest_check:gsub("\n", ""))
+        vim.notify("Pytest version: " .. pytest_check:gsub("\n", ""))
       end, {})
 
       -- Clear neotest cache command
