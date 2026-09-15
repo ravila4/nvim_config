@@ -21,39 +21,39 @@ return {
             enable = true,
             heading_1 = {
               style = "icon",
-              icon = "# ",
+              icon = "█ ",
               sign = "󰌖 ",
-              hl = "MarkviewPalette1Bg", -- Full line background
+              hl = "@markup.heading.1.markdown",
             },
             heading_2 = {
               style = "icon",
-              icon = "## ",
+              icon = "▋ ",
               sign = "󰌖 ",
-              hl = "MarkviewPalette2Bg", -- Full line background
+              hl = "@markup.heading.2.markdown",
             },
             heading_3 = {
               style = "icon",
-              icon = "### ",
+              icon = "▌ ",
               sign = "󰌖 ",
-              hl = "MarkviewPalette3Bg", -- Full line background
+              hl = "@markup.heading.3.markdown",
             },
             heading_4 = {
               style = "icon",
-              icon = "#### ",
+              icon = "▍ ",
               sign = "󰌖 ",
-              hl = "MarkviewPalette4Bg", -- Full line background
+              hl = "@markup.heading.4.markdown",
             },
             heading_5 = {
               style = "icon",
-              icon = "##### ",
+              icon = "▎ ",
               sign = "󰌖 ",
-              hl = "MarkviewPalette5Bg", -- Full line background
+              hl = "@markup.heading.5.markdown",
             },
             heading_6 = {
               style = "icon",
-              icon = "###### ",
+              icon = "▏ ",
               sign = "󰌖 ",
-              hl = "MarkviewPalette6Bg", -- Full line background
+              hl = "@markup.heading.6.markdown",
             },
           },
           code_blocks = {
