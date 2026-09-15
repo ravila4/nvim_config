@@ -92,17 +92,9 @@ end, { desc = "Close all buffers" })
 
 -- Context menus (using nvzone/menu)
 map("n", "<C-t>", ":ContextMenu<CR>", { desc = "Open context menu" })
-map("n", "<leader>mf", ":FileMenu<CR>", { desc = "File menu" })
-map("n", "<leader>mb", ":BufferMenu<CR>", { desc = "Buffer menu" })
-map("n", "<leader>ml", ":LspMenu<CR>", { desc = "LSP menu" })
-map("n", "<leader>mg", ":GitMenu<CR>", { desc = "Git menu" })
-map("n", "<leader>mt", ":TerminalMenu<CR>", { desc = "Terminal menu" })
-map("n", "<leader>mp", ":LayoutMenu<CR>", { desc = "Layout menu" })
-map("n", "<leader>md", ":DebugMenu<CR>", { desc = "Debug menu" })
-map("n", "<leader>mk", ":TestMenu<CR>", { desc = "Test menu" })
 
 -- Test panel toggle (safe loading)
-map("n", "<leader>t", function()
+map("n", "<leader>tp", function()
   -- Use vim.schedule to ensure proper loading
   vim.schedule(function()
     local neotest = require("neotest")

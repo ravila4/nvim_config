@@ -218,6 +218,9 @@ function M.changed(buf)
 end
 
 function M.records(buf)
+	if not states[buf] then
+		return {}, {}
+	end
 	return virtuals(buf), states[buf].records
 end
 

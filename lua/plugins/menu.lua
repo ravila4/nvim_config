@@ -383,7 +383,7 @@ return {
         local buf, line = vim.api.nvim_get_current_buf(), vim.api.nvim_win_get_cursor(0)[1]
         return {
           name = "Open Output", rtxt = "<leader>jv",
-          cmd = function() require("config.notebook_output").open(buf, line) end,
+          cmd = function() require("config.notebook_output_view").open(buf, line) end,
         }
       end
 

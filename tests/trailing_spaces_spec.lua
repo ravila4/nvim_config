@@ -72,4 +72,20 @@ describe("Trailing space matches", function()
 		flush()
 		assert.are.same({ "TrailingSpaces" }, groups(first))
 	end)
+
+	it("keeps the window match ID synchronized after deleting trailing spaces", function()
+		vim.fn.matchadd("ErrorMsg", "keep")
+		vim.api.nvim_buf_set_lines(0, 0, -1, false, { "local value = true  " })
+
+		vim.cmd("DeleteTrailingSpaces")
+		flush()
+
+		local trailing_match = vim.w[first].trailing_space_match
+		local live_ids = {}
+		for _, match in ipairs(vim.fn.getmatches(first)) do
+			live_ids[match.id] = true
+		end
+		assert.are.same({ "ErrorMsg", "TrailingSpaces" }, groups(first))
+		assert.is_true(live_ids[trailing_match])
+	end)
 end)

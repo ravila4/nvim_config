@@ -189,7 +189,7 @@ return {
 
 					-- Full output viewing
 					map("n", "<leader>jv", function()
-						require("config.notebook_output").open()
+						require("config.notebook_output_view").open()
 					end, "[Output] Open output buffer")
 					map("n", "<leader>jh", ":MoltenHideOutput<CR>", "[Output] Hide output")
 				end,
@@ -264,8 +264,6 @@ return {
 			})
 			require("config.notebook_save").setup()
 
-			local notebook_outputs = require("config.notebook_outputs")
-
 			-- Show the outputs already saved in the .ipynb without re-executing it.
 			-- Molten attaches imported outputs to a kernel, so one is started first
 			-- when the buffer has none.
@@ -273,7 +271,16 @@ return {
 				local ok, notebook = pcall(function()
 					return vim.json.decode(table.concat(vim.fn.readfile(path), "\n"))
 				end)
-				if not ok or not notebook_outputs.has_outputs(notebook) then
+				local has_outputs = false
+				if ok then
+					for _, cell in ipairs(notebook.cells or {}) do
+						if cell.cell_type == "code" and cell.outputs and #cell.outputs > 0 then
+							has_outputs = true
+							break
+						end
+					end
+				end
+				if not has_outputs then
 					return
 				end
 				if #vim.fn.MoltenRunningKernels(true) == 0 then
