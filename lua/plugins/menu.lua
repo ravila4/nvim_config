@@ -228,7 +228,7 @@ return {
         },
 
         jupyter_menu = {
-          { name = " Initialize Kernel", cmd = "MoltenInit", rtxt = "mK" },
+          { name = " Select Kernel", cmd = function() require("config.notebook_kernels").pick() end, rtxt = "mK" },
           { name = "separator" },
           { name = "  Run Selection", cmd = "MoltenEvaluateVisual", rtxt = "mr" },
           { name = "separator" },

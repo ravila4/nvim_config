@@ -19,6 +19,7 @@ return {
 	{
 		"ravila4/molten-nvim",
 		branch = "fix/virt-image-layout",
+		commit = "0961cea6227078d426d34c973eba37e1409d3b99",
 		build = ":UpdateRemotePlugins",
 		lazy = false, -- Load immediately so commands are always available
 		dependencies = {
@@ -141,7 +142,9 @@ return {
 				pattern = { "python", "julia", "r", "ipynb", "markdown", "quarto", "rmd" },
 				callback = function()
 					-- Molten-specific mappings (prefix: <leader>m)
-					map("n", "<leader>mK", ":MoltenInit<CR>", "[Molten] Initialize kernel")
+					map("n", "<leader>mK", function()
+						require("config.notebook_kernels").pick()
+					end, "[Molten] Select kernel")
 					map("n", "<leader>mr", ":MoltenEvaluateOperator<CR>", "[Molten] Run operator")
 					map("n", "<leader>ml", ":MoltenEvaluateLine<CR>", "[Molten] Run line")
 					map("n", "<leader>mc", ":MoltenReevaluateCell<CR>", "[Molten] Re-run cell")
@@ -163,7 +166,9 @@ return {
 					map("n", "<leader><CR>", run_current_cell, "[Molten] Run cell")
 					map("n", "<leader>jr", run_current_cell, "[Unified] Run cell (smart)")
 					map("v", "<leader>jr", ":<C-u>MoltenEvaluateVisual<CR>gv", "[Unified] Run selection")
-					map("n", "<leader>jK", ":MoltenInit<CR>", "[Unified] Initialize kernel")
+					map("n", "<leader>jK", function()
+						require("config.notebook_kernels").pick()
+					end, "[Unified] Select kernel")
 					map("n", "<leader>jo", function()
 						create_cell("below")
 					end, "[Cell] Create below")
@@ -269,22 +274,11 @@ return {
 				if not ok or not notebook_outputs.has_outputs(notebook) then
 					return
 				end
-				local venv = notebook_outputs.environment_venv(path, vim.env.VIRTUAL_ENV or vim.env.CONDA_PREFIX)
-				if venv then
-					vim.env.JUPYTER_PATH = notebook_outputs.jupyter_path(vim.env.JUPYTER_PATH, venv)
-				end
 				if #vim.fn.MoltenRunningKernels(true) == 0 then
-					local kernel = notebook_outputs.pick_kernel(notebook, vim.fn.MoltenAvailableKernels(), venv)
-					if not kernel then
-						vim.notify(
-							"Notebook has saved outputs but no matching kernel is installed; run :MoltenInit then :MoltenImportOutput",
-							vim.log.levels.WARN
-						)
-						return
-					end
-					vim.cmd.MoltenInit(kernel)
+					require("config.notebook_kernels").open(vim.api.nvim_get_current_buf(), notebook.metadata or {})
+				else
+					vim.cmd.MoltenImportOutput()
 				end
-				vim.cmd.MoltenImportOutput()
 			end
 
 			-- Ensure proper markdown detection and syntax highlighting for converted notebooks

@@ -204,8 +204,7 @@ Inline plots and output display, similar to VSCode notebooks.
 
 | Key | Action |
 |-----|--------|
-| `<leader>mK` | Initialize kernel |
-| `<leader>mk` | Select kernel (Telescope) |
+| `<leader>mK` / `<leader>jK` | Select kernel and remember it for this notebook |
 | `<leader>jo` / `<leader>jO` | Create code cell below / above |
 | `<leader>mr` | Run selection |
 | `<leader>ml` | Run line |
@@ -220,6 +219,19 @@ Inline plots and output display, similar to VSCode notebooks.
 | `<leader>x` | Interrupt the running cell |
 | `<leader>md` | Delete cell output |
 | `<leader>mq` | Quit kernel |
+
+Opening a notebook with saved outputs uses its remembered kernel choice, then the nearest project's `.venv`, then the global notebook environment. The picker opens if no suitable kernel exists. An unavailable remembered choice or recorded Databricks kernel prompts for a replacement instead of falling back automatically. Choices are stored locally under Neovim's state directory, keyed by notebook path.
+
+Switching kernels preserves displayed outputs and starts a fresh execution session. Interrupt running work before switching. Local kernel startup checks do not block input and stop after a failure or a 30-second timeout.
+
+#### Set up the global notebook environment
+
+```sh
+uv venv --python 3.13 ~/.local/share/nvim/notebook-venv
+uv pip install --python ~/.local/share/nvim/notebook-venv/bin/python pandas matplotlib ipykernel
+```
+
+`vim.g.notebook_default_python` can override the default interpreter path. Project and global kernels are registered with absolute interpreter paths. Databricks uses its own Python 3.12 environment; restore it with `uv sync --dev --locked` in `~/Projects/databricks.nvim`.
 
 ### Vim-Slime (terminal REPL)
 
