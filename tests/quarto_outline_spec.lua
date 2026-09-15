@@ -110,6 +110,35 @@ describe("Quarto outline actions", function()
 		end)
 		assert.are.same({}, sent)
 	end)
+	it("explains how to select a missing kernel without throwing a traceback", function()
+		QuartoConfig.codeRunner.default_method = "molten"
+		local old_molten = package.loaded["quarto.runner.molten"]
+		package.loaded["quarto.runner.molten"] = { run = function() end }
+		local original_kernels, original_notify = vim.fn.MoltenRunningKernels, vim.notify
+		local messages = {}
+		vim.fn.MoltenRunningKernels = function()
+			return {}
+		end
+		vim.notify = function(message, level)
+			messages[#messages + 1] = { message, level }
+		end
+		vim.api.nvim_win_set_cursor(0, { 1, 0 })
+		local ok, err = pcall(run, 1, "Cell")
+		vim.fn.MoltenRunningKernels, vim.notify = original_kernels, original_notify
+		package.loaded["quarto.runner.molten"] = old_molten
+		assert.is_true(ok, tostring(err))
+		assert.are.same(
+			{
+				{
+					"No kernel selected for this document. In the .qmd source window, run :MoltenInit and choose a kernel, then run the cell again.",
+					vim.log.levels.WARN,
+				},
+			},
+			messages
+		)
+		assert.are.same({}, sent)
+		assert.are.same({ 1, 0 }, vim.api.nvim_win_get_cursor(0))
+	end)
 	it("refuses ambiguous overlapping extracted chunks", function()
 		table.insert(chunks.python, { lang = "python", range = { from = { 2, 0 }, to = { 3, 0 } } })
 		assert.has_error(function()

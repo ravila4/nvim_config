@@ -61,6 +61,35 @@ describe("Editor context menu", function()
 			return item.name:find(name, 1, true) ~= nil
 		end)
 	end
+	for _, case in ipairs({ { "ipynb", "markdown" }, { "qmd", "quarto" } }) do
+		it("offers kernel controls for " .. case[1], function()
+			local buf = document("/tmp/kernel-menu." .. case[1], case[2])
+			vim.cmd("RightClickMenu")
+			assert.is_true(has_item("Select Kernel"))
+			assert.is_true(has_item("Interrupt Kernel"))
+			assert.is_true(has_item("Restart Kernel"))
+			local called
+			local kernels = require("config.notebook_kernels")
+			local pick = kernels.pick
+			kernels.pick = function(source)
+				vim.schedule(function()
+					called = source
+				end)
+			end
+			vim.cmd("vsplit")
+			document("/tmp/kernel-other.txt", "text")
+			for _, item in ipairs(opened) do
+				if item.name == "Select Kernel" then
+					item.cmd()
+				end
+			end
+			vim.wait(100, function()
+				return called ~= nil
+			end)
+			kernels.pick = pick
+			assert.equal(buf, called)
+		end)
+	end
 
 	for _, ft in ipairs({ "markdown", "quarto", "python" }) do
 		it("targets an inactive " .. ft .. " split before constructing its menu", function()

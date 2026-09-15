@@ -1,10 +1,13 @@
 describe("Molten mapping scope", function()
 	local buffers = {}
+	local prompt = package.loaded.prompt
+	package.loaded.prompt = {}
 	for _, spec in ipairs(require("plugins.jupyter")) do
 		if spec[1] == "ravila4/molten-nvim" then
 			spec.config()
 		end
 	end
+	package.loaded.prompt = prompt
 	vim.g.mapleader = " "
 	vim.keymap.set("n", "<leader>ms", "<cmd>Markview splitToggle<cr>", { desc = "Markview split view" })
 	after_each(function()
