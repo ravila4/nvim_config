@@ -37,10 +37,4 @@ jobs:
           uv tool install jupytext
 
       - name: Run tests
-        run: |
-          nvim --headless -u NONE \
-            --cmd "set rtp+=$PWD" \
-            --cmd "set rtp+=$XDG_DATA_HOME/nvim/lazy/plenary.nvim" \
-            --cmd "set rtp+=$XDG_DATA_HOME/nvim/lazy/menu" \
-            --cmd "set rtp+=$XDG_DATA_HOME/nvim/lazy/volt" \
-            -c "lua require('plenary.test_harness').test_directory('tests', { sequential = true })"
+        run: tests/run.sh
