@@ -6,11 +6,6 @@ local map = vim.keymap.set
 -- Insert date string in format YYYY-MM-DD
 map("n", "<F3>", ":r!date '+%F'<CR>", { desc = "Insert current date" })
 
--- WSL clipboard paste
-if vim.fn.system("uname -r"):match("Microsoft") then
-  map("n", "=", ':r !powershell.exe -Command "& {Get-Clipboard}"<CR>', { desc = "Paste from Windows clipboard" })
-end
-
 -- File explorer toggles (updated for Neo-tree)
 map("n", "<C-n>", ":Neotree toggle<CR>", { desc = "Toggle file explorer" })
 map("n", "<leader>e", ":Neotree toggle<CR>", { desc = "Toggle file explorer" })

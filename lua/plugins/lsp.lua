@@ -241,19 +241,19 @@ return {
           end, { desc = "Show diagnostic details", buffer = bufnr })
 
           vim.keymap.set("n", "]d", function()
-            vim.diagnostic.goto_next()
+            vim.diagnostic.jump({ count = 1, float = true })
           end, { desc = "Next diagnostic", buffer = bufnr })
 
           vim.keymap.set("n", "[d", function()
-            vim.diagnostic.goto_prev()
+            vim.diagnostic.jump({ count = -1, float = true })
           end, { desc = "Previous diagnostic", buffer = bufnr })
 
           vim.keymap.set("n", "]e", function()
-            vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
+            vim.diagnostic.jump({ count = 1, float = true, severity = vim.diagnostic.severity.ERROR })
           end, { desc = "Next error", buffer = bufnr })
 
           vim.keymap.set("n", "[e", function()
-            vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
+            vim.diagnostic.jump({ count = -1, float = true, severity = vim.diagnostic.severity.ERROR })
           end, { desc = "Previous error", buffer = bufnr })
         end,
       })

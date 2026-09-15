@@ -102,8 +102,6 @@ return {
     end,
   },
 
-  -- Note: File explorer moved to layout.lua (neo-tree with edgy integration)
-
   -- Icons
   {
     "nvim-tree/nvim-web-devicons",
