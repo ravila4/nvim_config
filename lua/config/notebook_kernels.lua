@@ -91,6 +91,30 @@ end
 
 local requests = {}
 
+function M.installed(callback)
+	vim.system(
+		{ vim.g.python3_host_prog or "python3", "-m", "jupyter", "kernelspec", "list", "--json" },
+		{ text = true, timeout = 10000 },
+		function(result)
+			vim.schedule(function()
+				local ok, data = pcall(vim.json.decode, result.stdout or "")
+				if result.code ~= 0 or not ok or type(data) ~= "table" or not data.kernelspecs then
+					vim.notify(
+						"Could not list notebook kernels: " .. (result.stderr or "invalid Jupyter response"),
+						vim.log.levels.ERROR
+					)
+					return
+				end
+				local choices = {}
+				for name, entry in pairs(data.kernelspecs) do
+					choices[name] = { name = name, label = entry.spec.display_name, executable = entry.spec.argv[1] }
+				end
+				callback(choices)
+			end)
+		end
+	)
+end
+
 local function collect(buf, saved, callback)
 	requests[buf] = (requests[buf] or 0) + 1
 	local request = requests[buf]
@@ -129,30 +153,41 @@ local function collect(buf, saved, callback)
 			end)
 			return
 		end
-		local choices, names = {}, {}
-		for _, name in ipairs(vim.fn.MoltenAvailableKernels()) do
-			if not attempted[name] then
-				choices[name] = { name = name, label = name }
+		M.installed(function(choices)
+			if not vim.api.nvim_buf_is_valid(buf) or requests[buf] ~= request then
+				return
 			end
-		end
-		for name, choice in pairs(prepared) do
-			choices[name] = choice
-		end
-		for name in pairs(choices) do
-			names[#names + 1] = name
-		end
-		table.sort(names)
-		callback(
-			choices,
-			names,
-			project and prepared[project.name] and project.name,
-			prepared[default.name] and default.name
-		)
+			local names = {}
+			for name in pairs(attempted) do
+				choices[name] = nil
+			end
+			for name, choice in pairs(prepared) do
+				choices[name] = choice
+			end
+			for name in pairs(choices) do
+				names[#names + 1] = name
+			end
+			table.sort(names, function(a, b)
+				if project and a == project.name then
+					return true
+				end
+				if project and b == project.name then
+					return false
+				end
+				return a < b
+			end)
+			callback(
+				choices,
+				names,
+				project and prepared[project.name] and project.name,
+				prepared[default.name] and default.name
+			)
+		end)
 	end
 	next_candidate(1)
 end
 
-local function picker(buf, choices, names, import_outputs)
+local function picker(buf, choices, names, import_outputs, execution)
 	if #names == 0 then
 		vim.notify(
 			"No usable notebook kernels. Install ipykernel in the project or global notebook environment.",
@@ -163,21 +198,97 @@ local function picker(buf, choices, names, import_outputs)
 	vim.ui.select(names, {
 		prompt = "Select notebook kernel (remembered for this file):",
 		format_item = function(name)
-			return choices[name].label
+			local choice = choices[name]
+			local path = choice.python or choice.executable or "unknown launch path"
+			path = path:match("^(.*)/bin/python[^/]*$") or path
+			local label = (choice.label or name):gsub("^Project %(.+%)$", "Project")
+			return label .. " — " .. vim.fn.fnamemodify(path, ":~")
 		end,
 	}, function(name)
 		if name then
+			if execution then
+				local event
+				event = vim.api.nvim_create_autocmd("User", {
+					pattern = "MoltenKernelReady",
+					callback = function(e)
+						if not e.data or e.data.kernel_id ~= name then
+							return
+						end
+						vim.api.nvim_del_autocmd(event)
+						vim.schedule(function()
+							if not vim.api.nvim_buf_is_valid(buf) then
+								return
+							end
+							if vim.api.nvim_buf_get_changedtick(buf) ~= execution.tick then
+								vim.notify(
+									"Document changed while selecting a kernel; run the cell again.",
+									vim.log.levels.WARN
+								)
+								return
+							end
+							vim.api.nvim_buf_call(buf, function()
+								if vim.fn.MoltenKernelName() ~= name then
+									return
+								end
+								local cursor = vim.api.nvim_win_get_cursor(0)
+								vim.api.nvim_win_set_cursor(0, execution.cursor)
+								local ok, err = pcall(vim.cmd, (execution.command:gsub("%%k", function()
+									return name
+								end)))
+								vim.api.nvim_win_set_cursor(0, cursor)
+								if not ok then
+									vim.notify(tostring(err), vim.log.levels.ERROR)
+								end
+							end)
+						end)
+					end,
+				})
+				vim.defer_fn(function()
+					pcall(vim.api.nvim_del_autocmd, event)
+				end, 60000)
+			end
 			M.start(buf, choices[name], true, import_outputs)
 		end
 	end)
 end
 
-function M.pick(buf)
+function M.pick(buf, command)
 	buf = buf or vim.api.nvim_get_current_buf()
+	local execution = command
+			and {
+				command = command,
+				tick = vim.api.nvim_buf_get_changedtick(buf),
+				cursor = vim.api.nvim_win_get_cursor(0),
+			}
+		or nil
 	local saved = M.load_choice(vim.api.nvim_buf_get_name(buf))
 	collect(buf, saved, function(choices, names)
-		picker(buf, choices, names, vim.api.nvim_buf_get_name(buf):match("%.ipynb$") ~= nil)
+		picker(buf, choices, names, not command and vim.api.nvim_buf_get_name(buf):match("%.ipynb$") ~= nil, execution)
 	end)
+end
+
+function M.setup_prompts()
+	local prompt = require("prompt")
+	prompt.prompt_init = function()
+		local buf = vim.api.nvim_get_current_buf()
+		vim.schedule(function()
+			M.pick(buf)
+		end)
+	end
+	prompt.prompt_init_and_run = function(_, _, command)
+		local buf, cursor = vim.api.nvim_get_current_buf(), vim.api.nvim_win_get_cursor(0)
+		vim.schedule(function()
+			if not vim.api.nvim_buf_is_valid(buf) then
+				return
+			end
+			vim.api.nvim_buf_call(buf, function()
+				local current = vim.api.nvim_win_get_cursor(0)
+				vim.api.nvim_win_set_cursor(0, cursor)
+				M.pick(buf, command)
+				vim.api.nvim_win_set_cursor(0, current)
+			end)
+		end)
+	end
 end
 
 function M.open(buf, metadata)

@@ -68,10 +68,15 @@ function M.run(buf, selected, scope)
 			end
 			if method == "molten" then
 				local available, kernels = pcall(vim.fn.MoltenRunningKernels, true)
-				assert(
-					available and type(kernels) == "table" and #kernels > 0,
-					"Initialize a kernel in this buffer with :MoltenInit before running cells"
-				)
+				assert(available, "Could not query Molten kernels: " .. tostring(kernels))
+				assert(type(kernels) == "table", "Molten returned an invalid kernel list")
+				if #kernels == 0 then
+					vim.notify(
+						"No kernel selected for this document. In the .qmd source window, run :MoltenInit and choose a kernel, then run the cell again.",
+						vim.log.levels.WARN
+					)
+					return
+				end
 			end
 			vim.api.nvim_win_set_cursor(0, { cell.body[1] + 1, 0 })
 			assert(

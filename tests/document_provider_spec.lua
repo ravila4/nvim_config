@@ -27,6 +27,45 @@ describe("Document outline provider", function()
 		assert.are.equal(2, #view.flats)
 		assert.are.equal("Child", view.flats[2].name)
 	end)
+	for _, case in ipairs({ { "ipynb", "markdown" }, { "qmd", "quarto" } }) do
+		it("offers kernel controls before execution in a " .. case[1] .. " outline", function()
+			open(case[1], case[2], { "# Title" })
+			local items = require("config.notebook_outline_actions").context_menu()
+			local actions = {}
+			for _, item in ipairs(items) do
+				actions[item.name] = item.cmd
+			end
+			assert.is_function(actions["Select Kernel"])
+			assert.is_function(actions["Interrupt Kernel"])
+			assert.is_function(actions["Restart Kernel"])
+			local called
+			local kernels = require("config.notebook_kernels")
+			local pick = kernels.pick
+			kernels.pick = function(source)
+				vim.schedule(function()
+					called = source
+				end)
+			end
+			actions["Select Kernel"]()
+			vim.wait(100, function()
+				return called ~= nil
+			end)
+			kernels.pick = pick
+			assert.equal(buf, called)
+		end)
+	end
+	it("highlights failed cell markers without duplicating window matches", function()
+		local view = open("qmd", "quarto", { "```{python}", "1/0", "```" })
+		require("config.notebook_outline_actions").attach()
+		require("config.notebook_outline_actions").attach()
+		local matches = vim.api.nvim_win_call(view.view.win, vim.fn.getmatches)
+		local errors = vim.tbl_filter(function(match)
+			return match.group == "DiagnosticError"
+		end, matches)
+		assert.are.equal(1, #errors)
+		assert.are.equal("✗", vim.fn.matchstr("  ✗ Cell 1: 1/0", errors[1].pattern))
+		assert.are.equal("", vim.fn.matchstr("  ✓ Cell 1: ok", errors[1].pattern))
+	end)
 	it("refreshes notebooks after the document provider has loaded", function()
 		vim.api.nvim_buf_set_name(buf, "/tmp/document-transition.ipynb")
 		vim.bo[buf].filetype = "markdown"

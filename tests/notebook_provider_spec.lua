@@ -143,7 +143,10 @@ endfunction]])
 		local names = vim.tbl_map(function(item)
 			return item.name
 		end, actions.context_menu())
-		assert.are.same({ "Interrupt Kernel", "Restart Kernel", "separator", "Expand All", "Collapse All" }, names)
+		assert.are.same(
+			{ "Select Kernel", "Interrupt Kernel", "Restart Kernel", "separator", "Expand All", "Collapse All" },
+			names
+		)
 	end)
 	it("creates a code cell above the selected cell from the menu", function()
 		vim.api.nvim_win_set_cursor(sidebar.view.win, { 4, 0 })
@@ -216,6 +219,7 @@ endfunction]])
 			"Create Cell Above",
 			"Create Cell Below",
 			"Open Output",
+			"Select Kernel",
 			"Interrupt Kernel",
 			"Restart Kernel",
 			"separator",
@@ -328,13 +332,14 @@ endfunction]])
 				end
 			end
 			assert.is_function(interrupt)
-			assert.are.equal("Restart Kernel", opened[3].name)
-			assert.are.equal("separator", opened[4].name)
+			assert.are.equal("Select Kernel", opened[2].name)
+			assert.are.equal("Restart Kernel", opened[4].name)
+			assert.are.equal("separator", opened[5].name)
 			vim.api.nvim_create_user_command("MoltenRestart", function()
 				vim.g.restarted_buf = vim.api.nvim_get_current_buf()
 			end, { force = true })
 			require("outline").focus_outline()
-			opened[3].cmd()
+			opened[4].cmd()
 			vim.wait(100)
 			assert.are.equal(buf, vim.g.restarted_buf)
 			vim.api.nvim_del_user_command("MoltenRestart")

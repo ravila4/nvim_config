@@ -217,19 +217,8 @@ function M.context_menu()
 			require("config.notebook_output_view").open(buf, selected.range_start + 1)
 		end)
 	end
-	local kernel_actions = mode == "notebook"
-		or (mode == "quarto" and #require("config.notebook_edit").live_info(source) > 0)
-	if kernel_actions then
-		action("Interrupt Kernel", function(current)
-			vim.api.nvim_win_call(current.code.win, function()
-				vim.cmd("MoltenInterrupt")
-			end)
-		end)
-		action("Restart Kernel", function(current)
-			vim.api.nvim_win_call(current.code.win, function()
-				vim.cmd("MoltenRestart")
-			end)
-		end)
+	for _, item in ipairs(require("config.notebook_kernel_menu").items(view.code.win, source)) do
+		action(item.name, item.cmd)
 	end
 	if #items > 0 then
 		items[#items + 1] = { name = "separator" }
@@ -248,6 +237,15 @@ function M.attach()
 	if not view or not view.view.buf or not vim.api.nvim_buf_is_valid(view.view.buf) then
 		return
 	end
+	vim.api.nvim_win_call(view.view.win, function()
+		local pattern = [[✗\ze Cell \d\+]]
+		for _, match in ipairs(vim.fn.getmatches()) do
+			if match.group == "DiagnosticError" and match.pattern == pattern then
+				return
+			end
+		end
+		vim.fn.matchadd("DiagnosticError", pattern, 20)
+	end)
 	local function map(mode, key, fn, desc, expr)
 		vim.keymap.set(mode, key, fn, { buffer = view.view.buf, silent = true, desc = desc, expr = expr })
 	end
