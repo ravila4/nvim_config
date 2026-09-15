@@ -51,8 +51,6 @@ return {
               color = { fg = "#228787" }, -- Teal color for kernel status
               icon = "",
             },
-            "encoding",
-            "fileformat",
             "filetype",
           },
           lualine_y = {
