@@ -10,12 +10,21 @@ return {
     dependencies = {
       "nvim-treesitter/nvim-treesitter",
       "nvim-tree/nvim-web-devicons",
+      {
+        "gunasekar/markview-smart-tables.nvim",
+        opts = {},
+      },
     },
     config = function()
       local markview = require("markview")
       local presets = require("markview.presets")
 
       markview.setup({
+        renderers = {
+          markdown_table = function(buffer, item)
+            require("markview-smart-tables").render(buffer, item)
+          end,
+        },
         markdown = {
           headings = {
             enable = true,
