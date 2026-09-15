@@ -22,7 +22,7 @@
   "menu": { "branch": "main", "commit": "7a0a4a2896b715c066cfbe320bdc048091874cc6" },
   "mini.diff": { "branch": "main", "commit": "626b8a5b93874c4d05ca25aedec56cfff0b378fb" },
   "minty": { "branch": "main", "commit": "aafc9e8e0afe6bf57580858a2849578d8d8db9e0" },
-  "molten-nvim": { "branch": "fix/snacks-mixed-output-clicks", "commit": "20b258a1f474f472f561f7b7ab9d91679b9f5378" },
+  "molten-nvim": { "branch": "fix/virt-image-layout", "commit": "bc3ee9f94dc9fb4593bef4da0a680a556b80f8f3" },
   "neo-tree.nvim": { "branch": "v3.x", "commit": "1a14083046d96e88e361d1da00761c40d45012f3" },
   "neotest": { "branch": "master", "commit": "27bf921498043f7ecd821d6db68d05de244bbd02" },
   "neotest-python": { "branch": "master", "commit": "1b56ca4ba51c6014f986d6548ee629bdc95589d1" },
