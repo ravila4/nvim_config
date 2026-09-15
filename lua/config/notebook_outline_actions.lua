@@ -124,7 +124,7 @@ function M.context_menu()
 			end)
 		end
 		action("Open Output", function()
-			require("config.notebook_output").open(buf, selected.range_start + 1)
+			require("config.notebook_output_view").open(buf, selected.range_start + 1)
 		end)
 	end
 	action("Interrupt Kernel", function(current)
