@@ -181,55 +181,6 @@ return {
         return ext and image_exts[ext:lower()] or false
       end
 
-      local function open_image_float(path)
-        -- Read image dimensions to size the float proportionally
-        local max_cols = math.floor(vim.o.columns * 0.8)
-        local max_rows = math.floor(vim.o.lines * 0.8)
-        local width, height = max_cols, max_rows
-
-        local out = vim.fn.system({ "magick", "identify", "-format", "%w %h", path })
-        if vim.v.shell_error == 0 then
-          local img_w, img_h = out:match("(%d+) (%d+)")
-          if img_w and img_h then
-            img_w, img_h = tonumber(img_w), tonumber(img_h)
-            -- Query actual terminal cell dimensions from snacks
-            local term = Snacks.image.terminal.size()
-            local cell_ratio = term.cell_height / term.cell_width
-            local aspect = (img_w / img_h) * cell_ratio
-            if aspect > max_cols / max_rows then
-              -- Image is wider than available space
-              width = max_cols
-              height = math.floor(max_cols / aspect)
-            else
-              -- Image is taller than available space
-              height = max_rows
-              width = math.floor(max_rows * aspect)
-            end
-          end
-        end
-
-        local buf = vim.api.nvim_create_buf(false, true)
-        local win = vim.api.nvim_open_win(buf, true, {
-          relative = "editor",
-          width = width,
-          height = height,
-          row = math.floor((vim.o.lines - height) / 2),
-          col = math.floor((vim.o.columns - width) / 2),
-          style = "minimal",
-          border = "rounded",
-          title = " " .. vim.fn.fnamemodify(path, ":t") .. " ",
-          title_pos = "center",
-        })
-        Snacks.image.buf.attach(buf, { src = path })
-        local function close()
-          if vim.api.nvim_win_is_valid(win) then
-            vim.api.nvim_win_close(win, true)
-          end
-        end
-        vim.keymap.set("n", "q", close, { buffer = buf, nowait = true })
-        vim.keymap.set("n", "<Esc>", close, { buffer = buf, nowait = true })
-      end
-
       -- Open file in the main editing window, not in neo-tree's window
       local function open_in_main_window(state)
         local node = state.tree:get_node()
@@ -242,7 +193,7 @@ return {
         end
         local path = node:get_id()
         if is_image(path) then
-          open_image_float(path)
+          require("config.image_viewer").open(path)
           return
         end
         -- Load the buffer, then directly assign it to the main window

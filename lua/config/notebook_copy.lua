@@ -1,7 +1,4 @@
--- Copy cell output to the system clipboard. Molten shows output on virtual
--- lines below the cell's anchor line, which cannot be selected: images are
--- placed there by image.nvim from the PNG files Molten writes, and text is
--- kept by Molten itself. Both are addressed through the cursor.
+-- Address Molten's virtual output through its anchor and original source files.
 local M = {}
 
 -- Anchor row (0-indexed) of the image under the cursor line (1-indexed), or nil.
@@ -36,15 +33,15 @@ function M.clipboard_command(path)
 	}
 end
 
-local function copy_file(image)
-	if not vim.uv.fs_stat(image.original_path) then
+function M.copy_file(path)
+	if not vim.uv.fs_stat(path) then
 		vim.notify("Image file is gone, re-run the cell", vim.log.levels.WARN)
 		return
 	end
-	vim.system(M.clipboard_command(image.original_path), {}, function(result)
+	vim.system(M.clipboard_command(path), {}, function(result)
 		vim.schedule(function()
 			if result.code == 0 then
-				vim.notify(("Copied image to clipboard (%dx%d)"):format(image.image_width, image.image_height))
+				vim.notify("Copied image to clipboard")
 			else
 				vim.notify("Copying the image failed: " .. (result.stderr or ""), vim.log.levels.ERROR)
 			end
@@ -53,18 +50,22 @@ local function copy_file(image)
 end
 
 local function images_by(pick)
-	local images = require("image").get_images({ buffer = vim.api.nvim_get_current_buf() })
-	local anchors = vim.tbl_map(function(image)
-		return image.geometry.y
-	end, images)
-	local anchor = pick(anchors, vim.api.nvim_win_get_cursor(0)[1])
-	local candidates = vim.tbl_filter(function(image)
-		return image.geometry.y == anchor
-	end, images)
-	table.sort(candidates, function(a, b)
-		return (a.render_offset_top or 0) < (b.render_offset_top or 0)
-	end)
-	return candidates
+	local buf = vim.api.nvim_get_current_buf()
+	local ns = vim.api.nvim_get_namespaces()["molten-extmarks"]
+	if not ns then
+		return {}
+	end
+	local anchors, sources = {}, {}
+	for _, mark in ipairs(vim.api.nvim_buf_get_extmarks(buf, ns, 0, -1, { details = true })) do
+		if mark[4].virt_lines then
+			local paths = vim.fn.MoltenOutputImages(buf, mark[1])
+			if #paths > 0 then
+				anchors[#anchors + 1] = mark[2]
+				sources[mark[2]] = paths
+			end
+		end
+	end
+	return sources[pick(anchors, vim.api.nvim_win_get_cursor(0)[1])] or {}
 end
 
 -- The images under the cursor, in output order. Empty when there is none.
@@ -144,27 +145,33 @@ function M.copy_output_at_cursor()
 	vim.notify(("Copied %d line%s of output"):format(lines, lines == 1 and "" or "s"))
 end
 
--- Copy the image under the cursor. A cell with several images asks which one.
-function M.copy_at_cursor()
+-- A cell with several images asks which source to use.
+local function with_image(action, prompt)
 	local candidates = M.at_cursor()
 	if #candidates == 0 then
 		vim.notify("No image at or below the cursor", vim.log.levels.WARN)
 		return
 	end
 	if #candidates == 1 then
-		copy_file(candidates[1])
+		action(candidates[1])
 		return
 	end
 	vim.ui.select(candidates, {
-		prompt = "Copy which image?",
-		format_item = function(image)
-			return ("%dx%d %s"):format(image.image_width, image.image_height, vim.fs.basename(image.original_path))
-		end,
+		prompt = prompt,
+		format_item = vim.fs.basename,
 	}, function(choice)
 		if choice then
-			copy_file(choice)
+			action(choice)
 		end
 	end)
+end
+
+function M.copy_at_cursor()
+	with_image(M.copy_file, "Copy which image?")
+end
+
+function M.open_at_cursor()
+	with_image(require("config.image_viewer").open, "Open which image?")
 end
 
 return M

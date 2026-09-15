@@ -1,3 +1,31 @@
+describe("notebook horizontal scrolling", function()
+	local buf, wrap, virtualedit
+	before_each(function()
+		buf = vim.api.nvim_create_buf(false, true)
+		vim.api.nvim_set_current_buf(buf)
+		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "x", "y" })
+		wrap, virtualedit = vim.wo.wrap, vim.wo.virtualedit
+		vim.wo.wrap = false
+	end)
+	after_each(function()
+		vim.wo.wrap, vim.wo.virtualedit = wrap, virtualedit
+		vim.api.nvim_buf_delete(buf, { force = true })
+	end)
+	it("pans past a short anchor through a redraw without changing editing options", function()
+		require("config.notebook_images").scroll("zl", 30)
+		vim.cmd.redraw()
+		assert.equal(30, vim.fn.winsaveview().leftcol)
+		assert.equal(virtualedit, vim.wo.virtualedit)
+		assert.same({ "x", "y" }, vim.api.nvim_buf_get_lines(buf, 0, -1, false))
+	end)
+	it("pans back without passing the start of the image", function()
+		require("config.notebook_images").scroll("zl", 30)
+		require("config.notebook_images").scroll("zh", 40)
+		vim.cmd.redraw()
+		assert.equal(0, vim.fn.winsaveview().leftcol)
+	end)
+end)
+
 describe("notebook image window transfer", function()
 	local source, floating, previous_image
 	before_each(function()

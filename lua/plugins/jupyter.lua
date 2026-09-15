@@ -19,7 +19,7 @@ return {
 		"ravila4/molten-nvim",
 		dir = vim.fn.expand("~/.local/share/nvim/lazy/molten-nvim/.worktrees/experiment-snacks-image"),
 		branch = "experiment/snacks-image",
-		commit = "c6ddefae161e68cbefd15463115cd1889db560a6",
+		commit = "e8c884953673ccaf146131428f260e25a0310247",
 		build = ":UpdateRemotePlugins",
 		lazy = false, -- Load immediately so commands are always available
 		dependencies = {
@@ -154,6 +154,16 @@ return {
 					map("n", "<leader>my", function()
 						require("config.notebook_copy").copy_at_cursor()
 					end, "[Molten] Copy image to clipboard")
+					if vim.fn.expand("%:e") == "ipynb" then
+						map("n", "<leader>mi", function()
+							require("config.notebook_copy").open_at_cursor()
+						end, "[Molten] Open image")
+						for _, key in ipairs({ "zh", "zl", "zH", "zL" }) do
+							map("n", key, function()
+								require("config.notebook_images").scroll(key, vim.v.count1)
+							end, "[Molten] Scroll horizontally")
+						end
+					end
 					map("n", "<leader>mo", function()
 						require("config.notebook_copy").copy_output_at_cursor()
 					end, "[Molten] Copy output text to clipboard")

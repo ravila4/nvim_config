@@ -1,5 +1,53 @@
 local images = require("config.notebook_copy")
 
+describe("Molten image sources", function()
+	local buf, old_select, old_viewer
+	before_each(function()
+		buf = vim.api.nvim_create_buf(false, true)
+		vim.api.nvim_set_current_buf(buf)
+		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "cell", "end", "text", "plot", "end" })
+		local ns = vim.api.nvim_create_namespace("molten-extmarks")
+		for _, row in ipairs({ 1, 4 }) do
+			vim.api.nvim_buf_set_extmark(buf, ns, row, 0, { id = row, virt_lines = { { { "output" } } } })
+		end
+		vim.cmd([[function! MoltenOutputImages(buf, id)
+return a:id == 4 ? ['/tmp/first.png', '/tmp/second.png'] : []
+endfunction]])
+		old_select = vim.ui.select
+		old_viewer = package.loaded["config.image_viewer"]
+	end)
+	after_each(function()
+		vim.ui.select = old_select
+		package.loaded["config.image_viewer"] = old_viewer
+		vim.cmd("delfunction MoltenOutputImages")
+		vim.api.nvim_buf_delete(buf, { force = true })
+	end)
+	it("finds the next image output, skipping text-only outputs", function()
+		assert.same({ "/tmp/first.png", "/tmp/second.png" }, images.at_cursor())
+	end)
+	it("does not offer a following image when text output is clicked", function()
+		vim.api.nvim_win_set_cursor(0, { 2, 0 })
+		assert.same({}, images.clicked())
+	end)
+	it("offers images in output order when their anchor is clicked", function()
+		vim.api.nvim_win_set_cursor(0, { 5, 0 })
+		assert.same({ "/tmp/first.png", "/tmp/second.png" }, images.clicked())
+	end)
+	it("opens the chosen source in the shared viewer", function()
+		local opened
+		package.loaded["config.image_viewer"] = {
+			open = function(path)
+				opened = path
+			end,
+		}
+		vim.ui.select = function(items, _, callback)
+			callback(items[2])
+		end
+		images.open_at_cursor()
+		assert.equal("/tmp/second.png", opened)
+	end)
+end)
+
 describe("Image under the cursor", function()
 	-- anchors are 0-indexed buffer rows, the cursor line is 1-indexed
 	it("is the one anchored on the cursor line", function()

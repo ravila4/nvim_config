@@ -515,6 +515,7 @@ return {
             table.insert(context_menu, 1, { name = "󰆏 Copy Output", cmd = copy.copy_output_at_cursor, rtxt = "mo" })
           end
           if has_image then
+            table.insert(context_menu, 1, { name = "Open Image", cmd = copy.open_at_cursor, rtxt = "mi" })
             table.insert(context_menu, 1, { name = "󰋩 Copy Image", cmd = copy.copy_at_cursor, rtxt = "my" })
           end
         end
