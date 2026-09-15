@@ -104,16 +104,11 @@ return {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
     config = function()
-      -- Build capabilities (blink.cmp > cmp-nvim-lsp > defaults)
+      -- Add Blink completion capabilities when available.
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       local ok_blink, blink = pcall(require, "blink.cmp")
       if ok_blink and blink and blink.get_lsp_capabilities then
         capabilities = blink.get_lsp_capabilities(capabilities)
-      else
-        local ok_cmp, cmp_cap = pcall(require, "cmp_nvim_lsp")
-        if ok_cmp and cmp_cap and cmp_cap.default_capabilities then
-          capabilities = cmp_cap.default_capabilities(capabilities)
-        end
       end
 
       -- Shared capabilities for all servers
@@ -176,7 +171,7 @@ return {
         },
       })
 
-      vim.lsp.enable({ "pyright", "ruff", "r_language_server" })
+      vim.lsp.enable({ "pyright", "ruff", "r_language_server", "ts_ls", "lua_ls", "yamlls", "bashls" })
 
       -- Diagnostics config (consolidated)
       vim.diagnostic.config({

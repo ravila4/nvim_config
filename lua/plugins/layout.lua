@@ -54,11 +54,6 @@ return {
             return vim.api.nvim_win_get_config(win).relative == ""
           end,
         },
-        -- Trouble diagnostics
-        {
-          ft = "trouble",
-          size = { height = 10 },
-        },
         -- QuickFix
         { ft = "qf", title = "QuickFix" },
         -- Help
@@ -106,22 +101,10 @@ return {
         },
       },
       right = {
-        -- Git status
-        {
-          title = "Git",
-          ft = "fugitive",
-          size = { width = 0.3 },
-        },
         -- Diffview file panel
         {
           title = "Diff Files",
           ft = "DiffviewFiles",
-          size = { width = 0.2 },
-        },
-        -- Database UI (if using)
-        {
-          title = "DB",
-          ft = "dbui",
           size = { width = 0.2 },
         },
       },
@@ -229,7 +212,7 @@ return {
         enable_diagnostics = true,
         use_popups_for_input = false,
         open_files_in_last_window = true,
-        open_files_do_not_replace_types = { "terminal", "Trouble", "trouble", "qf", "edgy", "Outline" },
+        open_files_do_not_replace_types = { "terminal", "qf", "edgy", "Outline" },
         window = {
           position = "left",
           width = 30,

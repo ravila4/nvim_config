@@ -12,7 +12,6 @@ return {
         "debugpy",
         -- Web development
         "prettier",
-        "eslint_d",
         "typescript-language-server",
         -- Lua
         "stylua",

@@ -5,7 +5,6 @@ return {
     event = "InsertEnter",
     config = function()
       require("nvim-autopairs").setup({})
-      -- nvim-cmp integration disabled; blink.cmp has built-in bracket handling
     end,
   },
 
