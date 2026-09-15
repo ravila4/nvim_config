@@ -1,0 +1,44 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      XDG_DATA_HOME: ${{ github.workspace }}/.nvim-data
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: MunifTanjim/setup-neovim-action@v1
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+
+      - name: Install test dependencies
+        run: |
+          mkdir -p "$XDG_DATA_HOME/nvim/lazy"
+          git clone --depth 1 https://github.com/nvim-lua/plenary.nvim.git \
+            "$XDG_DATA_HOME/nvim/lazy/plenary.nvim"
+          git clone --depth 1 https://github.com/hedyhli/outline.nvim.git \
+            "$XDG_DATA_HOME/nvim/lazy/outline.nvim"
+          git clone --depth 1 https://github.com/goerz/jupytext.nvim.git \
+            "$XDG_DATA_HOME/nvim/lazy/jupytext.nvim"
+          git clone --depth 1 https://github.com/nvzone/menu.git \
+            "$XDG_DATA_HOME/nvim/lazy/menu"
+          git clone --depth 1 https://github.com/nvzone/volt.git \
+            "$XDG_DATA_HOME/nvim/lazy/volt"
+          uv tool install jupytext
+
+      - name: Run tests
+        run: |
+          nvim --headless -u NONE \
+            --cmd "set rtp+=$PWD" \
+            --cmd "set rtp+=$XDG_DATA_HOME/nvim/lazy/plenary.nvim" \
+            --cmd "set rtp+=$XDG_DATA_HOME/nvim/lazy/menu" \
+            --cmd "set rtp+=$XDG_DATA_HOME/nvim/lazy/volt" \
+            -c "lua require('plenary.test_harness').test_directory('tests', { sequential = true })"
