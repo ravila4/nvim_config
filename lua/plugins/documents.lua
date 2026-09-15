@@ -179,9 +179,9 @@ return {
         -- Disable legacy commands to avoid deprecation warnings
         legacy_commands = false,
 
-        -- Attachment configuration (matches your _images pattern)
+        -- Relative to the note's directory; use "_images" for a vault-wide folder.
         attachments = {
-          folder = "_images",
+          folder = "./_images",
         },
 
         -- Note path and ID generation

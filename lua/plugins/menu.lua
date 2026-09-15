@@ -9,6 +9,11 @@ return {
     config = function()
       local menu = require("menu")
 
+      local function prepend_image_actions(items, images)
+        table.insert(items, 1, { name = "Open Image", cmd = images.open_at_cursor, rtxt = "mi" })
+        table.insert(items, 1, { name = "󰋩 Copy Image", cmd = images.copy_at_cursor, rtxt = "my" })
+      end
+
       -- Set ExBlack3Bg immediately when plugin loads (for first menu)
       vim.api.nvim_set_hl(0, "ExBlack3Bg", { bg = "#3584e4", fg = "#ffffff" })
 
@@ -536,6 +541,22 @@ return {
         local ft = vim.bo.filetype
         if ft == "markdown" or ft == "quarto" or ft == "rmd" then
           table.insert(context_menu, { name = "󰍔 Toggle Markview", cmd = "Markview Toggle", rtxt = "mv" })
+          if ft == "markdown" or ft == "quarto" then
+            local images = require("config.document_images")
+            if #images.at_cursor() > 0 then
+              table.insert(context_menu, 1, { name = "separator" })
+              prepend_image_actions(context_menu, images)
+            end
+            table.insert(context_menu, {
+              name = "Paste Image",
+              cmd = "Obsidian paste_img",
+            })
+            table.insert(context_menu, {
+              name = images.is_enabled(0) and "Show Image Links" or "Render Images Inline",
+              cmd = images.toggle,
+              rtxt = "mi",
+            })
+          end
           table.insert(context_menu, {
             name = (vim.wo.wrap and "󰖶 Disable" or "󰖶 Enable") .. " Line Wrap",
             cmd = require("config.prose_wrap").toggle,

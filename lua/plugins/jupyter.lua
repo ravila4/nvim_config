@@ -148,12 +148,22 @@ return {
 					map("n", "<leader>mh", ":MoltenHideOutput<CR>", "[Molten] Hide output")
 					map("n", "<leader>ms", ":MoltenShowOutput<CR>", "[Molten] Show output")
 					map("n", "<leader>my", function()
-						require("config.notebook_copy").copy_at_cursor()
-					end, "[Molten] Copy image to clipboard")
-					if vim.fn.expand("%:e") == "ipynb" then
+						if not require("config.document_images").copy_at_cursor() then
+							require("config.notebook_copy").copy_at_cursor()
+						end
+					end, "Copy image to clipboard")
+					if
+						vim.fn.expand("%:e") == "ipynb"
+						or vim.bo.filetype == "markdown"
+						or vim.bo.filetype == "quarto"
+					then
 						map("n", "<leader>mi", function()
-							require("config.notebook_copy").open_at_cursor()
-						end, "[Molten] Open image")
+							if not require("config.document_images").open_at_cursor() then
+								require("config.notebook_copy").open_at_cursor()
+							end
+						end, "Open image")
+					end
+					if vim.fn.expand("%:e") == "ipynb" then
 						for _, key in ipairs({ "zh", "zl", "zH", "zL" }) do
 							map("n", key, function()
 								require("config.notebook_images").scroll(key, vim.v.count1)

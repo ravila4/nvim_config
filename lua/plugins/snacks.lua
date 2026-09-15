@@ -130,10 +130,10 @@ return {
         enabled = true,
         backend = "kitty",
         doc = {
-          enabled = false, -- Obsidian buffers attach selectively below
+          enabled = false, -- Markdown and Quarto buffers attach below
           inline = true,
           float = false,
-          conceal = require("config.obsidian_images").conceal,
+          conceal = require("config.document_images").conceal,
           max_width = 120,
           max_height = 40,
         },
@@ -386,7 +386,7 @@ return {
     },
     config = function(_, opts)
       require("snacks").setup(opts)
-      require("config.obsidian_images").setup()
+      require("config.document_images").setup()
     end,
     init = function()
       vim.api.nvim_create_autocmd("User", {
