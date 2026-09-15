@@ -159,6 +159,7 @@ end, 200)
 
 -- Command to delete trailing spaces (reuses same buffer filtering logic)
 vim.api.nvim_create_user_command("DeleteTrailingSpaces", function()
+  local win = vim.api.nvim_get_current_win()
   local buftype = vim.bo.buftype
   local filetype = vim.bo.filetype
 
@@ -196,8 +197,7 @@ vim.api.nvim_create_user_command("DeleteTrailingSpaces", function()
 
   -- Update trailing space highlighting after deletion
   vim.defer_fn(function()
-    vim.fn.clearmatches()
-    vim.fn.matchadd("TrailingSpaces", "\\s\\+$")
+    update_trailing_spaces(win)
   end, 50)
 
   print(string.format("Removed %d trailing characters from %d lines", total_trailing_chars, lines_with_trailing))
