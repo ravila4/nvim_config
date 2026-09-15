@@ -111,7 +111,7 @@ function M.executions(buf, saved)
 				visit(node.children)
 			end
 		end
-		visit(require("config.notebook_outline").symbols(lines, {}, {}))
+		visit(require("config.document_outline").parse(lines, require("config.document_outline").format(buf)))
 		set_virtuals(buf, cells)
 	end
 	return virtuals(buf)

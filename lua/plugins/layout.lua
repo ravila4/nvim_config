@@ -369,7 +369,7 @@ return {
         },
         -- Better buffer handling
         providers = {
-          priority = { "notebook", "lsp", "coc", "markdown", "norg" },
+          priority = { "notebook", "document", "lsp", "coc", "markdown", "norg" },
         },
         symbols = {
           icon_fetcher = function(_, _, symbol)

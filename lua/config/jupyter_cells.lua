@@ -81,28 +81,19 @@ local function insert_percent(lines, cursor_line, direction)
 	}
 end
 
-local function is_fence_open(line)
-	return line:match("^%s*```%s*[^%s].*$") ~= nil
-end
-
-local function is_fence_close(line)
-	return line:match("^%s*```%s*$") ~= nil
-end
-
 local function enclosing_fence(lines, cursor_line)
-	local opening
-	for line, text in ipairs(lines) do
-		if not opening and is_fence_open(text) then
-			opening = line
-		elseif opening and is_fence_close(text) then
-			if cursor_line >= opening and cursor_line <= line then
-				return opening, line
+	local document = require("config.document_outline")
+	local line = document.content_start(lines)
+	while line <= #lines do
+		local block = document.fence(lines, line)
+		if block then
+			if cursor_line >= line and cursor_line <= block.finish then
+				return line, block.finish
 			end
-			opening = nil
+			line = block.finish + 1
+		else
+			line = line + 1
 		end
-	end
-	if opening and cursor_line >= opening then
-		return opening, #lines
 	end
 	return nil, nil
 end

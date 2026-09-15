@@ -13,7 +13,7 @@ function M.open(source, line)
 			visit(node.children or {})
 		end
 	end
-	visit(require("config.notebook_outline").symbols(lines, {}))
+	visit(require("config.document_outline").parse(lines, require("config.document_outline").format(source)))
 	local texts = {}
 	local ns = vim.api.nvim_get_namespaces()["molten-extmarks"]
 	if selected and ns then
