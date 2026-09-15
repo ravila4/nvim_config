@@ -233,6 +233,7 @@ return {
 				end,
 			})
 			require("config.notebook_save").setup()
+			require("config.notebook_borders").setup()
 
 			-- Show the outputs already saved in the .ipynb without re-executing it.
 			-- Molten attaches imported outputs to a kernel, so one is started first
