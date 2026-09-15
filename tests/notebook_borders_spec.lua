@@ -4,40 +4,55 @@ describe("notebook cell borders", function()
 		buf = vim.api.nvim_create_buf(false, true)
 		vim.api.nvim_buf_set_name(buf, vim.fn.tempname() .. ".ipynb")
 		borders = require("config.notebook_borders")
+		vim.o.columns = 120
+		vim.o.lines = 30
+		vim.api.nvim_set_current_buf(buf)
+		vim.wo.number = false
+		vim.wo.signcolumn = "no"
+		borders.setup()
 	end)
 	after_each(function()
+		for _, win in ipairs(vim.api.nvim_list_wins()) do
+			if vim.api.nvim_win_get_config(win).relative ~= "" then
+				vim.api.nvim_win_close(win, true)
+			end
+		end
+		vim.cmd("only!")
 		vim.api.nvim_buf_delete(buf, { force = true })
 	end)
 	it("encloses code without adding source or virtual rows", function()
 		local lines = { "# Heading", "```python", "print('hello')", "```", "prose" }
 		vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
 		borders.refresh(buf)
-		local marks = vim.api.nvim_buf_get_extmarks(buf, borders.ns, 0, -1, { details = true })
-		assert.equals(4, #marks)
+		vim.cmd("redraw!")
+		assert.equals("╭", vim.fn.screenstring(2, 1))
+		assert.equals("│", vim.fn.screenstring(3, 1))
+		assert.equals("╰", vim.fn.screenstring(4, 1))
+		assert.equals("p", vim.fn.screenstring(5, 1))
 		assert.same(lines, vim.api.nvim_buf_get_lines(buf, 0, -1, false))
-		for _, mark in ipairs(marks) do
-			assert.is_true(mark[2] >= 1 and mark[2] <= 3)
-			assert.is_nil(mark[4].virt_lines)
-		end
 	end)
 	it("removes borders when a cell is deleted", function()
 		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "```python", "x = 1", "```" })
 		borders.refresh(buf)
+		vim.cmd("redraw!")
+		assert.equals("╭", vim.fn.screenstring(1, 1))
 		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "prose" })
-		borders.refresh(buf)
-		assert.same({}, vim.api.nvim_buf_get_extmarks(buf, borders.ns, 0, -1, {}))
+		vim.api.nvim_exec_autocmds("TextChanged", { buffer = buf })
+		vim.cmd("redraw!")
+		assert.equals("p", vim.fn.screenstring(1, 1))
 	end)
 	it("fills the window excluding its gutter and follows resizing", function()
 		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "```python", "x = 1", "```" })
-		local win = vim.api.nvim_open_win(buf, true, { relative = "editor", row = 0, col = 0, width = 72, height = 8 })
+		vim.cmd("vsplit")
+		local win = vim.api.nvim_get_current_win()
 		vim.wo[win].number = true
 		for _, size in ipairs({ 72, 45 }) do
 			vim.api.nvim_win_set_width(win, size)
 			borders.refresh(buf)
-			local marks = vim.api.nvim_buf_get_extmarks(buf, borders.ns, 0, -1, { details = true })
-			local width = size - vim.fn.getwininfo(win)[1].textoff
-			assert.equals(width, vim.fn.strdisplaywidth(marks[1][4].virt_text[1][1]))
-			assert.equals(width - 1, marks[3][4].virt_text_win_col)
+			vim.cmd("redraw!")
+			local info = vim.fn.getwininfo(win)[1]
+			assert.equals("╭", vim.fn.screenstring(info.winrow, info.wincol + info.textoff))
+			assert.equals("╮", vim.fn.screenstring(info.winrow, info.wincol + size - 1))
 		end
 		vim.api.nvim_win_close(win, true)
 	end)
@@ -45,6 +60,32 @@ describe("notebook cell borders", function()
 		vim.api.nvim_buf_set_name(buf, vim.fn.tempname() .. ".md")
 		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "```python", "x = 1", "```" })
 		borders.refresh(buf)
-		assert.same({}, vim.api.nvim_buf_get_extmarks(buf, borders.ns, 0, -1, {}))
+		vim.cmd("redraw!")
+		assert.equals("`", vim.fn.screenstring(1, 1))
+	end)
+	it("renders independent borders in unequal splits", function()
+		vim.o.columns = 120
+		vim.o.lines = 30
+		vim.api.nvim_set_current_buf(buf)
+		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "```python", "x = 1", "```" })
+		borders.setup()
+		vim.cmd("vsplit")
+		vim.api.nvim_win_set_width(0, 35)
+		borders.refresh(buf)
+		vim.cmd("redraw!")
+		for _, win in ipairs(vim.api.nvim_list_wins()) do
+			local info = vim.fn.getwininfo(win)[1]
+			assert.equals("╮", vim.fn.screenstring(info.winrow, info.wincol + info.width - 1))
+		end
+	end)
+	it("resizes a non-current notebook without refreshing its buffer", function()
+		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "```python", "x = 1", "```" })
+		borders.refresh(buf)
+		local notebook_win = vim.api.nvim_get_current_win()
+		vim.cmd("vnew")
+		vim.api.nvim_win_set_width(notebook_win, 45)
+		vim.cmd("redraw!")
+		local info = vim.fn.getwininfo(notebook_win)[1]
+		assert.equals("╮", vim.fn.screenstring(info.winrow, info.wincol + info.width - 1))
 	end)
 end)
