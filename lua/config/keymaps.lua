@@ -102,7 +102,7 @@ map("n", "<leader>md", ":DebugMenu<CR>", { desc = "Debug menu" })
 map("n", "<leader>mk", ":TestMenu<CR>", { desc = "Test menu" })
 
 -- Test panel toggle (safe loading)
-map("n", "<leader>t", function()
+map("n", "<leader>tp", function()
   -- Use vim.schedule to ensure proper loading
   vim.schedule(function()
     local neotest = require("neotest")
