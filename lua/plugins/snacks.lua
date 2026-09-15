@@ -134,9 +134,9 @@ return {
         doc = {
           inline = false, -- Don't render images inline (causes scroll jank)
           float = false, -- Don't auto-float either
+          max_width = 120,
+          max_height = 40,
         },
-        max_width = 120,
-        max_height_window_percentage = 50,
         -- Image scaling and conversion options
         convert = {
           magick = {

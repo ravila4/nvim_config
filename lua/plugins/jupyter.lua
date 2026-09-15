@@ -13,21 +13,21 @@ return {
 	},
 
 	-- Molten-nvim for VSCode-like inline Jupyter experience.
-	-- Fork of benlubas/molten-nvim: places virtual-text images below the text
-	-- printed before them instead of over it, and fixes the "More Lines" footer
-	-- of the floating output window.
+	-- Experimental fork with Snacks image rendering. image.nvim remains installed
+	-- below as a one-line rollback while notebook placement is validated.
 	{
 		"ravila4/molten-nvim",
-		branch = "fix/virt-image-layout",
-		commit = "0961cea6227078d426d34c973eba37e1409d3b99",
+		dir = vim.fn.expand("~/.local/share/nvim/lazy/molten-nvim/.worktrees/experiment-snacks-image"),
+		branch = "experiment/snacks-image",
+		commit = "c6ddefae161e68cbefd15463115cd1889db560a6",
 		build = ":UpdateRemotePlugins",
 		lazy = false, -- Load immediately so commands are always available
 		dependencies = {
-			"ravila4/image.nvim", -- For inline image rendering
+			"folke/snacks.nvim",
 		},
 		config = function()
 			-- Global configuration
-			vim.g.molten_image_provider = "image.nvim" -- Use image.nvim for inline images
+			vim.g.molten_image_provider = "snacks.nvim"
 			vim.g.molten_output_win_max_height = 20 -- Reasonable output window height
 			vim.g.molten_auto_open_output = false -- Manual control over output
 			vim.g.molten_wrap_output = true -- Wrap long outputs
