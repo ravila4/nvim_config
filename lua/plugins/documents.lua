@@ -147,10 +147,8 @@ return {
           },
         },
 
-        -- Completion configuration (blink.cmp)
+        -- Completion configuration
         completion = {
-          nvim_cmp = false,
-          blink = true,
           min_chars = 2,
         },
 
@@ -184,7 +182,7 @@ return {
 
         -- Attachment configuration (matches your _images pattern)
         attachments = {
-          img_folder = "_images",
+          folder = "_images",
         },
 
         -- Note path and ID generation
