@@ -120,31 +120,42 @@ vim.api.nvim_create_autocmd("ColorScheme", {
   end,
 })
 
+local function update_trailing_spaces(win)
+  if not vim.api.nvim_win_is_valid(win) then
+    return
+  end
+  local match_id = vim.w[win].trailing_space_match
+  if match_id then
+    pcall(vim.fn.matchdelete, match_id, win)
+    vim.w[win].trailing_space_match = nil
+  end
+  local buf = vim.api.nvim_win_get_buf(win)
+  if vim.bo[buf].buftype == "" and not vim.tbl_contains(trailing_skip_filetypes, vim.bo[buf].filetype) then
+    vim.w[win].trailing_space_match = vim.fn.matchadd("TrailingSpaces", "\\s\\+$", 10, -1, { window = win })
+  end
+end
+
 -- Apply trailing space highlighting with delay to avoid startup artifacts
 vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
   group = "TrailingSpace",
   callback = function()
-    -- Small delay to ensure UI is fully loaded
+    local win = vim.api.nvim_get_current_win()
+    local buf = vim.api.nvim_win_get_buf(win)
     vim.defer_fn(function()
-      local buftype = vim.bo.buftype
-      local filetype = vim.bo.filetype
-
-      if buftype == "" and not vim.tbl_contains(trailing_skip_filetypes, filetype) and filetype ~= "" then
-        -- Clear any existing matches first
-        vim.fn.clearmatches()
-        -- Add the trailing space match
-        vim.fn.matchadd("TrailingSpaces", "\\s\\+$")
+      if vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == buf then
+        update_trailing_spaces(win)
       end
-    end, 100) -- 100ms delay
+    end, 100)
   end,
 })
 
--- Clear trailing space highlighting for special filetypes
+-- Filetype detection can finish after a buffer is displayed.
 vim.api.nvim_create_autocmd("FileType", {
   group = "TrailingSpace",
-  pattern = trailing_skip_filetypes,
-  callback = function()
-    vim.fn.clearmatches()
+  callback = function(args)
+    for _, win in ipairs(vim.fn.win_findbuf(args.buf)) do
+      update_trailing_spaces(win)
+    end
   end,
 })
 
