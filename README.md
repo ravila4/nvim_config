@@ -197,13 +197,33 @@ Shorthands (tab-complete in the prompt, extra text appended as context):
 | `<leader>mv` | Toggle Markview rendering |
 | `<leader>ms` | Markview split toggle |
 
+## Markdown and Quarto outline
+
+`<leader>s` opens a heading hierarchy for Markdown documents. Quarto (`.qmd`) also lists numbered executable chunks such as ` ```{python} ` and ` ```{r} `, nested under their headings. Ordinary fenced examples and raw output blocks are excluded. Chunk labels supply titles when present; otherwise the first code line is used, skipping cell options. Enter jumps to an entry and Space folds or unfolds a section.
+
+The Quarto outline supports the same copy/cut/paste and undo keys described below for Jupyter. Headings inside callouts or other fenced divs stay within their enclosing container: copying or cutting them leaves that container's delimiters in place. Its context menu provides:
+
+| Action | Behavior |
+|--------|----------|
+| Run Cell | Run the selected chunk through the configured Quarto runner |
+| Run All Above / Below | Dispatch chunks strictly before / after the selection, in document order |
+| Create Cell Above / Below | Inherit the selected chunk's language; from a heading, insert at the start / end of its section and choose a language |
+| Open Output | View text output for a chunk configured to use Molten |
+| Interrupt / Restart Kernel | Available when the document has live Molten cells |
+
+Creating a document's first cell inserts it after YAML front matter. Creation preserves labels and options on existing chunks and gives the new chunk only its language. The outline recognizes bare curly language headers (`{python}`, `{r}`, etc.); place chunk labels and options in the chunk body. Navigation works without a kernel; running requires matching Quarto/Otter language support and, for Molten, a kernel initialized in the source buffer.
+
+Bulk execution validates every target before sending code and honors Quarto's `never_run` list. A batch containing multiple languages routed to Molten is refused because that runner does not choose kernels by language. Individual execution uses the current kernel; configure per-language runners for other execution targets. Interactive actions follow Quarto's runner semantics, including execution of chunks marked `eval: false`; rendering settings are not an interactive execution policy. Separate runners may finish in a different order, and runtime failures can leave a batch partially executed.
+
+Moves retain live Molten outputs; copies start unexecuted. Undo/redo restores output positions, including from the source buffer after closing the outline. Other runners manage their own output state. Pasting preserves source verbatim and warns when it introduces duplicate scalar chunk labels; rename copied labels before rendering. Cross-document pastes transfer source text without execution identity or format conversion.
+
 ## Jupyter Notebooks
 
 Opening `.ipynb` files auto-converts them to markdown via jupytext.
 Changes save back to `.ipynb` format. Full LSP support in the converted view.
 Outputs saved in the notebook are shown on open without re-running it: Molten starts the notebook's kernel (or one named after the active venv) and imports them. If neither kernel is installed, run `:MoltenInit` then `:MoltenImportOutput`.
 
-Molten comes from the `ravila4/molten-nvim` fork (branch `fix/virt-image-layout`) and uses Snacks to render plots with Kitty Unicode placeholders.
+Molten comes from the `ravila4/molten-nvim` fork (branch `fix/snacks-mixed-output-clicks`) and uses Snacks to render plots with Kitty Unicode placeholders.
 
 `<leader>s` opens the notebook outline: Markdown headings contain numbered code cells, titled from their first nonblank line. Enter jumps to an entry, and the outline highlights the cell containing the editor cursor. Headings represent document sections rather than original Markdown-cell boundaries.
 
