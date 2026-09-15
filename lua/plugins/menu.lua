@@ -556,10 +556,16 @@ return {
               table.insert(context_menu, 1, { name = "separator" })
               prepend_image_actions(context_menu, images)
             end
-            table.insert(context_menu, {
-              name = "Paste Image (markdown)",
-              cmd = "Obsidian paste_img",
-            })
+            local path = vim.api.nvim_buf_get_name(0)
+            for _, workspace in ipairs(_G.Obsidian and Obsidian.workspaces or {}) do
+              if vim.startswith(path, tostring(workspace.path) .. "/") then
+                table.insert(context_menu, {
+                  name = "Paste Image (markdown)",
+                  cmd = "Obsidian paste_img",
+                })
+                break
+              end
+            end
             table.insert(context_menu, {
               name = images.is_enabled(0) and "Show Image Links" or "Render Images Inline",
               cmd = images.toggle,
@@ -620,16 +626,11 @@ return {
       {
         "<RightMouse>",
         function()
-          if vim.bo.filetype == "snacks_dashboard" or vim.bo.filetype == "dashboard" then
-            return
-          end
           -- Act where the click landed, like a right-click in any editor. In
           -- visual mode the selection is what the menu acts on, so keep it.
           local mouse = vim.fn.getmousepos()
           if vim.fn.mode() == "n" and mouse.winid > 0 and vim.api.nvim_win_is_valid(mouse.winid) then
-            if vim.bo[vim.api.nvim_win_get_buf(mouse.winid)].filetype == "Outline" then
-              vim.api.nvim_set_current_win(mouse.winid)
-            end
+            vim.api.nvim_set_current_win(mouse.winid)
           end
           if vim.fn.mode() == "n" and mouse.winid == vim.api.nvim_get_current_win() and mouse.line > 0 then
             vim.api.nvim_win_set_cursor(0, { mouse.line, math.max(0, mouse.column - 1) })

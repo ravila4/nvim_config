@@ -50,33 +50,46 @@ function M.at_cursor(buf)
 		for _, placement in pairs(state.renderer.imgs) do
 			local range = placement.opts and (placement.opts.range or placement.opts.pos)
 			if range and line >= range[1] and line <= (range[3] or range[1]) then
-				paths[#paths + 1] = placement.img and placement.img.src
+				if placement.img then
+					paths[#paths + 1] = { src = placement.img.src, file = placement.img.file }
+				end
 			end
 		end
 	else
 		for _, link in ipairs(state.links or {}) do
 			local first, last = link_rows(buf, link)
 			if first and line >= first and line <= last then
-				paths[#paths + 1] = link.src
+				paths[#paths + 1] = { src = link.src, file = link.file }
 			end
 		end
 	end
-	table.sort(paths)
+	table.sort(paths, function(a, b)
+		return a.src < b.src
+	end)
 	return paths
 end
 
 local function with_image(action, prompt)
+	local function apply(image)
+		local path = image.src:match("^https?://") and image.file or image.src
+		action(path)
+	end
 	local paths = M.at_cursor()
 	if #paths == 0 then
 		return false
 	end
 	if #paths == 1 then
-		action(paths[1])
+		apply(paths[1])
 		return true
 	end
-	vim.ui.select(paths, { prompt = prompt, format_item = vim.fs.basename }, function(path)
+	vim.ui.select(paths, {
+		prompt = prompt,
+		format_item = function(image)
+			return vim.fs.basename(image.src)
+		end,
+	}, function(path)
 		if path then
-			action(path)
+			apply(path)
 		end
 	end)
 	return true
@@ -110,6 +123,7 @@ function M.toggle(buf)
 				local first = math.max(range[1] - 1, 0)
 				state.links[#state.links + 1] = {
 					src = src,
+					file = placement.img.file,
 					mark = vim.api.nvim_buf_set_extmark(buf, ns, first, 0, {
 						end_row = math.max((range[3] or range[1]) - 1, first),
 						end_col = 0,

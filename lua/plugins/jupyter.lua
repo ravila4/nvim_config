@@ -15,8 +15,7 @@ return {
 	-- Molten-nvim for VSCode-like inline Jupyter experience.
 	{
 		"ravila4/molten-nvim",
-		branch = "fix/virt-image-layout",
-		dir = vim.fn.stdpath("data") .. "/lazy/molten-nvim/.worktrees/experiment-snacks-image",
+		branch = "fix/snacks-mixed-output-clicks",
 		build = ":UpdateRemotePlugins",
 		lazy = false, -- Load immediately so commands are always available
 		dependencies = {
@@ -138,16 +137,6 @@ return {
 			vim.api.nvim_create_autocmd("FileType", {
 				pattern = { "python", "julia", "r", "ipynb", "markdown", "quarto", "rmd" },
 				callback = function()
-					-- Molten-specific mappings (prefix: <leader>m)
-					map("n", "<leader>mK", function()
-						require("config.notebook_kernels").pick()
-					end, "[Molten] Select kernel")
-					map("n", "<leader>mr", ":MoltenEvaluateOperator<CR>", "[Molten] Run operator")
-					map("n", "<leader>ml", ":MoltenEvaluateLine<CR>", "[Molten] Run line")
-					map("n", "<leader>mc", ":MoltenReevaluateCell<CR>", "[Molten] Re-run cell")
-					map("v", "<leader>mr", ":<C-u>MoltenEvaluateVisual<CR>gv", "[Molten] Run selection")
-					map("n", "<leader>mh", ":MoltenHideOutput<CR>", "[Molten] Hide output")
-					map("n", "<leader>ms", ":MoltenShowOutput<CR>", "[Molten] Show output")
 					map("n", "<leader>my", function()
 						if not require("config.document_images").copy_at_cursor() then
 							require("config.notebook_copy").copy_at_cursor()
@@ -164,6 +153,19 @@ return {
 							end
 						end, "Open image")
 					end
+					if vim.bo.filetype == "markdown" and vim.fn.expand("%:e") ~= "ipynb" then
+						return
+					end
+					-- Molten-specific mappings (prefix: <leader>m)
+					map("n", "<leader>mK", function()
+						require("config.notebook_kernels").pick()
+					end, "[Molten] Select kernel")
+					map("n", "<leader>mr", ":MoltenEvaluateOperator<CR>", "[Molten] Run operator")
+					map("n", "<leader>ml", ":MoltenEvaluateLine<CR>", "[Molten] Run line")
+					map("n", "<leader>mc", ":MoltenReevaluateCell<CR>", "[Molten] Re-run cell")
+					map("v", "<leader>mr", ":<C-u>MoltenEvaluateVisual<CR>gv", "[Molten] Run selection")
+					map("n", "<leader>mh", ":MoltenHideOutput<CR>", "[Molten] Hide output")
+					map("n", "<leader>ms", ":MoltenShowOutput<CR>", "[Molten] Show output")
 					if vim.fn.expand("%:e") == "ipynb" then
 						for _, key in ipairs({ "zh", "zl", "zH", "zL" }) do
 							map("n", key, function()
@@ -263,14 +265,16 @@ return {
 				pattern = "*.ipynb",
 				callback = function(args)
 					-- Force markdown filetype and enable syntax highlighting
-					vim.bo.filetype = "markdown"
+					vim.bo[args.buf].filetype = "markdown"
 					-- Enable treesitter highlighting
 					vim.defer_fn(function()
-						if vim.bo.filetype == "markdown" then
-							vim.treesitter.start()
+						if vim.api.nvim_buf_is_loaded(args.buf) and vim.bo[args.buf].filetype == "markdown" then
+							vim.treesitter.start(args.buf)
 							-- Trigger markview if available
 							if pcall(require, "markview") then
-								vim.cmd("Markview enable")
+								vim.api.nvim_buf_call(args.buf, function()
+									vim.cmd("Markview enable")
+								end)
 							end
 						end
 					end, 100)
@@ -279,6 +283,9 @@ return {
 					-- Neo-tree's open_in_main_window loads the buffer before showing it,
 					-- so the import waits for the first window that displays it.
 					vim.schedule(function()
+						if not vim.api.nvim_buf_is_loaded(args.buf) then
+							return
+						end
 						local path = vim.api.nvim_buf_get_name(args.buf)
 						local win = vim.fn.bufwinid(args.buf)
 						if win ~= -1 then
