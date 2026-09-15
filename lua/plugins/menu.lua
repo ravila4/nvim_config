@@ -506,7 +506,8 @@ return {
           table.insert(context_menu, { name = " Jupyter Notebook", cmd = "JupyterMenu", rtxt = "mj" })
           -- Right-clicking an output puts copying it first
           local copy = require("config.notebook_copy")
-          local has_image = #copy.clicked() > 0
+          local clicked_images = copy.clicked()
+          local has_image = #clicked_images > 0
           local has_text = copy.output_text_clicked() ~= ""
           if has_image or has_text then
             table.insert(context_menu, 1, { name = "separator" })
@@ -515,8 +516,20 @@ return {
             table.insert(context_menu, 1, { name = "󰆏 Copy Output", cmd = copy.copy_output_at_cursor, rtxt = "mo" })
           end
           if has_image then
-            table.insert(context_menu, 1, { name = "Open Image", cmd = copy.open_at_cursor, rtxt = "mi" })
-            table.insert(context_menu, 1, { name = "󰋩 Copy Image", cmd = copy.copy_at_cursor, rtxt = "my" })
+            table.insert(context_menu, 1, {
+              name = "Open Image",
+              cmd = function()
+                copy.open(clicked_images)
+              end,
+              rtxt = "mi",
+            })
+            table.insert(context_menu, 1, {
+              name = "󰋩 Copy Image",
+              cmd = function()
+                copy.copy(clicked_images)
+              end,
+              rtxt = "my",
+            })
           end
         end
 

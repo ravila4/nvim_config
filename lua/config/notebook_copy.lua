@@ -73,9 +73,18 @@ function M.at_cursor()
 	return images_by(M.anchor_at)
 end
 
--- The images whose output block, or anchor line, the cursor is on.
+-- Resolve the mouse before a context menu takes focus.
 function M.clicked()
-	return images_by(M.anchor_clicked)
+	local api = rawget(_G, "_snacks")
+	if api and type(api.image_at) == "function" then
+		local mouse = vim.fn.getmousepos()
+		local ok, path =
+			pcall(api.image_at, vim.api.nvim_get_current_buf(), mouse.winid, mouse.screenrow, mouse.screencol)
+		if ok and type(path) == "string" and path ~= "" then
+			return { path }
+		end
+	end
+	return {}
 end
 
 -- Molten's output extmark under the cursor as { row, id }, or nil.
@@ -146,8 +155,7 @@ function M.copy_output_at_cursor()
 end
 
 -- A cell with several images asks which source to use.
-local function with_image(action, prompt)
-	local candidates = M.at_cursor()
+local function with_image(candidates, action, prompt)
 	if #candidates == 0 then
 		vim.notify("No image at or below the cursor", vim.log.levels.WARN)
 		return
@@ -166,12 +174,20 @@ local function with_image(action, prompt)
 	end)
 end
 
+function M.copy(candidates)
+	with_image(candidates, M.copy_file, "Copy which image?")
+end
+
+function M.open(candidates)
+	with_image(candidates, require("config.image_viewer").open, "Open which image?")
+end
+
 function M.copy_at_cursor()
-	with_image(M.copy_file, "Copy which image?")
+	M.copy(M.at_cursor())
 end
 
 function M.open_at_cursor()
-	with_image(require("config.image_viewer").open, "Open which image?")
+	M.open(M.at_cursor())
 end
 
 return M

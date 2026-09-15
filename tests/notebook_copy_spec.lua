@@ -1,7 +1,7 @@
 local images = require("config.notebook_copy")
 
 describe("Molten image sources", function()
-	local buf, old_select, old_viewer
+	local buf, old_select, old_viewer, old_snacks_api, old_mousepos
 	before_each(function()
 		buf = vim.api.nvim_create_buf(false, true)
 		vim.api.nvim_set_current_buf(buf)
@@ -15,10 +15,15 @@ return a:id == 4 ? ['/tmp/first.png', '/tmp/second.png'] : []
 endfunction]])
 		old_select = vim.ui.select
 		old_viewer = package.loaded["config.image_viewer"]
+		old_snacks_api = _G._snacks
+		old_mousepos = vim.fn.getmousepos
+		_G._snacks = { image_at = function() return nil end }
 	end)
 	after_each(function()
 		vim.ui.select = old_select
 		package.loaded["config.image_viewer"] = old_viewer
+		_G._snacks = old_snacks_api
+		vim.fn.getmousepos = old_mousepos
 		vim.cmd("delfunction MoltenOutputImages")
 		vim.api.nvim_buf_delete(buf, { force = true })
 	end)
@@ -29,9 +34,37 @@ endfunction]])
 		vim.api.nvim_win_set_cursor(0, { 2, 0 })
 		assert.same({}, images.clicked())
 	end)
-	it("offers images in output order when their anchor is clicked", function()
+	it("does not offer cell images when the mouse misses them", function()
 		vim.api.nvim_win_set_cursor(0, { 5, 0 })
-		assert.same({ "/tmp/first.png", "/tmp/second.png" }, images.clicked())
+		assert.same({}, images.clicked())
+	end)
+	it("returns only the Snacks image under the mouse", function()
+		_G._snacks = {
+			image_at = function(bufnr, winid, screenrow, screencol)
+				assert.equal(buf, bufnr)
+				assert.equal(31, winid)
+				assert.equal(12, screenrow)
+				assert.equal(45, screencol)
+				return "/tmp/second.png"
+			end,
+		}
+		vim.fn.getmousepos = function()
+			return { winid = 31, screenrow = 12, screencol = 45 }
+		end
+		assert.same({ "/tmp/second.png" }, images.clicked())
+	end)
+	it("opens the captured clicked image without asking again", function()
+		local opened
+		package.loaded["config.image_viewer"] = {
+			open = function(path)
+				opened = path
+			end,
+		}
+		vim.ui.select = function()
+			error("an exact click must not open the selector")
+		end
+		images.open({ "/tmp/second.png" })
+		assert.equal("/tmp/second.png", opened)
 	end)
 	it("opens the chosen source in the shared viewer", function()
 		local opened
