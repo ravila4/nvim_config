@@ -145,6 +145,84 @@ endfunction]])
 		end, actions.context_menu())
 		assert.are.same({ "Interrupt Kernel", "Restart Kernel", "separator", "Expand All", "Collapse All" }, names)
 	end)
+	it("creates a code cell above the selected cell from the menu", function()
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 4, 0 })
+		choose("Create Cell Above")()
+		assert.are.same({
+			"# First",
+			"```python",
+			"a = 1",
+			"```",
+			"# Second",
+			"",
+			"```python",
+			"",
+			"```",
+			"",
+			"```python",
+			"",
+			"b = 2",
+			"",
+			"```",
+			"## Nested",
+			"```python",
+			"c = 3",
+			"```",
+			"# Last",
+			"```python",
+			"d = 4",
+			"```",
+		}, vim.api.nvim_buf_get_lines(buf, 0, -1, false))
+	end)
+	it("creates a code cell below the selected cell from the menu", function()
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 4, 0 })
+		choose("Create Cell Below")()
+		assert.are.same({
+			"# First",
+			"```python",
+			"a = 1",
+			"```",
+			"# Second",
+			"```python",
+			"",
+			"b = 2",
+			"",
+			"```",
+			"",
+			"```python",
+			"",
+			"```",
+			"",
+			"## Nested",
+			"```python",
+			"c = 3",
+			"```",
+			"# Last",
+			"```python",
+			"d = 4",
+			"```",
+		}, vim.api.nvim_buf_get_lines(buf, 0, -1, false))
+	end)
+	it("separates cell creation actions below the run actions", function()
+		vim.api.nvim_win_set_cursor(sidebar.view.win, { 4, 0 })
+		local names = vim.tbl_map(function(item)
+			return item.name
+		end, actions.context_menu())
+		assert.are.same({
+			"Run Cell",
+			"Run All Above",
+			"Run All Below",
+			"separator",
+			"Create Cell Above",
+			"Create Cell Below",
+			"Open Output",
+			"Interrupt Kernel",
+			"Restart Kernel",
+			"separator",
+			"Expand All",
+			"Collapse All",
+		}, names)
+	end)
 	it("interrupts the notebook kernel from a heading while retaining outline focus", function()
 		choose("Interrupt Kernel")()
 		assert.are.equal(buf, vim.g.interrupted_buf)
@@ -277,8 +355,11 @@ endfunction]])
 			vim.api.nvim_win_set_cursor(sidebar.view.win, { 4, 0 })
 			vim.cmd(command)
 			open:revert()
-			assert.are.equal("Run Cell", opened[1].name)
-			opened[1].cmd()
+			local run = vim.iter(opened):find(function(item)
+				return item.name == "Run Cell"
+			end)
+			assert.is_table(run)
+			run.cmd()
 			vim.wait(100)
 			assert.are.same({ { buf, 8, 8 } }, vim.g.outline_runs)
 		end)
@@ -301,8 +382,11 @@ endfunction]])
 		end
 		mouse:revert()
 		open:revert()
-		assert.are.equal("Run Cell", opened[1].name)
-		opened[1].cmd()
+		local run = vim.iter(opened):find(function(item)
+			return item.name == "Run Cell"
+		end)
+		assert.is_table(run)
+		run.cmd()
 		vim.wait(100)
 		assert.are.same({ { buf, 8, 8 } }, vim.g.outline_runs)
 	end)

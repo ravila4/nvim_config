@@ -362,6 +362,21 @@ function M.paste(buf, index, register, count)
 	end)
 end
 
+function M.insert(buf, index, contents)
+	if #contents == 0 then
+		return
+	end
+	local before = snapshot(buf)
+	remember(buf, before)
+	local after = {}
+	for _, kind in ipairs({ "saved", "molten" }) do
+		after[kind] = splice(before[kind], index, index, #contents)
+	end
+	change(buf, before, after, function()
+		vim.api.nvim_buf_set_lines(buf, index, index, false, contents)
+	end)
+end
+
 function M.undo(buf, redo)
 	remember(buf, snapshot(buf))
 	vim.api.nvim_buf_call(buf, function()

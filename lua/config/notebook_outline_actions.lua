@@ -123,6 +123,23 @@ function M.context_menu()
 				end)
 			end)
 		end
+		items[#items + 1] = { name = "separator" }
+		for _, direction in ipairs({ "Above", "Below" }) do
+			action("Create Cell " .. direction, function(current)
+				local previous = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+				local result = require("config.jupyter_cells").insert(
+					previous,
+					selected.range_start + 1,
+					direction:lower(),
+					"fenced",
+					"python"
+				)
+				local changed = require("config.jupyter_cells").changed_region(previous, result.lines)
+				assert(changed.start_line == changed.end_line, "Creating a cell must only insert lines")
+				require("config.notebook_edit").insert(buf, changed.start_line, changed.replacement)
+				refresh(current, vim.api.nvim_win_get_cursor(current.view.win)[1] + (direction == "Below" and 1 or 0))
+			end)
+		end
 		action("Open Output", function()
 			require("config.notebook_output_view").open(buf, selected.range_start + 1)
 		end)
