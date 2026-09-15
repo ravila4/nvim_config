@@ -105,12 +105,6 @@ return {
       state = {
         enabled = true,
       },
-      -- Don't configure consumers - let neotest handle defaults
-      -- consumers = {
-      --   overseer = {
-      --     enabled = false, -- Disable if not using overseer
-      --   },
-      -- },
       running = {
         -- Run tests concurrently when an adapter provides multiple commands
         concurrent = true,

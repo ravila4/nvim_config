@@ -78,16 +78,6 @@ opt.shortmess:append("c")
 -- Enable 24-bit colors
 opt.termguicolors = true
 
--- WSL clipboard support
-if vim.fn.system("uname -r"):match("Microsoft") then
-  vim.api.nvim_create_autocmd("TextYankPost", {
-    group = vim.api.nvim_create_augroup("Yank", { clear = true }),
-    callback = function()
-      vim.fn.system("clip.exe", vim.fn.getreg('"'))
-    end,
-  })
-end
-
 -- Filetypes to skip for trailing space highlighting/deletion
 local trailing_skip_filetypes = {
   "lazy",
