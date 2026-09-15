@@ -524,9 +524,7 @@ return {
           table.insert(context_menu, { name = "󰍔 Toggle Markview", cmd = "Markview Toggle", rtxt = "mv" })
           table.insert(context_menu, {
             name = (vim.wo.wrap and "󰖶 Disable" or "󰖶 Enable") .. " Line Wrap",
-            cmd = function()
-              vim.wo.wrap = not vim.wo.wrap
-            end,
+            cmd = require("config.prose_wrap").toggle,
             rtxt = "tw",
           })
         end
