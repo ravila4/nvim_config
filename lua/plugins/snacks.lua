@@ -132,10 +132,15 @@ return {
         enabled = true,
         backend = "kitty",
         doc = {
-          inline = false, -- Don't render images inline (causes scroll jank)
-          float = false, -- Don't auto-float either
+          enabled = false, -- Obsidian buffers attach selectively below
+          inline = true,
+          float = false,
+          conceal = require("config.obsidian_images").conceal,
           max_width = 120,
           max_height = 40,
+        },
+        icons = {
+          image = "",
         },
         -- Image scaling and conversion options
         convert = {
@@ -381,6 +386,10 @@ return {
         mode = { "n", "t" },
       },
     },
+    config = function(_, opts)
+      require("snacks").setup(opts)
+      require("config.obsidian_images").setup()
+    end,
     init = function()
       vim.api.nvim_create_autocmd("User", {
         pattern = "VeryLazy",

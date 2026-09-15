@@ -71,19 +71,9 @@ return {
           },
           horizontal_rules = presets.horizontal_rules.thin,
         },
-        -- Show image links with a camera icon for easy scanning
         markdown_inline = {
           images = {
-            enable = true,
-            default = {
-              icon = "󰥶 ",
-              icon_hl = "DiagnosticInfo",
-              hl = "DiagnosticInfo",
-              corner_left = "",
-              corner_right = "",
-              padding_left = "",
-              padding_right = "",
-            },
+            enable = false,
           },
         },
         -- Enable LaTeX math rendering
