@@ -200,29 +200,24 @@ return {
           },
           args = { "--log-level", "DEBUG", "--quiet", "-v" },
           runner = "pytest",
-          -- Custom python path (supports uv, conda, venv) - cached for performance
-          python = function()
-            -- Cache python path to avoid repeated system calls
-            if _G._neotest_python_path then
-              return _G._neotest_python_path
-            end
-
-            -- Check for uv first
-            local uv_python = vim.fn.system("uv run which python 2>/dev/null"):gsub("\n", "")
-            if vim.v.shell_error == 0 and uv_python ~= "" then
-              _G._neotest_python_path = uv_python
-              return uv_python
+          -- Resolve in the test project's environment, independently of editor cwd.
+          python = function(root)
+            local ok, process = pcall(vim.system, { "uv", "run", "which", "python" }, { cwd = root, text = true })
+            if ok then
+              local result = process:wait()
+              local uv_python = vim.trim(result.stdout or "")
+              if result.code == 0 and uv_python ~= "" then
+                return uv_python
+              end
             end
 
             -- Fallback to conda/venv
             local venv = vim.env.CONDA_PREFIX or vim.env.VIRTUAL_ENV
             if venv then
-              _G._neotest_python_path = venv .. "/bin/python"
-              return _G._neotest_python_path
+              return venv .. "/bin/python"
             end
 
             -- Default python
-            _G._neotest_python_path = "python"
             return "python"
           end,
           -- Pytest configuration - automatically detect pyproject.toml
@@ -279,9 +274,6 @@ return {
         if neotest.state then
           neotest.state.clear()
         end
-
-        -- Clear Python path cache
-        _G._neotest_python_path = nil
 
         -- Clear package cache to force reload
         package.loaded["neotest"] = nil

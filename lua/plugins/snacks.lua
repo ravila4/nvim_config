@@ -154,18 +154,10 @@ return {
         resolve = function(file, src)
           local obsidian_vault = vim.fn.expand("~/Documents/Obsidian-Notes")
           -- Only apply custom resolution for files in Obsidian vault
-          if file:match(vim.pesc(obsidian_vault)) then
-            -- If src is just a filename, use find to locate it
+          if vim.startswith(file, obsidian_vault .. "/") then
+            -- Resolve bare filenames literally within the vault.
             if not src:find("/") and not src:find("\\") then
-              local handle =
-                io.popen('find "' .. obsidian_vault .. '" -name "' .. src .. '" -type f 2>/dev/null | head -1')
-              if handle then
-                local found_path = handle:read("*l")
-                handle:close()
-                if found_path and found_path ~= "" and vim.fn.filereadable(found_path) == 1 then
-                  return found_path
-                end
-              end
+              return vim.fs.find(src, { path = obsidian_vault, type = "file", limit = 1 })[1]
             end
           end
           -- Return nil to use default resolution
