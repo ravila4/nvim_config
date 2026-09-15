@@ -16,6 +16,7 @@ return {
 	{
 		"ravila4/molten-nvim",
 		branch = "fix/virt-image-layout",
+		dir = vim.fn.stdpath("data") .. "/lazy/molten-nvim/.worktrees/experiment-snacks-image",
 		build = ":UpdateRemotePlugins",
 		lazy = false, -- Load immediately so commands are always available
 		dependencies = {

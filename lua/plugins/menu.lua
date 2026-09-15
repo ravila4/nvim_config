@@ -10,7 +10,7 @@ return {
       local menu = require("menu")
 
       local function prepend_image_actions(items, images)
-        table.insert(items, 1, { name = "Open Image", cmd = images.open_at_cursor, rtxt = "mi" })
+        table.insert(items, 1, { name = " Open Image", cmd = images.open_at_cursor, rtxt = "mi" })
         table.insert(items, 1, { name = "󰋩 Copy Image", cmd = images.copy_at_cursor, rtxt = "my" })
       end
 
@@ -233,7 +233,13 @@ return {
         },
 
         jupyter_menu = {
-          { name = " Select Kernel", cmd = function() require("config.notebook_kernels").pick() end, rtxt = "mK" },
+          {
+            name = " Select Kernel",
+            cmd = function()
+              require("config.notebook_kernels").pick()
+            end,
+            rtxt = "mK",
+          },
           { name = "separator" },
           { name = "  Run Selection", cmd = "MoltenEvaluateVisual", rtxt = "mr" },
           { name = "separator" },
@@ -387,8 +393,11 @@ return {
       local function notebook_output_item()
         local buf, line = vim.api.nvim_get_current_buf(), vim.api.nvim_win_get_cursor(0)[1]
         return {
-          name = "Open Output", rtxt = "<leader>jv",
-          cmd = function() require("config.notebook_output_view").open(buf, line) end,
+          name = "Open Output",
+          rtxt = "<leader>jv",
+          cmd = function()
+            require("config.notebook_output_view").open(buf, line)
+          end,
         }
       end
 
@@ -522,7 +531,7 @@ return {
           end
           if has_image then
             table.insert(context_menu, 1, {
-              name = "Open Image",
+              name = " Open Image",
               cmd = function()
                 copy.open(clicked_images)
               end,
@@ -548,7 +557,7 @@ return {
               prepend_image_actions(context_menu, images)
             end
             table.insert(context_menu, {
-              name = "Paste Image",
+              name = "Paste Image (markdown)",
               cmd = "Obsidian paste_img",
             })
             table.insert(context_menu, {
