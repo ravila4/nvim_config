@@ -10,7 +10,7 @@
   "databricks.nvim": { "branch": "main", "commit": "6c301bec9dfa8d4d6bbc58d581b5df122983b443" },
   "diffview.nvim": { "branch": "main", "commit": "4516612fe98ff56ae0415a259ff6361a89419b0a" },
   "edgy.nvim": { "branch": "main", "commit": "8bfd2808994a988c975694122f68624b8a219f5f" },
-  "gitsigns.nvim": { "branch": "main", "commit": "fd36f038e52ad8409fbf9926ae4a0a514cca04d8" },
+  "gitsigns.nvim": { "branch": "main", "commit": "5eb287fdbd523c3a1b3d01f304f43570e73e259b" },
   "image.nvim": { "branch": "fix/virt-lines-scroll", "commit": "f31d9fe4dcbb9329ac171bbab50a85ee61d8be86" },
   "jupytext.nvim": { "branch": "master", "commit": "d7897ba4012c328f2a6bc955f1fe57578ebaceb1" },
   "lazy.nvim": { "branch": "main", "commit": "306a05526ada86a7b30af95c5cc81ffba93fef97" },
