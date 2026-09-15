@@ -2,6 +2,31 @@
 
 Leader key is `Space`.
 
+## Table of Contents
+
+- [External Dependencies](#external-dependencies)
+  - [Molten setup](#molten-setup)
+- [General](#general)
+- [Navigation](#navigation)
+  - [Within Neo-tree](#within-neo-tree)
+- [File Search (Telescope)](#file-search-telescope)
+- [Layout (edgy.nvim)](#layout-edgynvim)
+- [Terminal](#terminal)
+- [Code Analysis](#code-analysis)
+- [AI Assistance](#ai-assistance)
+  - [Copilot](#copilot-inline-ghost-text)
+  - [Claude Code](#claude-code)
+  - [Quick Edit](#quick-edit-inline-llm)
+- [Markdown / Documents](#markdown--documents)
+- [Jupyter Notebooks](#jupyter-notebooks)
+  - [Molten](#molten-inline-execution)
+  - [Set up the global notebook environment](#set-up-the-global-notebook-environment)
+  - [Databricks](#databricks)
+  - [Vim-Slime](#vim-slime-terminal-repl)
+- [Git](#git)
+  - [Within Diffview](#within-diffview)
+- [Trailing Whitespace](#trailing-whitespace)
+
 ## External Dependencies
 
 | Dependency | Install | Required by |
@@ -11,6 +36,7 @@ Leader key is `Space`.
 | `yarn` | `brew install yarn` | `markdown-preview.nvim` |
 | Kitty graphics protocol | Ghostty / Kitty terminal | Image rendering (`snacks.image`, `image.nvim`) |
 | `jupytext` | `uv tool install jupytext` | Notebook `.ipynb` conversion |
+| `databricks-nvim` | See [Databricks](#databricks) | Managed Databricks notebook kernels |
 | Stable Python host | See Molten setup below | Neovim Python provider and Molten kernel communication |
 | `ipykernel` | Install in each kernel environment | Molten kernel execution |
 
@@ -231,7 +257,25 @@ uv venv --python 3.13 ~/.local/share/nvim/notebook-venv
 uv pip install --python ~/.local/share/nvim/notebook-venv/bin/python pandas matplotlib ipykernel
 ```
 
-`vim.g.notebook_default_python` can override the default interpreter path. Project and global kernels are registered with absolute interpreter paths. Databricks uses its own Python 3.12 environment; restore it with `uv sync --dev --locked` in `~/Projects/databricks.nvim`.
+`vim.g.notebook_default_python` can override the default interpreter path. Project and global kernels are registered with absolute interpreter paths. Databricks kernels remain separate from this fallback.
+
+### Databricks
+
+Lazy installs the Lua plugin from [ravila4/databricks.nvim](https://github.com/ravila4/databricks.nvim). Install its Python commands as a uv tool:
+
+```sh
+uv tool install --python 3.12 \
+  git+https://github.com/ravila4/databricks.nvim
+```
+
+The tool owns an isolated Python 3.12 environment for Databricks Connect and adds the target, health, and kernelspec commands to `PATH`. Authenticate a Databricks CLI profile and generate a managed kernelspec as described in the plugin README.
+
+| Command | Key | Action |
+|---------|-----|--------|
+| `:DatabricksTarget` | `<leader>dk` | Select an installed managed target |
+| `:checkhealth databricks` | n/a | Validate profiles, compute targets, kernelspecs, and Python dependencies |
+
+The target picker shows the compute name, profile, and DBR version. It attaches an already-running target as a shared Molten kernel. If the current buffer uses a different kernel, run `:MoltenDeinit` before selecting another target.
 
 ### Vim-Slime (terminal REPL)
 
