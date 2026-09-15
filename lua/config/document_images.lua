@@ -1,6 +1,8 @@
 local M = {}
 
 local states = {}
+-- Marks the image links while inline rendering is off, so the text can move.
+local ns = vim.api.nvim_create_namespace("document_inline_images_links")
 
 function M.conceal(_, image_type)
 	return image_type == "image"
@@ -25,6 +27,15 @@ function M.is_enabled(buf)
 	return states[buf] ~= nil and states[buf].enabled
 end
 
+-- Rows an image link spans now, tracking edits made since rendering stopped.
+local function link_rows(buf, link)
+	local mark = vim.api.nvim_buf_get_extmark_by_id(buf, ns, link.mark, { details = true })
+	if not mark[1] then
+		return nil
+	end
+	return mark[1] + 1, (mark[3] and mark[3].end_row or mark[1]) + 1
+end
+
 function M.at_cursor(buf)
 	if buf == nil or buf == 0 then
 		buf = vim.api.nvim_get_current_buf()
@@ -35,11 +46,19 @@ function M.at_cursor(buf)
 	end
 	local line = vim.api.nvim_win_get_cursor(0)[1]
 	local paths = {}
-	local placements = state.enabled and state.renderer.imgs or state.links or {}
-	for _, placement in pairs(placements) do
-		local range = placement.opts and (placement.opts.range or placement.opts.pos)
-		if range and line >= range[1] and line <= (range[3] or range[1]) and placement.img and placement.img.file then
-			paths[#paths + 1] = placement.img.file
+	if state.enabled then
+		for _, placement in pairs(state.renderer.imgs) do
+			local range = placement.opts and (placement.opts.range or placement.opts.pos)
+			if range and line >= range[1] and line <= (range[3] or range[1]) then
+				paths[#paths + 1] = placement.img and placement.img.src
+			end
+		end
+	else
+		for _, link in ipairs(state.links or {}) do
+			local first, last = link_rows(buf, link)
+			if first and line >= first and line <= last then
+				paths[#paths + 1] = link.src
+			end
 		end
 	end
 	table.sort(paths)
@@ -83,15 +102,28 @@ function M.toggle(buf)
 	if state.enabled then
 		state.enabled = false
 		state.renderer.update = function() end
-		state.links = vim.tbl_values(state.renderer.imgs)
-		for _, image in pairs(state.renderer.imgs) do
-			image:close()
+		state.links = {}
+		for _, placement in pairs(state.renderer.imgs) do
+			local range = placement.opts and (placement.opts.range or placement.opts.pos)
+			local src = placement.img and placement.img.src
+			if range and src then
+				local first = math.max(range[1] - 1, 0)
+				state.links[#state.links + 1] = {
+					src = src,
+					mark = vim.api.nvim_buf_set_extmark(buf, ns, first, 0, {
+						end_row = math.max((range[3] or range[1]) - 1, first),
+						end_col = 0,
+					}),
+				}
+			end
+			placement:close()
 		end
 		state.renderer.imgs = {}
 		state.renderer.idx = {}
 	else
 		state.enabled = true
 		state.links = nil
+		vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
 		state.renderer.update = state.update
 		state.renderer:update()
 	end

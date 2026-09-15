@@ -98,7 +98,7 @@ describe("Document inline images", function()
 		local renderer = {
 			imgs = {
 				first = {
-					img = { file = "/tmp/figure.png" },
+					img = { src = "/tmp/figure.png", file = "/tmp/cache/figure.conv.png" },
 					opts = { range = { line, 0, line, 20 } },
 				},
 			},
@@ -121,7 +121,7 @@ describe("Document inline images", function()
 		local renderer = {
 			imgs = {
 				first = {
-					img = { file = "/tmp/figure.png" },
+					img = { src = "/tmp/figure.png", file = "/tmp/cache/figure.conv.png" },
 					opts = { range = { line, 0, line, 20 } },
 					close = function() end,
 				},
@@ -144,7 +144,7 @@ describe("Document inline images", function()
 		local renderer = {
 			imgs = {
 				first = {
-					img = { file = "/tmp/figure.png" },
+					img = { src = "/tmp/figure.png", file = "/tmp/cache/figure.conv.png" },
 					opts = { range = { line, 0, line, 20 } },
 				},
 			},
@@ -174,6 +174,58 @@ describe("Document inline images", function()
 		notebook_copy.copy_file, image_viewer.open = old_copy, old_open
 		assert.are.equal("/tmp/figure.png", copied)
 		assert.are.equal("/tmp/figure.png", opened)
+	end)
+
+	it("acts on the original image, not the downscaled cache copy", function()
+		local buf = vim.api.nvim_get_current_buf()
+		local line = vim.api.nvim_win_get_cursor(0)[1]
+		local renderer = {
+			imgs = {
+				first = {
+					img = { src = "/tmp/photo.jpg", file = "/tmp/cache/photo.conv.png" },
+					opts = { range = { line, 0, line, 20 } },
+				},
+			},
+			idx = {},
+			update = function() end,
+		}
+		images.attach(buf, function()
+			return renderer
+		end)
+
+		assert.same({ "/tmp/photo.jpg" }, images.at_cursor())
+	end)
+
+	it("follows the image through edits made while showing links", function()
+		local buf = vim.api.nvim_create_buf(false, true)
+		local previous = vim.api.nvim_get_current_buf()
+		vim.api.nvim_set_current_buf(buf)
+		vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "intro", "![fig](fig.png)", "outro" })
+		local renderer = {
+			imgs = {
+				first = {
+					img = { src = "/tmp/fig.png" },
+					opts = { range = { 2, 0, 2, 15 } },
+					close = function() end,
+				},
+			},
+			idx = {},
+			update = function() end,
+		}
+		images.attach(buf, function()
+			return renderer
+		end)
+		images.toggle(buf)
+
+		vim.api.nvim_buf_set_lines(buf, 0, 0, false, { "a", "b", "c" })
+
+		vim.api.nvim_win_set_cursor(0, { 5, 0 })
+		assert.same({ "/tmp/fig.png" }, images.at_cursor(buf))
+		vim.api.nvim_win_set_cursor(0, { 2, 0 })
+		assert.same({}, images.at_cursor(buf))
+
+		vim.api.nvim_set_current_buf(previous)
+		vim.api.nvim_buf_delete(buf, { force = true })
 	end)
 
 	it("leaves the action unhandled when there is no document image", function()
