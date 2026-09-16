@@ -56,7 +56,8 @@ describe("Notebook outline", function()
 		local lines = { "```python", "x = 1", "```" }
 		local info =
 			{ { start_line = 1, end_line = 1, source = "x = 1", status = "done", old = false, execution_count = 4 } }
-		assert.are.equal("done [4]", notebook.symbols(lines, info)[1].detail)
+		assert.are.equal("[4]", notebook.symbols(lines, info)[1].detail)
+		assert.are.equal("✓", notebook.symbols(lines, info)[1].notebook_icon)
 		lines[2] = "x = 2"
 		assert.are.equal("modified", notebook.symbols(lines, info)[1].detail)
 		info[1].status = "running"
@@ -74,14 +75,16 @@ describe("Notebook outline", function()
 		local tree = notebook.symbols({ "```python", "1 / 0", "```" }, {
 			{ start_line = 1, end_line = 1, source = "1 / 0", status = "error", old = true, execution_count = 2 },
 		})
-		assert.are.equal("saved error [2]", tree[1].detail)
+		assert.are.equal("[2]", tree[1].detail)
+		assert.are.equal("✗", tree[1].notebook_icon)
 	end)
 
 	it("shows saved execution without starting a kernel even for empty outputs", function()
 		local tree = notebook.symbols({ "```python", "x = 1", "```" }, {}, {
 			{ cell_type = "code", source = { "x = 1" }, execution_count = 3, outputs = {} },
 		})
-		assert.are.equal("saved done [3]", tree[1].detail)
+		assert.are.equal("[3]", tree[1].detail)
+		assert.are.equal("✓", tree[1].notebook_icon)
 	end)
 
 	it("does not assign ambiguous saved results to duplicate source", function()

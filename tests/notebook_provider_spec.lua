@@ -56,7 +56,7 @@ describe("Notebook outline provider", function()
 		vim.g.outline_test_info = { { start_line = 1, end_line = 1, source = "x = 1", status = "done", old = false } }
 		vim.api.nvim_exec_autocmds("User", { pattern = "MoltenCellUpdate", data = { buffers = { buf } } })
 		assert.is_true(vim.wait(500, function()
-			return sidebar.items[1].detail == "done"
+			return sidebar.items[1].detail == ""
 		end))
 		assert.are.equal(outline_win, vim.api.nvim_get_current_win())
 		vim.cmd("delfunction MoltenCellInfo")
@@ -492,7 +492,7 @@ endfunction]])
 		assert.are.equal("not run", sidebar.items[1].detail)
 		keys("<Esc>")
 		assert.is_true(vim.wait(200, function()
-			return sidebar.items[1].detail == "done"
+			return sidebar.items[1].detail == ""
 		end))
 		vim.cmd("delfunction MoltenCellInfo")
 	end)

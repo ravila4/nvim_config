@@ -7,7 +7,8 @@ return {
     lazy = false,
     config = function()
       require("mini.diff").setup({
-        source = require("mini.diff").gen_source.none(),
+        source = { require("config.notebook_diff").source(), require("mini.diff").gen_source.none() },
+        view = { style = "sign", signs = { add = "┃", change = "┃", delete = "_" } },
       })
 
       -- Quick Edit: inline LLM code editing and questions
@@ -238,7 +239,11 @@ Respond in markdown. Be concise but thorough.
         pcall(vim.keymap.del, "n", "<Tab>", { buffer = buf })
 
         pcall(function()
-          require("mini.diff").set_ref_text(buf, {})
+          if require("config.notebook_diff").is_notebook(buf) then
+            require("config.notebook_diff").refresh(buf)
+          else
+            require("mini.diff").set_ref_text(buf, {})
+          end
         end)
       end
 
@@ -263,7 +268,9 @@ Respond in markdown. Be concise but thorough.
         local new_lines = vim.split(new_code, "\n")
         vim.api.nvim_buf_set_lines(buf, start_line - 1, end_line, false, new_lines)
 
-        require("mini.diff").set_ref_text(buf, snapshot)
+        if not require("config.notebook_diff").is_notebook(buf) then
+          require("mini.diff").set_ref_text(buf, snapshot)
+        end
 
         pcall(function()
           require("mini.diff").toggle_overlay(buf)
@@ -542,6 +549,10 @@ Respond in markdown. Be concise but thorough.
       vim.keymap.set("n", "<leader>gi", function()
         local buf = vim.api.nvim_get_current_buf()
         local md = require("mini.diff")
+        if require("config.notebook_diff").is_notebook(buf) then
+          md.toggle_overlay(buf)
+          return
+        end
         local buf_data = md.get_buf_data(buf)
         if buf_data and buf_data.ref_text then
           md.set_ref_text(buf, {})

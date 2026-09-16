@@ -112,6 +112,9 @@ return {
     event = { "BufReadPre", "BufNewFile" },
     config = function()
       require("gitsigns").setup({
+        on_attach = function(buf)
+          return not require("config.notebook_diff").is_notebook(buf)
+        end,
         signs = {
           add = { text = "┃" },
           change = { text = "┃" },
@@ -144,6 +147,9 @@ return {
 
       -- Set theme-aware git sign colors
       local function set_git_colors()
+        vim.api.nvim_set_hl(0, "MiniDiffSignAdd", { link = "GitSignsAdd" })
+        vim.api.nvim_set_hl(0, "MiniDiffSignChange", { link = "GitSignsChange" })
+        vim.api.nvim_set_hl(0, "MiniDiffSignDelete", { link = "GitSignsDelete" })
         local is_dark = vim.o.background == "dark"
 
         if is_dark then
