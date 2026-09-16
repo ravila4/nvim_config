@@ -255,7 +255,7 @@ Opening `.ipynb` files auto-converts them to markdown via jupytext.
 Changes save back to `.ipynb` format. Full LSP support in the converted view.
 Outputs saved in the notebook are shown on open without re-running it: Molten starts the notebook's kernel (or one named after the active venv) and imports them. If neither kernel is installed, run `:MoltenInit` then `:MoltenImportOutput`.
 
-Molten comes from the `ravila4/molten-nvim` fork (branch `fix/snacks-mixed-output-clicks`) and uses Snacks to render plots with Kitty Unicode placeholders.
+Molten comes from the `ravila4/molten-nvim` fork (branch `fix/virt-image-layout`) and uses Snacks to render plots with Kitty Unicode placeholders.
 
 `<leader>s` opens the notebook outline: Markdown headings contain numbered code cells, titled from their first nonblank line. Enter jumps to an entry, and the outline highlights the cell containing the editor cursor. Headings represent document sections rather than original Markdown-cell boundaries.
 

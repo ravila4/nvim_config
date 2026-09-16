@@ -53,6 +53,20 @@ describe("Editor-owned executable paths", function()
 		)
 	end)
 
+	it("configures Python paths without deprecated table helpers", function()
+		assert.equal(
+			"configured",
+			evaluate([[
+        vim.tbl_flatten = function() error("vim.tbl_flatten is deprecated") end
+        vim.lsp.enable = function() end
+        for _, spec in ipairs(require("plugins.lsp")) do
+          if spec[1] == "neovim/nvim-lspconfig" then spec.config() end
+        end
+        print("configured")
+      ]])
+		)
+	end)
+
 	it("does not enable the R language server before R setup", function()
 		local enabled = vim.json.decode(evaluate([[
       local enabled

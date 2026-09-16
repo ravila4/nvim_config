@@ -77,7 +77,7 @@ return {
 							autoSearchPaths = true,
 							useLibraryCodeForTypes = true,
 							typeCheckingMode = "basic",
-							extraPaths = vim.tbl_flatten({
+							extraPaths = vim.iter({
 								vim.fn.glob(
 									vim.fn.expand("~/.local/share/uv/python/*/lib/python*/site-packages"),
 									true,
@@ -93,7 +93,9 @@ return {
 									true,
 									true
 								) or {},
-							}),
+							})
+								:flatten()
+								:totable(),
 						},
 					},
 				},
