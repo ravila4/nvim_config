@@ -36,7 +36,16 @@ jobs:
             "$XDG_DATA_HOME/nvim/lazy/menu"
           git clone --depth 1 https://github.com/nvzone/volt.git \
             "$XDG_DATA_HOME/nvim/lazy/volt"
+          git init "$XDG_DATA_HOME/nvim/lazy/R.nvim"
+          git -C "$XDG_DATA_HOME/nvim/lazy/R.nvim" remote add origin https://github.com/R-nvim/R.nvim.git
+          git -C "$XDG_DATA_HOME/nvim/lazy/R.nvim" fetch --depth 1 origin "$(jq -r '."R.nvim".commit' lazy-lock.json)"
+          git -C "$XDG_DATA_HOME/nvim/lazy/R.nvim" checkout --detach FETCH_HEAD
           uv tool install jupytext
 
       - name: Run tests
         run: tests/run.sh
+
+      - name: Verify R plugin buffer isolation
+        run: |
+          nvim --headless -u NONE -i NONE -l tests/r_runtime.lua "$XDG_DATA_HOME/nvim/lazy/R.nvim"
+          nvim --headless -u NONE -i NONE -l tests/r_runtime.lua "$XDG_DATA_HOME/nvim/lazy/R.nvim" script-first

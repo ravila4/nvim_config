@@ -145,7 +145,7 @@ return {
 
       -- Python: Ruff for fast linting
       vim.lsp.config("ruff", {
-        cmd = { vim.fn.expand("~/.local/share/nvim/mason/packages/ruff/venv/bin/ruff"), "server" },
+        cmd = { vim.fn.stdpath("data") .. "/mason/bin/ruff", "server" },
         on_attach = function(client, _bufnr)
           -- Disable hover in favor of pyright's more detailed hover
           client.server_capabilities.hoverProvider = false
@@ -153,7 +153,10 @@ return {
       })
 
       -- R Language Server
+      local selected_r = require("config.r_integration").read_config()
       vim.lsp.config("r_language_server", {
+        cmd = selected_r and { selected_r.executable, "--no-echo", "--no-restore", "-e", "languageserver::run()" },
+        cmd_env = selected_r and { R_LIBS_USER = selected_r.library },
         settings = {
           r = {
             linting = {
@@ -171,7 +174,11 @@ return {
         },
       })
 
-      vim.lsp.enable({ "pyright", "ruff", "r_language_server", "ts_ls", "lua_ls", "yamlls", "bashls" })
+      local servers = { "pyright", "ruff", "ts_ls", "lua_ls", "yamlls", "bashls" }
+      if selected_r then
+        servers[#servers + 1] = "r_language_server"
+      end
+      vim.lsp.enable(servers)
 
       -- Diagnostics config (consolidated)
       vim.diagnostic.config({

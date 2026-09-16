@@ -86,7 +86,6 @@ describe("Molten mapping scope", function()
 		{ "analysis.Rmd", "rmd" },
 		{ "analysis.py", "python" },
 		{ "analysis.jl", "julia" },
-		{ "analysis.R", "r" },
 	}) do
 		it("keeps execution shortcuts in " .. case[1], function()
 			open("/tmp/" .. case[1], case[2])
@@ -94,4 +93,10 @@ describe("Molten mapping scope", function()
 			assert.equal("[Unified] Run cell (smart)", vim.fn.maparg(" jr", "n", false, true).desc)
 		end)
 	end
+
+	it("leaves R script execution to R.nvim", function()
+		open("/tmp/analysis.R", "r")
+		assert.equal("", vim.fn.maparg(" jr", "n"))
+		assert.equal("", vim.fn.maparg("<C-CR>", "n"))
+	end)
 end)
