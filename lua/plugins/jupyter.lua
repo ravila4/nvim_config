@@ -243,6 +243,15 @@ return {
 					end, "[Output] Open output buffer")
 					map("n", "<leader>jh", ":MoltenHideOutput<CR>", "[Output] Hide output")
 					map("n", "<leader>jm", ":MoltenToggleOutputFormat<CR>", "[Output] Toggle markdown output")
+					map("n", "<leader>je", ":MoltenToggleVirtExpand<CR>", "[Output] Expand/collapse ghost text")
+					-- A click on the "More Lines" / "Show Less" footer toggles that output;
+					-- any other click stays a normal click.
+					vim.keymap.set("n", "<LeftMouse>", function()
+						if require("config.notebook_output_view").click_footer() then
+							return ""
+						end
+						return "<LeftMouse>"
+					end, { buffer = true, expr = true, desc = "[Output] Click footer to expand" })
 				end,
 			})
 		end,

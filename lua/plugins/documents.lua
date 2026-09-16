@@ -104,6 +104,13 @@ return {
           modes = { "n", "no", "c" }, -- Normal, operator-pending, command modes
           hybrid_modes = { "n" }, -- Partial rendering in normal mode
           ignore_buftypes = { "nofile", "terminal" }, -- Buffer types to ignore
+          -- Scratch buffers opt in with vim.b.markview_attach (e.g. the notebook output
+          -- float); nil leaves the filetype/buftype checks above in charge.
+          condition = function(buf)
+            if vim.b[buf].markview_attach then
+              return true
+            end
+          end,
           callbacks = {
             on_enable = function()
               -- Keep treesitter highlight enabled for code block syntax highlighting

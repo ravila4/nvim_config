@@ -47,19 +47,49 @@ function M.open(source, line)
 		title = " Cell Output ",
 		title_pos = "center",
 	})
-	-- Markdown outputs (pipe tables, Markdown objects) get rendered by markview. Plain
-	-- output is left without a filetype so stray `#` or `*` in stdout are not styled.
+	-- Markdown outputs (pipe tables, Markdown objects) get rendered by markview, which
+	-- ignores scratch buffers unless they opt in. Plain output is left without a
+	-- filetype so stray `#` or `*` in stdout are not styled.
 	if vim.g.molten_output_format == "markdown" then
+		vim.b[buf].markview_attach = true
 		vim.bo[buf].filetype = "markdown"
 	end
-	vim.wo[win].wrap = false
-	vim.wo[win].sidescrolloff = 0
+	local function no_wrap()
+		if vim.api.nvim_win_is_valid(win) then
+			vim.wo[win].wrap = false
+			vim.wo[win].sidescrolloff = 0
+		end
+	end
+	-- Markview turns wrap on when it attaches; wide tables need horizontal scrolling.
+	no_wrap()
+	vim.schedule(no_wrap)
 	for _, key in ipairs({ "q", "<Esc>" }) do
 		vim.keymap.set("n", key, function()
 			vim.api.nvim_win_close(win, true)
 		end, { buffer = buf, silent = true, desc = "Close output" })
 	end
+	vim.keymap.set("n", "<leader>jm", function()
+		vim.api.nvim_win_close(win, true)
+		vim.cmd("MoltenToggleOutputFormat")
+		M.open(source, line)
+	end, { buffer = buf, silent = true, desc = "[Output] Toggle markdown output" })
 	return win
+end
+
+-- Expand or collapse the ghost-text output whose "More Lines" / "Show Less" footer
+-- is under the mouse. Returns true when a footer was clicked.
+function M.click_footer()
+	local mouse = vim.fn.getmousepos()
+	local ok, virt_lines = pcall(require, "molten.virt_lines")
+	if not ok or mouse.winid == 0 then
+		return false
+	end
+	local buf = vim.api.nvim_win_get_buf(mouse.winid)
+	local hit = virt_lines.at(buf, mouse.winid, mouse.screenrow)
+	if not hit or not virt_lines.is_footer(hit.text) then
+		return false
+	end
+	return vim.fn.MoltenToggleVirtExpandAt(buf, hit.id) == true
 end
 
 return M
