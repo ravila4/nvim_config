@@ -107,6 +107,30 @@ return {
 				move_to_next_cell()
 			end
 
+			local function go_to_cell()
+				vim.ui.input({ prompt = "Cell number: " }, function(value)
+					local number = tonumber(value)
+					local document = require("config.document_outline")
+					local cells = document.cells(document.parse(buffer_lines(), document.format(0)))
+					local cell = number and number % 1 == 0 and cells[number]
+					if not cell then
+						if value ~= nil then
+							vim.notify(
+								("Cell %s does not exist; this document has %d cell%s"):format(
+									value,
+									#cells,
+									#cells == 1 and "" or "s"
+								),
+								vim.log.levels.WARN
+							)
+						end
+						return
+					end
+					vim.api.nvim_win_set_cursor(0, { cell.range.start.line + 1, 0 })
+					vim.cmd("normal! zz")
+				end)
+			end
+
 			local function cell_representation()
 				if vim.tbl_contains({ "python", "julia", "r" }, vim.bo.filetype) then
 					return "percent", vim.bo.filetype
@@ -191,6 +215,9 @@ return {
 					map("n", "<leader>jK", function()
 						require("config.notebook_kernels").pick()
 					end, "[Unified] Select kernel")
+					if require("config.document_outline").format(0) ~= nil then
+						map("n", "<leader>jg", go_to_cell, "[Cell] Go to numbered cell")
+					end
 					map("n", "<leader>jo", function()
 						create_cell("below")
 					end, "[Cell] Create below")

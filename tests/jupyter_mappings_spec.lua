@@ -38,6 +38,48 @@ describe("Molten mapping scope", function()
 		assert.equal("Copy image to clipboard", vim.fn.maparg(" my", "n", false, true).desc)
 	end)
 
+	it("jumps to a numbered notebook cell", function()
+		open("/tmp/notebook.ipynb", "markdown")
+		vim.api.nvim_buf_set_lines(0, 0, -1, false, {
+			"# First",
+			"```python",
+			"a = 1",
+			"```",
+			"# Second",
+			"```python",
+			"b = 2",
+			"```",
+		})
+		local input = vim.ui.input
+		vim.ui.input = function(_, callback)
+			callback("2")
+		end
+		vim.fn.maparg(" jg", "n", false, true).callback()
+		vim.ui.input = input
+		assert.equal(6, vim.api.nvim_win_get_cursor(0)[1])
+	end)
+
+	it("reports a notebook cell number that does not exist", function()
+		open("/tmp/notebook.ipynb", "markdown")
+		vim.api.nvim_buf_set_lines(0, 0, -1, false, { "```python", "a = 1", "```" })
+		local input, notify = vim.ui.input, vim.notify
+		local message
+		vim.ui.input = function(_, callback)
+			callback("5")
+		end
+		vim.notify = function(value)
+			message = value
+		end
+		vim.fn.maparg(" jg", "n", false, true).callback()
+		vim.ui.input, vim.notify = input, notify
+		assert.equal("Cell 5 does not exist; this document has 1 cell", message)
+	end)
+
+	it("does not map numbered outline navigation in percent-cell scripts", function()
+		open("/tmp/analysis.py", "python")
+		assert.equal("", vim.fn.maparg(" jg", "n"))
+	end)
+
 	for _, case in ipairs({
 		{ "notebook.ipynb", "markdown" },
 		{ "analysis.qmd", "quarto" },

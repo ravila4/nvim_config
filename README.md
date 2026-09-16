@@ -227,6 +227,8 @@ Molten comes from the `ravila4/molten-nvim` fork (branch `fix/snacks-mixed-outpu
 
 `<leader>s` opens the notebook outline: Markdown headings contain numbered code cells, titled from their first nonblank line. Enter jumps to an entry, and the outline highlights the cell containing the editor cursor. Headings represent document sections rather than original Markdown-cell boundaries.
 
+`<leader>jg` prompts for a cell number and jumps to that code cell. For example, enter `5` to jump to `Cell 5` in the outline.
+
 Cell details show `not run`, `queued`, `running`, `done`, or `error`, with the execution count when available. `saved` identifies results from the notebook or loaded output state; it does not imply that the current kernel contains those variables. Editing executed code shows `modified`; executing only a portion of a cell shows `partial`. Live status requires the fork's `MoltenCellInfo` function and `MoltenCellUpdate` event. The kernel continues processing results while the outline is focused.
 
 The notebook outline supports editing whole cells:
