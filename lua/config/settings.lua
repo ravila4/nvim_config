@@ -31,7 +31,7 @@ opt.ignorecase = true
 opt.smartcase = true
 
 -- Text wrapping
-opt.wrap = false -- Disable line wrapping by default (enabled for prose via autocmd)
+opt.wrap = true -- Enable line wrapping by default
 opt.linebreak = true -- When wrapping is enabled, break at word boundaries
 opt.showbreak = "↳ " -- Visual indicator for wrapped lines
 
