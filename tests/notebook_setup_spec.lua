@@ -21,7 +21,12 @@ describe("Delayed notebook rendering", function()
 		table.insert(
 			stubs,
 			stub(vim.treesitter, "start", function(buf)
-				table.insert(highlighted, buf or vim.api.nvim_get_current_buf())
+				-- Neovim 0.12's ftplugin/markdown.lua starts treesitter (with no
+				-- buffer argument) whenever a displayed buffer becomes markdown;
+				-- only the plugin's deferred render passes an explicit buffer.
+				if buf then
+					table.insert(highlighted, buf)
+				end
 			end)
 		)
 		vim.api.nvim_create_user_command("Markview", function()
@@ -74,6 +79,8 @@ describe("Delayed notebook rendering", function()
 		local notebook = buffer("/tmp/delayed-notebook.ipynb")
 		vim.api.nvim_exec_autocmds("BufRead", { buffer = notebook })
 		local other = buffer("/tmp/delayed-other.md")
+		-- Exclude Tree-sitter starts from the runtime Markdown ftplugin during setup.
+		highlighted = {}
 		deferred[1]()
 		assert.same({ notebook }, highlighted)
 		assert.same({ notebook }, rendered)
@@ -85,6 +92,7 @@ describe("Delayed notebook rendering", function()
 		vim.api.nvim_exec_autocmds("BufRead", { buffer = notebook })
 		buffer("/tmp/delayed-other.md")
 		vim.api.nvim_buf_delete(notebook, { force = true })
+		highlighted = {}
 		deferred[1]()
 		for _, fn in ipairs(scheduled) do
 			fn()
@@ -98,6 +106,7 @@ describe("Delayed notebook rendering", function()
 		vim.api.nvim_exec_autocmds("BufRead", { buffer = notebook })
 		vim.bo[notebook].filetype = "text"
 		buffer("/tmp/delayed-other.md")
+		highlighted = {}
 		deferred[1]()
 		assert.same({}, highlighted)
 		assert.same({}, rendered)
