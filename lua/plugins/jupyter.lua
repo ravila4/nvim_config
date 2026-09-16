@@ -30,6 +30,7 @@ return {
 			vim.g.molten_wrap_output = true -- Wrap long outputs
 			vim.g.molten_virt_text_output = true -- Show outputs as virtual text
 			vim.g.molten_virt_lines_off_by_1 = true -- Better virtual line positioning
+			vim.g.molten_output_format = "markdown" -- DataFrame HTML as pipe tables, text/markdown verbatim
 
 			-- Theme integration - use your teal accent
 			vim.g.molten_output_crop_border = true
@@ -241,6 +242,7 @@ return {
 						require("config.notebook_output_view").open()
 					end, "[Output] Open output buffer")
 					map("n", "<leader>jh", ":MoltenHideOutput<CR>", "[Output] Hide output")
+					map("n", "<leader>jm", ":MoltenToggleOutputFormat<CR>", "[Output] Toggle markdown output")
 				end,
 			})
 		end,

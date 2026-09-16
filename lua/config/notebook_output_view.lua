@@ -47,6 +47,11 @@ function M.open(source, line)
 		title = " Cell Output ",
 		title_pos = "center",
 	})
+	-- Markdown outputs (pipe tables, Markdown objects) get rendered by markview. Plain
+	-- output is left without a filetype so stray `#` or `*` in stdout are not styled.
+	if vim.g.molten_output_format == "markdown" then
+		vim.bo[buf].filetype = "markdown"
+	end
 	vim.wo[win].wrap = false
 	vim.wo[win].sidescrolloff = 0
 	for _, key in ipairs({ "q", "<Esc>" }) do
