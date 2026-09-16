@@ -119,7 +119,7 @@ function M.create(buf, selected, direction, language)
 			index = direction == "above" and selected.heading_end or selected.range["end"].line + 1
 		end
 	end
-	local line = document.content_start(lines)
+	local line = first
 	while line <= #lines do
 		local block = document.fence(lines, line)
 		if block then

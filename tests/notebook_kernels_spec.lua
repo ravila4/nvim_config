@@ -20,6 +20,80 @@ describe("Notebook kernel selection", function()
 	end)
 end)
 
+describe("Installed kernel discovery failures", function()
+	local system, notify, schedule, response, messages, finished, failure
+	before_each(function()
+		system, notify, schedule = vim.system, vim.notify, vim.schedule
+		messages, finished, failure = {}, false, nil
+		vim.system = function(_, _, callback)
+			callback(response)
+		end
+		vim.notify = function(message)
+			messages[#messages + 1] = message
+		end
+		vim.schedule = function(callback)
+			schedule(function()
+				local ok, err = pcall(callback)
+				if not ok then
+					failure = err
+				end
+				finished = true
+			end)
+		end
+	end)
+	after_each(function()
+		vim.system, vim.notify, vim.schedule = system, notify, schedule
+	end)
+	local function discover()
+		local result, calls = nil, 0
+		kernels.installed(function(choices)
+			result, calls = choices, calls + 1
+		end)
+		vim.wait(1000, function()
+			return finished
+		end)
+		assert.is_nil(failure)
+		assert.equals(1, calls)
+		return result
+	end
+	it("keeps valid kernels when other entries are malformed", function()
+		response = {
+			code = 0,
+			stdout = vim.json.encode({
+				kernelspecs = {
+					good = { spec = { display_name = "R", argv = { "/bin/R" } } },
+					missing_spec = {},
+					missing_argv = { spec = {} },
+					empty_argv = { spec = { argv = {} } },
+					scalar = false,
+					bad_executable = { spec = { argv = { false } } },
+					empty_executable = { spec = { argv = { "" } } },
+				},
+			}),
+		}
+		assert.same({ good = { name = "good", label = "R", executable = "/bin/R" } }, discover())
+	end)
+	for _, case in ipairs({
+		{ name = "failed command", result = { code = 1, stderr = "no module named jupyter" } },
+		{ name = "invalid JSON", result = { code = 0, stdout = "invalid", stderr = "" } },
+		{ name = "invalid kernelspec collection", result = { code = 0, stdout = '{"kernelspecs":true}' } },
+	}) do
+		it("completes discovery after " .. case.name, function()
+			response = case.result
+			assert.same({}, discover())
+			assert.equals(1, #messages)
+			assert.matches("Could not list notebook kernels: .+", messages[1])
+		end)
+	end
+	it("completes discovery when the interpreter cannot be spawned", function()
+		vim.system = function()
+			error("ENOENT: missing interpreter")
+		end
+		assert.same({}, discover())
+		assert.matches("missing interpreter", messages[1])
+	end)
+end)
+
 describe("Preparing an environment kernel", function()
 	it("reads installed kernel display names and launch paths", function()
 		local system, result = vim.system, nil
