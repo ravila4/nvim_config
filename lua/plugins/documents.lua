@@ -65,10 +65,12 @@ return {
               hl = "@markup.heading.6.markdown",
             },
           },
-          code_blocks = {
-            enable = true,
-            sign = false,
-          },
+          code_blocks = function(buf)
+            return vim.tbl_extend("force", require("markview.config.markdown").code_blocks, {
+              enable = not vim.api.nvim_buf_get_name(buf):match("%.ipynb$"),
+              sign = false,
+            })
+          end,
           horizontal_rules = presets.horizontal_rules.thin,
         },
         markdown_inline = {
