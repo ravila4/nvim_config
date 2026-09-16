@@ -584,6 +584,17 @@ return {
 					reveal = { "close" },
 				},
 				sort_by = "insert_at_end",
+				-- Reserve the neo-tree column so the buffer tabs start at the divider.
+				-- Width is read from the live window, so it follows sidebar resizes.
+				-- Text is empty because edgy already draws the "Files" title below.
+				offsets = {
+					{
+						filetype = "neo-tree",
+						text = "",
+						highlight = "BufferLineFill",
+						separator = true,
+					},
+				},
 			},
 			highlights = function()
 				local colors = {}
