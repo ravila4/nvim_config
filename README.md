@@ -233,6 +233,7 @@ The notebook outline supports editing whole cells:
 
 | Key | Action |
 |-----|--------|
+| `=` | Expand or collapse every outline section |
 | `yy` / `Y` | Copy the current cell or section |
 | `dd` | Cut the current cell or section |
 | `V`, then `j` / `k` | Select outline rows |

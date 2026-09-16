@@ -254,6 +254,11 @@ function M.attach()
 			current:_toggle_fold()
 		end)
 	end, "Expand or collapse notebook group")
+	map("n", "=", function()
+		run(function(current)
+			current:_toggle_all_fold()
+		end)
+	end, "Expand or collapse all notebook groups")
 	local editable = require("config.document_outline").format(view.code.buf) ~= "markdown"
 	if not editable then
 		for _, key in ipairs({ "y", "d", "yy", "dd", "Y", "p", "P", "u", "<C-r>" }) do
