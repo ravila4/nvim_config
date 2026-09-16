@@ -110,6 +110,10 @@ return {
             cmd = function()
               local buf = vim.api.nvim_get_current_buf()
               local md = require("mini.diff")
+              if require("config.notebook_diff").is_notebook(buf) then
+                md.toggle_overlay(buf)
+                return
+              end
               local buf_data = md.get_buf_data(buf)
               if buf_data and buf_data.ref_text then
                 md.set_ref_text(buf, {})

@@ -30,6 +30,8 @@ jobs:
             "$XDG_DATA_HOME/nvim/lazy/outline.nvim"
           git clone --depth 1 https://github.com/goerz/jupytext.nvim.git \
             "$XDG_DATA_HOME/nvim/lazy/jupytext.nvim"
+          git clone --depth 1 https://github.com/echasnovski/mini.diff.git \
+            "$XDG_DATA_HOME/nvim/lazy/mini.diff"
           git clone --depth 1 https://github.com/nvzone/menu.git \
             "$XDG_DATA_HOME/nvim/lazy/menu"
           git clone --depth 1 https://github.com/nvzone/volt.git \
