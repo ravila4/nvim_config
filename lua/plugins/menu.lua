@@ -401,16 +401,16 @@ return {
         }
       end
 
-      local function notebook_kernel_item(name, command)
-        local win = vim.api.nvim_get_current_win()
-        return {
-          name = name,
-          cmd = function()
-            vim.api.nvim_win_call(win, function()
-              vim.cmd(command)
-            end)
-          end,
-        }
+      local function prepend_kernel_actions(items)
+        local kernels = require("config.notebook_kernel_menu").items(
+          vim.api.nvim_get_current_win(), vim.api.nvim_get_current_buf()
+        )
+        if #kernels > 0 then
+          table.insert(items, 1, { name = "separator" })
+          for i = #kernels, 1, -1 do
+            table.insert(items, 1, kernels[i])
+          end
+        end
       end
 
       local function notebook_outline_menu()
@@ -460,10 +460,9 @@ return {
           return
         end
         local items = vim.deepcopy(_G.ide_menus.context_menu)
-        if vim.fn.expand("%:t"):match("%.ipynb$") then
-          table.insert(items, 1, { name = "separator" })
-          table.insert(items, 1, notebook_kernel_item("Restart Kernel", "MoltenRestart"))
-          table.insert(items, 1, notebook_kernel_item("Interrupt Kernel", "MoltenInterrupt"))
+        local mode = require("config.document_outline").format(vim.api.nvim_get_current_buf())
+        prepend_kernel_actions(items)
+        if mode == "notebook" then
           table.insert(items, 1, notebook_output_item())
         end
         menu.open(normalize_menu(items), _G.ide_menus._menu_opts())
@@ -511,10 +510,8 @@ return {
         local context_menu = vim.deepcopy(_G.ide_menus.context_menu)
         local filename = vim.fn.expand("%:t")
 
+        prepend_kernel_actions(context_menu)
         if filename:match("%.ipynb$") then
-          table.insert(context_menu, 1, { name = "separator" })
-          table.insert(context_menu, 1, notebook_kernel_item("Restart Kernel", "MoltenRestart"))
-          table.insert(context_menu, 1, notebook_kernel_item("Interrupt Kernel", "MoltenInterrupt"))
           table.insert(context_menu, 1, notebook_output_item())
           -- Add Jupyter menu item to the context menu for notebook files
           table.insert(context_menu, { name = " Jupyter Notebook", cmd = "JupyterMenu", rtxt = "mj" })

@@ -22,6 +22,7 @@ return {
 			"folke/snacks.nvim",
 		},
 		config = function()
+			require("config.notebook_kernels").setup_prompts()
 			-- Global configuration
 			vim.g.molten_image_provider = "snacks.nvim"
 			vim.g.molten_output_win_max_height = 20 -- Reasonable output window height

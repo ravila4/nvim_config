@@ -6,7 +6,7 @@ local function sidebar()
 	if
 		view
 		and view.provider
-		and view.provider.name == "notebook"
+		and (view.provider.name == "notebook" or view.provider.name == "document")
 		and vim.api.nvim_get_current_buf() == view.view.buf
 	then
 		return view
@@ -25,7 +25,17 @@ local function run(fn)
 	if not view then
 		return
 	end
-	local ok, err = pcall(fn, view)
+	local ok, err = pcall(function()
+		assert(
+			vim.api.nvim_win_is_valid(view.code.win) and vim.api.nvim_win_get_buf(view.code.win) == view.code.buf,
+			"Outline source window changed"
+		)
+		assert(
+			require("config.document_outline_provider").is_current(view),
+			"Document changed; refresh the outline before editing"
+		)
+		fn(view)
+	end)
 	if not ok then
 		vim.notify(tostring(err), vim.log.levels.WARN)
 	end
@@ -62,6 +72,8 @@ function M.context_menu()
 	end
 	local items = {}
 	local selected = view.flats[vim.api.nvim_win_get_cursor(view.view.win)[1]]
+	local mode = require("config.document_outline").format(view.code.buf)
+	local source, source_tick = view.code.buf, vim.api.nvim_buf_get_changedtick(view.code.buf)
 	local function action(name, fn)
 		items[#items + 1] = {
 			name = name,
@@ -70,11 +82,72 @@ function M.context_menu()
 					return
 				end
 				vim.api.nvim_set_current_win(view.view.win)
-				run(fn)
+				run(function(current)
+					assert(
+						current.code.buf == source and vim.api.nvim_buf_get_changedtick(source) == source_tick,
+						"Notebook changed; reopen the Outline menu before running cells or editing"
+					)
+					fn(current)
+				end)
 			end,
 		}
 	end
-	if selected and selected.kind == vim.lsp.protocol.SymbolKind.Function then
+	if mode == "quarto" then
+		local document = require("config.document_outline")
+		local tree = document.parse(vim.api.nvim_buf_get_lines(source, 0, -1, false), mode)
+		local node
+		local function find(nodes)
+			for _, item in ipairs(nodes) do
+				if selected and item.range.start.line == selected.range_start then
+					node = item
+				end
+				find(item.children)
+			end
+		end
+		find(tree)
+		local quarto = require("config.quarto_outline")
+		if node and node.kind == "Function" then
+			for _, scope in ipairs({ "Cell", "All Above", "All Below" }) do
+				action("Run " .. scope, function(current)
+					vim.api.nvim_win_call(current.code.win, function()
+						quarto.run(source, node, scope)
+					end)
+				end)
+			end
+			items[#items + 1] = { name = "separator" }
+		end
+		for _, direction in ipairs({ "Above", "Below" }) do
+			action("Create Cell " .. direction, function(current)
+				local function create(language)
+					if not language then
+						return
+					end
+					local ok, err = pcall(function()
+						assert(
+							vim.api.nvim_buf_is_valid(source)
+								and vim.api.nvim_buf_get_changedtick(source) == source_tick,
+							"Document changed; reopen the Outline menu"
+						)
+						quarto.create(source, node, direction:lower(), language)
+						refresh(current, vim.api.nvim_win_get_cursor(current.view.win)[1])
+					end)
+					if not ok then
+						vim.notify(tostring(err), vim.log.levels.WARN)
+					end
+				end
+				if node and node.language then
+					create(node.language)
+				else
+					vim.ui.select({ "python", "r", "julia", "bash" }, { prompt = "New cell language:" }, create)
+				end
+			end)
+		end
+		if node and node.kind == "Function" and quarto.uses_molten(node.language) then
+			action("Open Output", function()
+				require("config.notebook_output_view").open(source, node.range.start.line + 1)
+			end)
+		end
+	elseif mode == "notebook" and selected and selected.kind == vim.lsp.protocol.SymbolKind.Function then
 		local buf = view.code.buf
 		local tick = vim.api.nvim_buf_get_changedtick(buf)
 		local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
@@ -144,17 +217,12 @@ function M.context_menu()
 			require("config.notebook_output_view").open(buf, selected.range_start + 1)
 		end)
 	end
-	action("Interrupt Kernel", function(current)
-		vim.api.nvim_win_call(current.code.win, function()
-			vim.cmd("MoltenInterrupt")
-		end)
-	end)
-	action("Restart Kernel", function(current)
-		vim.api.nvim_win_call(current.code.win, function()
-			vim.cmd("MoltenRestart")
-		end)
-	end)
-	items[#items + 1] = { name = "separator" }
+	for _, item in ipairs(require("config.notebook_kernel_menu").items(view.code.win, source)) do
+		action(item.name, item.cmd)
+	end
+	if #items > 0 then
+		items[#items + 1] = { name = "separator" }
+	end
 	action("Expand All", function(current)
 		current:_set_all_folded(false)
 	end)
@@ -169,6 +237,15 @@ function M.attach()
 	if not view or not view.view.buf or not vim.api.nvim_buf_is_valid(view.view.buf) then
 		return
 	end
+	vim.api.nvim_win_call(view.view.win, function()
+		local pattern = [[✗\ze Cell \d\+]]
+		for _, match in ipairs(vim.fn.getmatches()) do
+			if match.group == "DiagnosticError" and match.pattern == pattern then
+				return
+			end
+		end
+		vim.fn.matchadd("DiagnosticError", pattern, 20)
+	end)
 	local function map(mode, key, fn, desc, expr)
 		vim.keymap.set(mode, key, fn, { buffer = view.view.buf, silent = true, desc = desc, expr = expr })
 	end
@@ -177,6 +254,16 @@ function M.attach()
 			current:_toggle_fold()
 		end)
 	end, "Expand or collapse notebook group")
+	local editable = require("config.document_outline").format(view.code.buf) ~= "markdown"
+	if not editable then
+		for _, key in ipairs({ "y", "d", "yy", "dd", "Y", "p", "P", "u", "<C-r>" }) do
+			pcall(vim.keymap.del, "n", key, { buffer = view.view.buf })
+		end
+		for _, key in ipairs({ "y", "d" }) do
+			pcall(vim.keymap.del, "x", key, { buffer = view.view.buf })
+		end
+		return
+	end
 	for _, key in ipairs({ "y", "d" }) do
 		local cut = key == "d"
 		map("n", key, function()
@@ -211,7 +298,10 @@ function M.attach()
 					vim.api.nvim_buf_get_lines(current.code.buf, 0, -1, false)
 				)
 				local index = node and (key == "P" and node.range_start or ranges[1][2]) or 0
-				require("config.notebook_edit").paste(current.code.buf, index, register, count)
+				local module = require("config.document_outline").format(current.code.buf) == "quarto"
+						and "config.quarto_outline"
+					or "config.notebook_edit"
+				require(module).paste(current.code.buf, index, register, count)
 				refresh(current, row)
 			end)
 		end, key == "p" and "Paste cells after" or "Paste cells before")
