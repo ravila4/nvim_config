@@ -51,21 +51,21 @@ map("n", "<leader>tw", ":set wrap!<CR>", { desc = "Toggle line wrapping" })
 
 -- Layout management keymaps
 map("n", "<leader>ll", function()
-  require("edgy").toggle("left")
+	require("edgy").toggle("left")
 end, { desc = "Toggle left panel" })
 map("n", "<leader>lr", function()
-  require("edgy").toggle("right")
+	require("edgy").toggle("right")
 end, { desc = "Toggle right panel" })
 map("n", "<leader>lb", function()
-  require("edgy").toggle("bottom")
+	require("edgy").toggle("bottom")
 end, { desc = "Toggle bottom panel" })
 map("n", "<leader>lL", function()
-  require("edgy").open("left")
-  require("edgy").open("right")
-  require("edgy").open("bottom")
+	require("edgy").open("left")
+	require("edgy").open("right")
+	require("edgy").open("bottom")
 end, { desc = "Open full IDE layout" })
 map("n", "<leader>lc", function()
-  require("edgy").close()
+	require("edgy").close()
 end, { desc = "Close all panels" })
 
 -- Git: Neo-tree git status (float, base=main)
@@ -73,21 +73,21 @@ map("n", "<leader>gS", ":Neotree float git_status git_base=main<CR>", { desc = "
 
 -- Session management keymaps
 map("n", "<leader>qc", function()
-  -- Close all buffers except current one
-  local current = vim.api.nvim_get_current_buf()
-  local buffers = vim.api.nvim_list_bufs()
-  for _, buf in ipairs(buffers) do
-    if buf ~= current and vim.api.nvim_buf_is_loaded(buf) then
-      vim.api.nvim_buf_delete(buf, { force = false })
-    end
-  end
-  vim.notify("Session closed - all buffers except current closed")
+	-- Close all buffers except current one
+	local current = vim.api.nvim_get_current_buf()
+	local buffers = vim.api.nvim_list_bufs()
+	for _, buf in ipairs(buffers) do
+		if buf ~= current and vim.api.nvim_buf_is_loaded(buf) then
+			vim.api.nvim_buf_delete(buf, { force = false })
+		end
+	end
+	vim.notify("Session closed - all buffers except current closed")
 end, { desc = "Close session (close all buffers)" })
 
 map("n", "<leader>qC", function()
-  -- Close all buffers
-  vim.cmd("bufdo bdelete")
-  vim.notify("All buffers closed")
+	-- Close all buffers
+	vim.cmd("bufdo bdelete")
+	vim.notify("All buffers closed")
 end, { desc = "Close all buffers" })
 
 -- Context menus (using nvzone/menu)
@@ -95,19 +95,19 @@ map("n", "<C-t>", ":ContextMenu<CR>", { desc = "Open context menu" })
 
 -- Test panel toggle (safe loading)
 map("n", "<leader>tp", function()
-  -- Use vim.schedule to ensure proper loading
-  vim.schedule(function()
-    local neotest = require("neotest")
-    neotest.summary.toggle()
-  end)
+	-- Use vim.schedule to ensure proper loading
+	vim.schedule(function()
+		local neotest = require("neotest")
+		neotest.summary.toggle()
+	end)
 end, { desc = "Toggle test panel" })
 
 -- Force refresh test discovery
 map("n", "<leader>tR", function()
-  -- Clear the cache and refresh
-  vim.cmd("lua package.loaded['neotest'] = nil")
-  require("neotest")
-  require("neotest").summary.toggle()
-  require("neotest").summary.toggle()
-  vim.notify("Tests refreshed!")
+	-- Clear the cache and refresh
+	vim.cmd("lua package.loaded['neotest'] = nil")
+	require("neotest")
+	require("neotest").summary.toggle()
+	require("neotest").summary.toggle()
+	vim.notify("Tests refreshed!")
 end, { desc = "Refresh test discovery" })

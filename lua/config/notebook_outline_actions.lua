@@ -233,8 +233,8 @@ function M.context_menu()
 end
 
 function M.attach()
-	local view = require("outline")._get_sidebar()
-	if not view or not view.view.buf or not vim.api.nvim_buf_is_valid(view.view.buf) then
+	local view = sidebar()
+	if not view then
 		return
 	end
 	vim.api.nvim_win_call(view.view.win, function()

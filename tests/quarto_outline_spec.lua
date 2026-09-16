@@ -127,15 +127,12 @@ describe("Quarto outline actions", function()
 		vim.fn.MoltenRunningKernels, vim.notify = original_kernels, original_notify
 		package.loaded["quarto.runner.molten"] = old_molten
 		assert.is_true(ok, tostring(err))
-		assert.are.same(
+		assert.are.same({
 			{
-				{
-					"No kernel selected for this document. In the .qmd source window, run :MoltenInit and choose a kernel, then run the cell again.",
-					vim.log.levels.WARN,
-				},
+				"No kernel selected for this document. In the .qmd source window, run :MoltenInit and choose a kernel, then run the cell again.",
+				vim.log.levels.WARN,
 			},
-			messages
-		)
+		}, messages)
 		assert.are.same({}, sent)
 		assert.are.same({ 1, 0 }, vim.api.nvim_win_get_cursor(0))
 	end)

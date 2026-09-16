@@ -117,17 +117,14 @@ describe("bootstrap", function()
 			return string.rep("b", 40)
 		end
 		bootstrap.databricks("/repo")
-		assert.same(
-			{
-				"uv",
-				"tool",
-				"install",
-				"--python",
-				"3.12",
-				"git+https://github.com/ravila4/databricks.nvim@" .. string.rep("b", 40),
-			},
-			commands[1]
-		)
+		assert.same({
+			"uv",
+			"tool",
+			"install",
+			"--python",
+			"3.12",
+			"git+https://github.com/ravila4/databricks.nvim@" .. string.rep("b", 40),
+		}, commands[1])
 	end)
 
 	it("does not replace a global notebook kernel owned by someone else", function()
@@ -198,11 +195,13 @@ describe("bootstrap", function()
 
 	it("reports failed plugin build tasks", function()
 		assert.has_error(function()
-			bootstrap.plugin_errors({ example = { _ = { tasks = { {
-				has_errors = function()
-					return true
-				end,
-			} } } } })
+			bootstrap.plugin_errors({
+				example = { _ = { tasks = { {
+					has_errors = function()
+						return true
+					end,
+				} } } },
+			})
 		end, "Plugin install/build failed: example")
 	end)
 
@@ -228,20 +227,17 @@ describe("bootstrap", function()
 	end)
 
 	it("keeps setup from running for missing R in the Makefile prerequisite", function()
-		local result = vim.system(
-			{
-				vim.v.progpath,
-				"--headless",
-				"-u",
-				"NONE",
-				"-i",
-				"NONE",
-				"-l",
-				"scripts/bootstrap.lua",
-				"r-prerequisite",
-			},
-			{ text = true, env = { R_EXECUTABLE = "/missing/R" } }
-		):wait()
+		local result = vim.system({
+			vim.v.progpath,
+			"--headless",
+			"-u",
+			"NONE",
+			"-i",
+			"NONE",
+			"-l",
+			"scripts/bootstrap.lua",
+			"r-prerequisite",
+		}, { text = true, env = { R_EXECUTABLE = "/missing/R" } }):wait()
 		assert.equals(1, result.code)
 		assert.is_truthy(result.stderr:find("R executable not found", 1, true))
 	end)
