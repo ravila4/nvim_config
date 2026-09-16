@@ -74,6 +74,7 @@ function M.symbols(lines, executions, saved, mode)
 			partial = "◐",
 		}
 		cell.notebook_icon = icons[cell.detail:gsub("^saved ", ""):match("^%S+")]
+		cell.detail = cell.detail:gsub("^saved ", ""):gsub("^done%s*", ""):gsub("^error%s*", "")
 	end
 	return tree
 end

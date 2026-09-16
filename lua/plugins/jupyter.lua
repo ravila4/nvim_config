@@ -34,6 +34,8 @@ return {
 			-- Theme integration - use your teal accent
 			vim.g.molten_output_crop_border = true
 			vim.g.molten_output_show_more = true
+			vim.g.molten_output_show_status = false
+			vim.g.molten_output_show_exec_time = false
 			vim.g.molten_output_virt_lines = true
 
 			-- Performance settings for bioinformatics (large outputs)
