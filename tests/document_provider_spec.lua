@@ -110,6 +110,73 @@ describe("Document outline provider", function()
 		vim.api.nvim_feedkeys("u", "xt", false)
 		assert.are.equal(3, #view.flats)
 	end)
+	it("runs the Quarto cell selected when the menu opens", function()
+		local view = open("qmd", "quarto", {
+			"# Title",
+			"```{python}",
+			"first()",
+			"```",
+			"```{r}",
+			"second()",
+			"```",
+		})
+		vim.api.nvim_win_set_cursor(view.view.win, { 3, 0 })
+		local quarto = require("config.quarto_outline")
+		local original_run = quarto.run
+		local received
+		quarto.run = function(source, node, scope)
+			received = {
+				source = source,
+				language = node.language,
+				line = node.range.start.line,
+				scope = scope,
+				current = vim.api.nvim_get_current_buf(),
+			}
+		end
+		local menu = require("config.notebook_outline_actions").context_menu()
+		local run_cell
+		for _, item in ipairs(menu) do
+			if item.name == "Run Cell" then
+				run_cell = item.cmd
+			end
+		end
+		vim.api.nvim_win_set_cursor(view.view.win, { 2, 0 })
+		run_cell()
+		quarto.run = original_run
+
+		assert.are.same({ source = buf, language = "r", line = 4, scope = "Cell", current = buf }, received)
+	end)
+	it("creates a selected-language Quarto cell below a heading", function()
+		local view = open("qmd", "quarto", { "# Title", "text" })
+		vim.api.nvim_win_set_cursor(view.view.win, { 1, 0 })
+		local original_select = vim.ui.select
+		vim.ui.select = function(_, _, callback)
+			callback("r")
+		end
+		local menu = require("config.notebook_outline_actions").context_menu()
+		for _, item in ipairs(menu) do
+			if item.name == "Create Cell Below" then
+				item.cmd()
+				break
+			end
+		end
+		vim.ui.select = original_select
+
+		assert.are.same({ "# Title", "text", "", "```{r}", "", "```" }, vim.api.nvim_buf_get_lines(buf, 0, -1, false))
+	end)
+	it("does not attach editing mappings to unsupported Outline providers", function()
+		local view = open("qmd", "quarto", { "```{python}", "x = 1", "```" })
+		pcall(vim.keymap.del, "n", "dd", { buffer = view.view.buf })
+		local provider_name = view.provider.name
+		view.provider.name = "lsp"
+
+		require("config.notebook_outline_actions").attach()
+		view.provider.name = provider_name
+
+		for _, mapping in ipairs(vim.api.nvim_buf_get_keymap(view.view.buf, "n")) do
+			assert.is_not.equal("dd", mapping.lhs)
+		end
+	end)
 	it("does not expose cell editing in Markdown", function()
 		local view = open("md", "markdown", { "# Title", "text" })
 		local items = require("config.notebook_outline_actions").context_menu()

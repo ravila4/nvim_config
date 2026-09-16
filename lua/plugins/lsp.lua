@@ -16,48 +16,12 @@ return {
 		event = "LspAttach",
 		config = function()
 			require("nvim-navic").setup({
-				icons = {
-					File = " ",
-					Module = " ",
-					Namespace = " ",
-					Package = " ",
-					Class = " ",
-					Method = " ",
-					Property = " ",
-					Field = " ",
-					Constructor = " ",
-					Enum = " ",
-					Interface = " ",
-					Function = " ",
-					Variable = " ",
-					Constant = " ",
-					String = " ",
-					Number = " ",
-					Boolean = " ",
-					Array = " ",
-					Object = " ",
-					Key = " ",
-					Null = " ",
-					EnumMember = " ",
-					Struct = " ",
-					Event = " ",
-					Operator = " ",
-					TypeParameter = " ",
-				},
+				icons = { enabled = true },
 				lsp = {
 					auto_attach = true,
 					preference = { "r_language_server", "pyright", "otter-ls" },
 				},
 				highlight = true,
-				separator = " > ",
-				depth_limit = 0,
-				depth_limit_indicator = "..",
-				safe_output = true,
-				lazy_update_context = false,
-				click = false,
-				format_text = function(text)
-					return text
-				end,
 			})
 
 			-- Set up highlight groups with your teal theme (solid backgrounds)
@@ -76,41 +40,6 @@ return {
 
 				vim.api.nvim_set_hl(0, "WinBar", { bg = bg_color })
 				vim.api.nvim_set_hl(0, "WinBarNC", { bg = bg_color })
-
-				local icon_types = {
-					"File",
-					"Module",
-					"Namespace",
-					"Package",
-					"Class",
-					"Method",
-					"Property",
-					"Field",
-					"Constructor",
-					"Enum",
-					"Interface",
-					"Function",
-					"Variable",
-					"Constant",
-					"String",
-					"Number",
-					"Boolean",
-					"Array",
-					"Object",
-					"Key",
-					"Null",
-					"EnumMember",
-					"Struct",
-					"Event",
-					"Operator",
-					"TypeParameter",
-				}
-
-				for _, icon_type in ipairs(icon_types) do
-					local hl_group = "NavicIcons" .. icon_type
-					local existing_hl = vim.api.nvim_get_hl(0, { name = hl_group })
-					vim.api.nvim_set_hl(0, hl_group, vim.tbl_extend("force", existing_hl, { bg = bg_color }))
-				end
 			end
 
 			vim.api.nvim_create_autocmd("ColorScheme", {
@@ -125,6 +54,9 @@ return {
 		"neovim/nvim-lspconfig",
 		event = { "BufReadPre", "BufNewFile" },
 		config = function()
+			local navic_winbar = require("config.navic_winbar")
+			navic_winbar.setup()
+
 			-- Add Blink completion capabilities when available.
 			local capabilities = vim.lsp.protocol.make_client_capabilities()
 			local ok_blink, blink = pcall(require, "blink.cmp")
@@ -238,32 +170,9 @@ return {
 					local bufnr = args.buf
 					local client = vim.lsp.get_client_by_id(args.data.client_id)
 
-					-- Navic winbar (navic auto_attach handles the attach call)
-					local ok_navic, navic = pcall(require, "nvim-navic")
-					if ok_navic and client and client.server_capabilities.documentSymbolProvider then
-						local function update_winbar()
-							vim.schedule(function()
-								if navic.is_available(bufnr) then
-									local location = navic.get_location()
-									local filepath = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":~:.")
-									if location and location ~= "" then
-										vim.wo.winbar = string.format(
-											"%%#NavicText# %s %%#NavicSeparator#>%%#NavicText# %s",
-											filepath,
-											location
-										)
-									else
-										vim.wo.winbar = string.format("%%#NavicText# %s", filepath)
-									end
-								end
-							end)
-						end
-
-						update_winbar()
-						vim.api.nvim_create_autocmd({ "CursorMoved", "CursorHold" }, {
-							buffer = bufnr,
-							callback = update_winbar,
-						})
+					-- Navic auto_attach handles symbol updates; the winbar expression handles rendering.
+					if client and client.server_capabilities.documentSymbolProvider then
+						navic_winbar.enable(bufnr)
 					end
 
 					-- LSP keymaps
