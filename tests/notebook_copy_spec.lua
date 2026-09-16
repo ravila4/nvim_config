@@ -17,7 +17,11 @@ endfunction]])
 		old_viewer = package.loaded["config.image_viewer"]
 		old_snacks_api = _G._snacks
 		old_mousepos = vim.fn.getmousepos
-		_G._snacks = { image_at = function() return nil end }
+		_G._snacks = {
+			image_at = function()
+				return nil
+			end,
+		}
 	end)
 	after_each(function()
 		vim.ui.select = old_select

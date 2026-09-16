@@ -112,15 +112,12 @@ function M.check(data, root)
 		if vim.fn.executable(notebook .. "/bin/python") == 1 then
 			need(
 				"Notebook packages",
-				pcall(
-					M.run,
-					{
-						notebook .. "/bin/python",
-						"-B",
-						"-c",
-						"from importlib.util import find_spec; assert all(find_spec(p) for p in ('ipykernel', 'pandas', 'matplotlib'))",
-					}
-				)
+				pcall(M.run, {
+					notebook .. "/bin/python",
+					"-B",
+					"-c",
+					"from importlib.util import find_spec; assert all(find_spec(p) for p in ('ipykernel', 'pandas', 'matplotlib'))",
+				})
 			)
 		end
 		need("Jupytext", vim.fn.executable("jupytext") == 1)
@@ -153,15 +150,12 @@ function M.check(data, root)
 		report.optional[#report.optional + 1] = "R"
 	end
 	if vim.fn.executable(host) == 1 and (vim.uv.fs_stat(notebook) or vim.fn.filereadable(r_config) == 1) then
-		local ok, result = pcall(
-			M.run,
-			{
-				host,
-				"-B",
-				"-c",
-				"import json; from jupyter_client.kernelspec import KernelSpecManager; print(json.dumps(KernelSpecManager(ensure_native_kernel=False).get_all_specs()))",
-			}
-		)
+		local ok, result = pcall(M.run, {
+			host,
+			"-B",
+			"-c",
+			"import json; from jupyter_client.kernelspec import KernelSpecManager; print(json.dumps(KernelSpecManager(ensure_native_kernel=False).get_all_specs()))",
+		})
 		need("Kernel discovery", ok)
 		if ok then
 			local specs = vim.json.decode(result)
@@ -223,20 +217,17 @@ end
 
 function M.plugins(root)
 	print("Installing locked plugins, tools, parsers and remote registration...")
-	M.run(
-		{
-			vim.v.progpath,
-			"--headless",
-			"-u",
-			"NONE",
-			"-i",
-			"NONE",
-			"-l",
-			root .. "/scripts/bootstrap-plugins.lua",
-			root,
-		},
-		{ timeout = 900000 }
-	)
+	M.run({
+		vim.v.progpath,
+		"--headless",
+		"-u",
+		"NONE",
+		"-i",
+		"NONE",
+		"-l",
+		root .. "/scripts/bootstrap-plugins.lua",
+		root,
+	}, { timeout = 900000 })
 end
 
 function M.install_spec(spec)
@@ -318,15 +309,11 @@ function M.mason_ready(path)
 end
 
 function M.preview_ready(path)
-	return pcall(
-		M.run,
-		{
-			"node",
-			"-e",
-			"for (const name of Object.keys(require('./package.json').dependencies)) require.resolve(name)",
-		},
-		{ cwd = path .. "/app" }
-	)
+	return pcall(M.run, {
+		"node",
+		"-e",
+		"for (const name of Object.keys(require('./package.json').dependencies)) require.resolve(name)",
+	}, { cwd = path .. "/app" })
 end
 
 function M.preview(path)
@@ -339,15 +326,12 @@ function M.preview(path)
 end
 
 function M.databricks_matches(python, revision)
-	local ok, result = pcall(
-		M.run,
-		{
-			python,
-			"-B",
-			"-c",
-			"import sys; from importlib.metadata import distribution; assert sys.version_info[:2] == (3, 12); print(distribution('databricks-nvim').read_text('direct_url.json'))",
-		}
-	)
+	local ok, result = pcall(M.run, {
+		python,
+		"-B",
+		"-c",
+		"import sys; from importlib.metadata import distribution; assert sys.version_info[:2] == (3, 12); print(distribution('databricks-nvim').read_text('direct_url.json'))",
+	})
 	if not ok then
 		return false
 	end
