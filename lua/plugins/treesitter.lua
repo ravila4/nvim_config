@@ -2,7 +2,6 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     branch = "main",
-    build = ":TSUpdate",
     lazy = false, -- nvim-treesitter does not support lazy-loading
     dependencies = {
       "OXY2DEV/markview.nvim", -- Ensure markview loads before treesitter
@@ -10,24 +9,6 @@ return {
     },
     config = function()
       require("nvim-treesitter").setup()
-
-      -- Install parsers
-      require("nvim-treesitter").install({
-        "javascript",
-        "typescript",
-        "python",
-        "vim",
-        "vimdoc",
-        "json",
-        "html",
-        "bash",
-        "css",
-        "r",
-        "lua",
-        "markdown",
-        "markdown_inline",
-        "latex", -- For LaTeX math rendering in markview
-      })
 
       -- Configure textobjects
       local move = require("nvim-treesitter-textobjects.move")

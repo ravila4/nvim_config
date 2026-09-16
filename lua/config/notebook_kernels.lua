@@ -92,27 +92,46 @@ end
 local requests = {}
 
 function M.installed(callback)
-	vim.system(
+	local function failed(message)
+		vim.notify("Could not list notebook kernels: " .. message, vim.log.levels.ERROR)
+		callback({})
+	end
+	local spawned, err = pcall(
+		vim.system,
 		{ vim.g.python3_host_prog or "python3", "-m", "jupyter", "kernelspec", "list", "--json" },
 		{ text = true, timeout = 10000 },
 		function(result)
 			vim.schedule(function()
 				local ok, data = pcall(vim.json.decode, result.stdout or "")
-				if result.code ~= 0 or not ok or type(data) ~= "table" or not data.kernelspecs then
-					vim.notify(
-						"Could not list notebook kernels: " .. (result.stderr or "invalid Jupyter response"),
-						vim.log.levels.ERROR
-					)
+				if result.code ~= 0 or not ok or type(data) ~= "table" or type(data.kernelspecs) ~= "table" then
+					failed(result.stderr and result.stderr ~= "" and result.stderr or "invalid Jupyter response")
 					return
 				end
 				local choices = {}
 				for name, entry in pairs(data.kernelspecs) do
-					choices[name] = { name = name, label = entry.spec.display_name, executable = entry.spec.argv[1] }
+					local spec = type(entry) == "table" and entry.spec
+					if
+						type(spec) == "table"
+						and type(spec.argv) == "table"
+						and type(spec.argv[1]) == "string"
+						and spec.argv[1] ~= ""
+					then
+						choices[name] = {
+							name = name,
+							label = type(spec.display_name) == "string" and spec.display_name or name,
+							executable = spec.argv[1],
+						}
+					end
 				end
 				callback(choices)
 			end)
 		end
 	)
+	if not spawned then
+		vim.schedule(function()
+			failed(tostring(err))
+		end)
+	end
 end
 
 local function collect(buf, saved, callback)

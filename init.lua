@@ -4,43 +4,38 @@
 -- Basic vim settings
 require("config.settings")
 
--- Bootstrap lazy.nvim
+-- Dependency installation is explicit: run make setup from this checkout.
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.uv.fs_stat(lazypath) then
-  vim.fn.system({
-    "git",
-    "clone",
-    "--filter=blob:none",
-    "https://github.com/folke/lazy.nvim.git",
-    "--branch=stable", -- latest stable release
-    lazypath,
-  })
+	vim.notify("Neovim dependencies are missing. Run make setup in the configuration checkout.", vim.log.levels.WARN)
+	return
 end
 vim.opt.rtp:prepend(lazypath)
 
 -- Setup lazy.nvim
 require("lazy").setup("plugins", {
-  defaults = {
-    lazy = true, -- Enable lazy loading by default
-  },
-  checker = {
-    enabled = true, -- Enable automatic updates
-    notify = false, -- Don't notify about updates
-  },
-  performance = {
-    rtp = {
-      disabled_plugins = {
-        "gzip",
-        "matchit",
-        "matchparen",
-        "netrwPlugin",
-        "tarPlugin",
-        "tohtml",
-        "tutor",
-        "zipPlugin",
-      },
-    },
-  },
+	install = { missing = false },
+	defaults = {
+		lazy = true, -- Enable lazy loading by default
+	},
+	checker = {
+		enabled = true, -- Enable automatic updates
+		notify = false, -- Don't notify about updates
+	},
+	performance = {
+		rtp = {
+			disabled_plugins = {
+				"gzip",
+				"matchit",
+				"matchparen",
+				"netrwPlugin",
+				"tarPlugin",
+				"tohtml",
+				"tutor",
+				"zipPlugin",
+			},
+		},
+	},
 })
 
 -- Load keymaps and abbreviations

@@ -1,5 +1,5 @@
 -- Jupyter notebook and REPL integration tools
--- Dual strategy: Molten for VSCode-like experience, vim-slime for flexible REPL workflow
+-- Molten provides inline Jupyter execution; R scripts use R.nvim.
 
 return {
 	-- Dependencies
@@ -163,7 +163,7 @@ return {
 			end
 
 			vim.api.nvim_create_autocmd("FileType", {
-				pattern = { "python", "julia", "r", "ipynb", "markdown", "quarto", "rmd" },
+				pattern = { "python", "julia", "ipynb", "markdown", "quarto", "rmd" },
 				callback = function()
 					map("n", "<leader>my", function()
 						if not require("config.document_images").copy_at_cursor() then
@@ -346,51 +346,6 @@ return {
 							end,
 						})
 					end)
-				end,
-			})
-		end,
-	},
-
-	-- Vim-slime for terminal-based REPL workflow
-	{
-		"jpalardy/vim-slime",
-		ft = { "python", "r", "julia", "sh", "bash" },
-		dependencies = {
-			"hanschen/vim-ipython-cell", -- Adds cell-based execution to vim-slime
-		},
-		config = function()
-			-- Configure vim-slime for terminal integration
-			vim.g.slime_target = "neovim" -- Use Neovim terminal
-			vim.g.slime_python_ipython = 1 -- Use IPython when available
-			vim.g.slime_cell_delimiter = "# %%" -- Standard Jupyter cell delimiter
-			vim.g.slime_default_config = { jobid = "terminal" }
-
-			-- Don't add newlines automatically
-			vim.g.slime_bracketed_paste = 1
-
-			-- Slime + IPython Cell keybindings
-			local function map(mode, key, cmd, desc)
-				vim.keymap.set(mode, key, cmd, { desc = desc, buffer = true })
-			end
-
-			vim.api.nvim_create_autocmd("FileType", {
-				pattern = { "python", "r", "julia" },
-				callback = function()
-					-- Slime-specific mappings (prefix: <leader>s)
-					map("n", "<leader>sc", ":SlimeSendCurrentLine<CR>", "[Slime] Send line")
-					map("v", "<leader>sc", ":SlimeSend<CR>", "[Slime] Send selection")
-					map("n", "<leader>ss", ":SlimeSend<CR>", "[Slime] Send operator")
-					map("n", "<leader>st", ":SlimeConfig<CR>", "[Slime] Configure target")
-
-					-- IPython terminal cell mappings
-					map("n", "<leader>se", ":IPythonCellExecuteCell<CR>", "[Slime] Run cell")
-					map("n", "<leader>sE", ":IPythonCellExecuteCellJump<CR>", "[Slime] Run cell + jump")
-					map("n", "<leader>ja", ":IPythonCellExecuteAll<CR>", "[Unified] Run all above")
-					map("n", "<leader>jA", ":IPythonCellExecuteAllBelow<CR>", "[Unified] Run all below")
-					map("n", "<leader>jc", ":IPythonCellClear<CR>", "[Unified] Clear terminal")
-					-- Terminal shortcuts
-					map("n", "<leader>js", ":IPythonCellRestart<CR>", "[Unified] Start/restart IPython")
-					map("n", "<leader>jt", ":terminal ipython<CR>", "[Unified] Open IPython terminal")
 				end,
 			})
 		end,

@@ -6,7 +6,7 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 -- Stable Python provider for molten-nvim remote plugins
-vim.g.python3_host_prog = vim.fn.expand("~/.local/share/nvim/python-host/bin/python")
+vim.g.python3_host_prog = vim.fn.stdpath("data") .. "/python-host/bin/python"
 
 local opt = vim.opt
 

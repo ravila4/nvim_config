@@ -293,7 +293,7 @@ return {
         },
         codeRunner = {
           enabled = true,
-          default_method = "molten", -- Changed from "slime" to "molten"
+          default_method = "molten",
           ft_runners = {},
           never_run = { "yaml" },
         },

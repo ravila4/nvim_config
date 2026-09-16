@@ -5,7 +5,7 @@ Leader key is `Space`.
 ## Table of Contents
 
 - [External Dependencies](#external-dependencies)
-  - [Molten setup](#molten-setup)
+  - [Set up a new machine](#set-up-a-new-machine)
 - [General](#general)
 - [Navigation](#navigation)
   - [Within Neo-tree](#within-neo-tree)
@@ -22,40 +22,72 @@ Leader key is `Space`.
   - [Molten](#molten-inline-execution)
   - [Set up the global notebook environment](#set-up-the-global-notebook-environment)
   - [Databricks](#databricks)
-  - [Vim-Slime](#vim-slime-terminal-repl)
+- [R scripts and notebooks](#r-scripts-and-notebooks)
 - [Git](#git)
   - [Within Diffview](#within-diffview)
 - [Trailing Whitespace](#trailing-whitespace)
 
 ## External Dependencies
 
-| Dependency | Install | Required by |
-|-----------|---------|-------------|
-| `lua` | `brew install lua` | Luarocks / plugin builds |
-| `luarocks` | `brew install luarocks` | Some Neovim plugins |
-| `yarn` | `brew install yarn` | `markdown-preview.nvim` |
-| Kitty graphics protocol | Ghostty / Kitty terminal | Image rendering with `snacks.image` |
-| `jupytext` | `uv tool install jupytext` | Notebook `.ipynb` conversion |
-| `databricks-nvim` | See [Databricks](#databricks) | Managed Databricks notebook kernels |
-| Stable Python host | See Molten setup below | Neovim Python provider and Molten kernel communication |
-| `ipykernel` | Install in each kernel environment | Molten kernel execution |
+### Set up a new machine
 
-### Molten setup
+From this checkout:
 
-Molten uses a stable, editor-owned Python environment so project dependency changes cannot break Neovim's remote-plugin host:
-
-```bash
-# 1. Create the host configured by lua/config/settings.lua
-uv venv ~/.local/share/nvim/python-host
-uv pip install \
-  --python ~/.local/share/nvim/python-host/bin/python \
-  pynvim jupyter_client nbformat
-
-# 2. Register the remote plugin (run inside Neovim)
-:UpdateRemotePlugins
+```sh
+make help
+make system-deps  # Optional: install system prerequisites with Homebrew on macOS
+make setup
+make notebooks    # Optional: global Python notebook environment and Jupytext
+make r            # Optional: R notebook kernel and editor tooling; requires R
+make databricks   # Optional: Databricks helper commands; requires Databricks CLI
+make check
 ```
 
-Install `ipykernel` and workload-specific packages in separate project environments, then register those environments as Jupyter kernelspecs.
+Setup requires Neovim 0.12+, Git, uv, Node/npm, Yarn, a C compiler, make, curl, tar,
+and tree-sitter CLI 0.26.1+ (not the npm package). Linux users install system
+prerequisites with their distribution's package manager. Use Ghostty or Kitty
+for inline image display.
+
+On macOS, optional system packages can be installed separately:
+
+```sh
+brew install r                         # Only if you need a new R installation
+brew install quarto                    # For rendering Quarto documents
+brew install databricks/tap/databricks  # For Databricks CLI authentication/targets
+```
+
+| Target | Scope |
+|--------|-------|
+| `help` (default) | List targets without installing anything |
+| `system-deps` | Explicit system prerequisite installation on macOS; prerequisite checks on Linux |
+| `setup` | Python remote-plugin host, locked plugins, core Mason tools including Pyright, parsers, Molten registration |
+| `notebooks` | Jupytext as a uv tool and a separate Python 3.13 environment with ipykernel, pandas, matplotlib |
+| `r` | IRkernel in a user R library, Jupyter registration, R language tooling |
+| `databricks` | Python 3.12 uv tool at the same revision as the locked Databricks Lua plugin |
+| `check` | Local checks without installing packages, authenticating, starting kernels, or contacting compute |
+
+Rerun setup targets to repair missing components. Setup does not request package
+upgrades; plugin revisions come from `lazy-lock.json`. Project `.venv` and `renv`
+environments, credentials, and unrelated kernels remain outside its scope.
+Pyright stays managed by Mason.
+
+Run `make setup` to install missing plugins, Mason packages, and parsers after
+adding dependencies. If an installed plugin differs from
+the lockfile, review the change and run `:Lazy restore` before retrying setup.
+Use the managers' explicit update commands when you intend to upgrade packages.
+
+```text
+System prerequisites
+        |
+Python host -> locked plugins -> tools/parsers -> remote-plugin registration
+                                                        |
+                                      optional notebooks / R / Databricks
+```
+
+Molten's Python host lives under Neovim's data directory at
+`python-host/bin/python`. Kernel environments are separate: their dependencies
+can change without changing Neovim's Python provider. Setup and the editor
+both honor Neovim's XDG data directory.
 
 ## General
 
@@ -276,22 +308,29 @@ Switching kernels preserves displayed outputs and starts a fresh execution sessi
 #### Set up the global notebook environment
 
 ```sh
-uv venv --python 3.13 ~/.local/share/nvim/notebook-venv
-uv pip install --python ~/.local/share/nvim/notebook-venv/bin/python pandas matplotlib ipykernel
+make notebooks
 ```
 
 `vim.g.notebook_default_python` can override the default interpreter path. Project and global kernels are registered with absolute interpreter paths. Databricks kernels remain separate from this fallback.
 
 ### Databricks
 
-Lazy installs the Lua plugin from [ravila4/databricks.nvim](https://github.com/ravila4/databricks.nvim). Install its Python commands as a uv tool:
+Lazy installs the Lua plugin from [ravila4/databricks.nvim](https://github.com/ravila4/databricks.nvim). Install its Python commands at the matching locked revision:
 
 ```sh
-uv tool install --python 3.12 \
-  git+https://github.com/ravila4/databricks.nvim
+make databricks
 ```
 
-The tool owns an isolated Python 3.12 environment for Databricks Connect and adds the target, health, and kernelspec commands to `PATH`. Authenticate a Databricks CLI profile and generate a managed kernelspec as described in the plugin README.
+The tool owns an isolated Python 3.12 environment for the integration's Databricks
+Connect 16.4 dependency and adds the target, health, and kernelspec commands to
+`PATH`. Python 3.12 is a requirement of this integration version, not of every
+Databricks runtime. The Databricks CLI is a separate prerequisite.
+
+Authenticate a Databricks CLI profile and generate a managed kernelspec as
+described in the plugin README. The kernelspec command's `--python` option
+selects a target-specific environment; setup does not create
+compute targets or change those environments. `make check` does not run the
+profile/compute checks below.
 
 | Command | Key | Action |
 |---------|-----|--------|
@@ -300,20 +339,58 @@ The tool owns an isolated Python 3.12 environment for Databricks Connect and add
 
 The target picker shows the compute name, profile, and DBR version. It attaches an already-running target as a shared Molten kernel. If the current buffer uses a different kernel, run `:MoltenDeinit` before selecting another target.
 
-### Vim-Slime (terminal REPL)
+## R scripts and notebooks
 
-Sends code to a terminal. Works over SSH, minimal dependencies.
+| File | Execution | Session |
+|------|-----------|---------|
+| `.R` | R.nvim's built-in terminal | Interactive R console |
+| `.qmd` / `.ipynb` with R cells | Molten using IRkernel | Jupyter R kernel |
+
+Run `make r` after installing R. IRkernel is an R package installed in a user
+R library, not a package in the Python notebook environment. The registered
+`nvim-r` kernel appears in the notebook and outline **Select Kernel** menus.
+Choose it before running R cells; the selection is remembered for that file.
+
+To select a specific R installation or user library:
+
+```sh
+make r R_EXECUTABLE=/absolute/path/to/R R_LIBRARY=/absolute/path/to/user-library
+```
+
+By default setup uses `R` from `PATH` and `r-library` under Neovim's data
+directory. It records that selection in `r-config.json` beside the library so
+R.nvim uses the same R installation. It does not edit `.Rprofile` or project
+`renv` settings.
+
+In an `.R` buffer, R.nvim uses `Space` as the local leader:
 
 | Key | Action |
 |-----|--------|
-| `<leader>se` | Run cell |
-| `<leader>sE` | Run cell + jump to next |
-| `<leader>ja` / `<leader>jA` | Run all above / below cursor |
-| `<leader>js` | Start/restart IPython |
-| `<leader>jt` | Open IPython terminal |
-| `<leader>jc` | Clear terminal |
-| `<leader>sc` | Send current line |
-| `<leader>ss` | Send text object |
+| `<Space>rf` | Start R or reopen its terminal |
+| `<Space>l` | Send the current line |
+| `<Space>rq` | Quit R without saving the workspace |
+
+R.nvim builds its bundled `nvimcom` support package when initializing R support.
+
+R.nvim is restricted to R scripts and R help buffers. Quarto execution is
+owned by Molten, including its embedded R buffers. The R console and notebook
+kernel do not share variables. Selecting an R kernel does not create a mixed
+Python/R kernel; use a kernel appropriate for the cells you intend to execute.
+
+### Verify execution
+
+`make check` does not execute code. To test the optional notebook environments,
+open a disposable notebook, choose the appropriate kernel, and run:
+
+| Python | R |
+|--------|---|
+| `1 + 1` | `1 + 1` |
+| `import pandas as pd; pd.DataFrame({"x": [1, 2]})` | `data.frame(x = c(1, 2))` |
+| `import matplotlib.pyplot as plt; plt.plot([1, 2]); plt.show()` | `plot(c(1, 2))` |
+
+Check table and plot output, interrupt/restart from the context menu, and reopen
+the file to verify its remembered kernel. Open an `.R` file before and after a
+Quarto file to check that each keeps its own execution commands.
 
 ## Git
 
