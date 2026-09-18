@@ -32,6 +32,19 @@ return {
 			vim.g.molten_virt_lines_off_by_1 = true -- Better virtual line positioning
 			vim.g.molten_output_format = "markdown" -- DataFrame HTML as pipe tables, text/markdown verbatim
 
+			-- Molten paints the cell under the cursor with MoltenCell (CursorLine by
+			-- default), which is a solid gray in the light theme. The cell borders
+			-- already show the active cell, so drop the fill and keep it dropped when
+			-- the colorscheme reloads.
+			local function clear_cell_highlight()
+				vim.api.nvim_set_hl(0, "MoltenCell", {})
+			end
+			clear_cell_highlight()
+			vim.api.nvim_create_autocmd("ColorScheme", {
+				group = vim.api.nvim_create_augroup("MoltenCellHighlight", { clear = true }),
+				callback = clear_cell_highlight,
+			})
+
 			-- Theme integration - use your teal accent
 			vim.g.molten_output_crop_border = true
 			vim.g.molten_output_show_more = true
