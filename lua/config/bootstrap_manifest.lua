@@ -1,6 +1,6 @@
 return {
 	tools = {
-		"pyright",
+		"basedpyright",
 		"ruff",
 		"debugpy",
 		"prettier",

@@ -19,7 +19,7 @@ return {
 				icons = { enabled = true },
 				lsp = {
 					auto_attach = true,
-					preference = { "r_language_server", "pyright", "otter-ls" },
+					preference = { "r_language_server", "basedpyright", "otter-ls" },
 				},
 				highlight = true,
 			})
@@ -69,14 +69,13 @@ return {
 				capabilities = capabilities,
 			})
 
-			-- Python: Pyright for types + LSP features
-			vim.lsp.config("pyright", {
+			-- Python: basedpyright for types, hover, inlay hints
+			vim.lsp.config("basedpyright", {
 				settings = {
-					python = {
+					basedpyright = {
 						analysis = {
 							autoSearchPaths = true,
-							useLibraryCodeForTypes = true,
-							typeCheckingMode = "basic",
+							typeCheckingMode = "standard",
 							extraPaths = vim.iter({
 								vim.fn.glob(
 									vim.fn.expand("~/.local/share/uv/python/*/lib/python*/site-packages"),
@@ -100,7 +99,7 @@ return {
 					},
 				},
 				on_attach = function(client, _bufnr)
-					-- Disable pyright's formatting since we use ruff via conform
+					-- Disable basedpyright's formatting since we use ruff via conform
 					client.server_capabilities.documentFormattingProvider = false
 					client.server_capabilities.documentRangeFormattingProvider = false
 				end,
@@ -110,7 +109,7 @@ return {
 			vim.lsp.config("ruff", {
 				cmd = { vim.fn.stdpath("data") .. "/mason/bin/ruff", "server" },
 				on_attach = function(client, _bufnr)
-					-- Disable hover in favor of pyright's more detailed hover
+					-- Disable hover in favor of basedpyright's more detailed hover
 					client.server_capabilities.hoverProvider = false
 				end,
 			})
@@ -138,7 +137,7 @@ return {
 				},
 			})
 
-			local servers = { "pyright", "ruff", "ts_ls", "lua_ls", "yamlls", "bashls" }
+			local servers = { "basedpyright", "ruff", "ts_ls", "lua_ls", "yamlls", "bashls" }
 			if selected_r then
 				servers[#servers + 1] = "r_language_server"
 			end

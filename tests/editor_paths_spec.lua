@@ -77,7 +77,7 @@ describe("Editor-owned executable paths", function()
       print(vim.json.encode(enabled))
     ]]))
 		assert.is_false(vim.tbl_contains(enabled, "r_language_server"))
-		assert.is_true(vim.tbl_contains(enabled, "pyright"))
+		assert.is_true(vim.tbl_contains(enabled, "basedpyright"))
 	end)
 
 	it("runs the R language server with the selected R installation and library", function()
