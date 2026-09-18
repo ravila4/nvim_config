@@ -92,6 +92,7 @@ return {
 					{ name = "  Go to References", cmd = "lua vim.lsp.buf.references()", rtxt = "gr" },
 					{ name = "  Go to Implementation", cmd = "lua vim.lsp.buf.implementation()", rtxt = "gi" },
 					{ name = "  Go to Type Definition", cmd = "lua vim.lsp.buf.type_definition()", rtxt = "gt" },
+					{ name = "  Hover", cmd = "lua vim.lsp.buf.hover()", rtxt = "K" },
 					{ name = "separator" },
 					{ name = " Rename Symbol", cmd = "lua vim.lsp.buf.rename()", rtxt = "rn" },
 					{ name = "  Code Action", cmd = "lua vim.lsp.buf.code_action()", rtxt = "cd" },
