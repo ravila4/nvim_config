@@ -41,3 +41,4 @@ require("lazy").setup("plugins", {
 -- Load keymaps and abbreviations
 require("config.keymaps")
 require("config.abbreviations")
+require("config.theme_sync")
