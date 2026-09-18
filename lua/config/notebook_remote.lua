@@ -11,10 +11,21 @@ local function hosts()
 	return vim.g.notebook_remotes or {}
 end
 
+-- Lua's generator starts from a fixed seed, so keys and ports come from
+-- the operating system's random source instead.
+local function random_int(low, high)
+	local bytes = vim.uv.random(4)
+	local value = 0
+	for index = 1, 4 do
+		value = value * 256 + bytes:byte(index)
+	end
+	return low + value % (high - low + 1)
+end
+
 function M.ports()
 	local ports, seen = {}, {}
 	while #ports < 5 do
-		local port = math.random(41000, 49000)
+		local port = random_int(41000, 49000)
 		if not seen[port] then
 			seen[port] = true
 			ports[#ports + 1] = port
@@ -25,8 +36,8 @@ end
 
 function M.key()
 	local hex = {}
-	for _ = 1, 32 do
-		hex[#hex + 1] = ("%x"):format(math.random(0, 15))
+	for index = 1, 16 do
+		hex[#hex + 1] = ("%02x"):format(vim.uv.random(16):byte(index))
 	end
 	return table.concat(hex)
 end
@@ -68,8 +79,9 @@ local function exports(env)
 	return table.concat(parts)
 end
 
--- The wrapper prints the kernel pid, then blocks on stdin until the heartbeat
--- stops (ssh gone or Neovim closed the pipe) and kills the kernel.
+-- The wrapper prints the kernel pid once the process has survived its first
+-- second, then blocks on stdin until the heartbeat stops (ssh gone or Neovim
+-- closed the pipe) or the kernel dies, and cleans up.
 function M.remote_command(entry, argv, remote_path)
 	local parts = {}
 	if entry.cwd then
@@ -77,9 +89,10 @@ function M.remote_command(entry, argv, remote_path)
 	end
 	parts[#parts + 1] = exports(entry.env)
 	parts[#parts + 1] = table.concat(vim.tbl_map(M.quote, argv), " ") .. " & pid=$!; "
+	parts[#parts + 1] = "sleep 1; kill -0 $pid 2>/dev/null || exit 1; "
 	parts[#parts + 1] = "echo NVIM_KERNEL_PID=$pid; "
-	parts[#parts + 1] = "while read -r -t " .. M.orphan_timeout .. " _; do :; done; "
-	parts[#parts + 1] = "kill $pid; rm -f " .. M.quote(remote_path) .. "; echo NVIM_KERNEL_DONE"
+	parts[#parts + 1] = "while read -r -t " .. M.orphan_timeout .. " _; do kill -0 $pid 2>/dev/null || break; done; "
+	parts[#parts + 1] = "kill $pid 2>/dev/null; rm -f " .. M.quote(remote_path) .. "; echo NVIM_KERNEL_DONE"
 	return table.concat(parts)
 end
 
@@ -465,6 +478,22 @@ function M.session_for(buf)
 	return id and M.sessions[id], id
 end
 
+-- A newer kernel selection for `buf` makes any launch still in flight stale.
+function M.cancel(buf)
+	requests[buf] = (requests[buf] or 0) + 1
+end
+
+-- After Molten switched `buf` to `target`, stop the remote session it had
+-- unless that is the session being switched to. Molten's switch fires no
+-- deinit event, so this is the only cleanup for the picker path.
+function M.release(buf, target)
+	local session, id = M.session_for(buf)
+	if session and session.file ~= target then
+		M.sessions[id] = nil
+		M.stop_session(session)
+	end
+end
+
 local function pick_kernel(buf, host, attach)
 	M.kernelspecs(host, function(listed, err)
 		if not listed then
@@ -568,7 +597,7 @@ function M.setup()
 	local group = vim.api.nvim_create_augroup("NotebookRemote", { clear = true })
 	vim.api.nvim_create_autocmd("User", {
 		group = group,
-		pattern = "MoltenDeinitPost",
+		pattern = { "MoltenDeinitPost", "MoltenKernelFailed" },
 		callback = function(event)
 			if event.data and event.data.kernel_id then
 				M.stop(event.data.kernel_id)

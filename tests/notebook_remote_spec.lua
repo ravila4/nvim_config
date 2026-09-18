@@ -28,11 +28,21 @@ describe("Remote kernel connection file", function()
 			end
 		end
 	end)
-	it("generates a 32 character hex key", function()
+	it("generates a 32 character hex key from the system's random source", function()
 		local key = remote.key()
 		assert.matches("^%x+$", key)
 		assert.equals(32, #key)
 		assert.are_not.equal(key, remote.key())
+		local random = vim.uv.random
+		local used = false
+		vim.uv.random = function(...)
+			used = true
+			return random(...)
+		end
+		remote.key()
+		remote.ports()
+		vim.uv.random = random
+		assert.is_true(used)
 	end)
 end)
 
@@ -57,9 +67,10 @@ describe("Remote kernel command assembly", function()
 			"cd '/home/j/repo' || exit 1; ",
 			"export B='x y'; export JUPYTER_CONFIG_DIR='/tmp/empty'; ",
 			"'/env/bin/python' '-m' 'ipykernel_launcher' '-f' '/run/k.json' & pid=$!; ",
+			"sleep 1; kill -0 $pid 2>/dev/null || exit 1; ",
 			"echo NVIM_KERNEL_PID=$pid; ",
-			"while read -r -t 90 _; do :; done; ",
-			"kill $pid; rm -f '/run/k.json'; echo NVIM_KERNEL_DONE",
+			"while read -r -t 90 _; do kill -0 $pid 2>/dev/null || break; done; ",
+			"kill $pid 2>/dev/null; rm -f '/run/k.json'; echo NVIM_KERNEL_DONE",
 		}
 		assert.equals(table.concat(expected), command)
 	end)
@@ -90,6 +101,12 @@ describe("Remote kernel command assembly", function()
 		assert.is_truthy(result.stdout:find("NVIM_KERNEL_DONE", 1, true))
 		assert.is_truthy(result.stdout:find("LAUNCHED in " .. real .. " with it's", 1, true))
 		assert.is_true(removed)
+	end)
+	it("exits without reporting a pid when the kernel dies at once", function()
+		local command = remote.remote_command({}, { "/nonexistent/notebook/python", "-m", "ipykernel" }, "/tmp/x.json")
+		local result = vim.system({ "sh", "-c", command }, { text = true, stdin = "" }):wait(10000)
+		assert.are_not.equal(0, result.code)
+		assert.is_nil(result.stdout:find("NVIM_KERNEL_PID", 1, true))
 	end)
 	it("aborts before launching when the working directory is missing", function()
 		local command = remote.remote_command(
@@ -474,6 +491,59 @@ command! MoltenImportOutput call add(g:kernel_calls, ['import'])
 		assert.is_false(second.closed)
 		assert.equals(22, remote.sessions[vim.g.kernel_calls[1][2]].pid)
 		assert.equals(1, vim.tbl_count(remote.paths))
+	end)
+
+	it("stops the session when Molten reports the kernel failed to start", function()
+		start()
+		local launch = launches()[1]
+		ready(launch, 55)
+		vim.api.nvim_exec_autocmds(
+			"User",
+			{ pattern = "MoltenKernelFailed", data = { kernel_id = vim.g.kernel_calls[1][2] } }
+		)
+		assert.is_true(launch.closed)
+		assert.same({}, remote.sessions)
+	end)
+
+	it("stops the remote session when the notebook switches to a local kernel", function()
+		start()
+		local launch = launches()[1]
+		ready(launch, 55)
+		kernels.start(buf, { name = "nvim-default", label = "Local" }, false, false)
+		assert.same({ "switch", "nvim-default" }, vim.g.kernel_calls[2])
+		assert.is_true(launch.closed)
+		assert.same({}, remote.sessions)
+		assert.same({}, remote.paths)
+	end)
+
+	it("stops the previous session when the notebook switches to another remote kernel", function()
+		start()
+		local first = launches()[1]
+		ready(first, 55)
+		local id = vim.g.kernel_calls[1][2]
+		start()
+		local second = launches()[2]
+		second.opts.stdout(nil, "NVIM_KERNEL_PID=66\n")
+		vim.wait(500, function()
+			return #vim.g.kernel_calls == 2
+		end)
+		assert.equals("switch", vim.g.kernel_calls[2][1])
+		assert.is_true(first.closed)
+		assert.is_false(second.closed)
+		assert.equals(66, remote.sessions[id].pid)
+		assert.equals(1, vim.tbl_count(remote.paths))
+	end)
+
+	it("lets a local selection cancel a pending remote launch", function()
+		start()
+		local launch = launches()[1]
+		kernels.start(buf, { name = "nvim-default", label = "Local" }, false, false)
+		assert.same({ { "init", "nvim-default" } }, vim.g.kernel_calls)
+		launch.opts.stdout(nil, "NVIM_KERNEL_PID=55\n")
+		vim.wait(200)
+		assert.same({ { "init", "nvim-default" } }, vim.g.kernel_calls)
+		assert.is_true(launch.closed)
+		assert.same({}, remote.sessions)
 	end)
 
 	it("stops the session when Molten deinitializes the kernel", function()

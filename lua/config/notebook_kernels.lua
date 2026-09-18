@@ -81,6 +81,9 @@ function M.attach(buf, target, choice, persist, import_outputs)
 		if vim.fn.MoltenKernelName() ~= target then
 			return false
 		end
+		if #running > 0 then
+			require("config.notebook_remote").release(buf, target)
+		end
 		if #running == 0 and import_outputs then
 			vim.cmd.MoltenImportOutput()
 		end
@@ -98,6 +101,7 @@ function M.start(buf, choice, persist, import_outputs)
 			return M.attach(buf, file, resolved, persist, import_outputs)
 		end)
 	else
+		require("config.notebook_remote").cancel(buf)
 		M.attach(buf, choice.name, choice, persist, import_outputs)
 	end
 end
