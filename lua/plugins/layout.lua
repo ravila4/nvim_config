@@ -378,6 +378,10 @@ return {
 					show_symbol_details = true,
 					auto_set_cursor = true,
 				},
+				symbol_folding = {
+					-- Show every symbol; fold by hand with <Tab> when a tree gets long.
+					autofold_depth = false,
+				},
 				-- Better buffer handling
 				providers = {
 					priority = { "notebook", "document", "lsp", "coc", "markdown", "norg" },
@@ -405,6 +409,19 @@ return {
 				preview_window = {
 					border = "rounded",
 				},
+			})
+			-- A click jumps to the symbol, the same as pressing <CR> on it. The
+			-- release fires after the press has already moved the cursor.
+			vim.api.nvim_create_autocmd("FileType", {
+				pattern = "Outline",
+				callback = function(event)
+					vim.keymap.set("n", "<LeftRelease>", function()
+						local sidebar = require("outline")._get_sidebar()
+						if sidebar and sidebar.view.buf == event.buf then
+							sidebar:_goto_location(true)
+						end
+					end, { buffer = event.buf, desc = "Jump to symbol" })
+				end,
 			})
 		end,
 		init = function()
