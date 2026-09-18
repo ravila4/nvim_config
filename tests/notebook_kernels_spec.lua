@@ -21,8 +21,9 @@ describe("Notebook kernel selection", function()
 end)
 
 describe("Kernelspec parsing", function()
+	local kernelspecs = require("config.kernelspecs")
 	it("keeps the full argv so a launcher can run the kernel itself", function()
-		local choices = kernels.parse_kernelspecs(vim.json.encode({
+		local choices = kernelspecs.parse(vim.json.encode({
 			kernelspecs = {
 				venv = {
 					spec = {
@@ -37,7 +38,7 @@ describe("Kernelspec parsing", function()
 	end)
 	it("reports unparseable output instead of returning choices", function()
 		for _, stdout in ipairs({ nil, "", "not json", '{"kernelspecs":true}' }) do
-			local choices, err = kernels.parse_kernelspecs(stdout)
+			local choices, err = kernelspecs.parse(stdout)
 			assert.is_nil(choices)
 			assert.are.equal("invalid Jupyter response", err)
 		end
@@ -312,8 +313,8 @@ command! MoltenImportOutput call add(g:kernel_calls, ['import'])
 		it("asks before dialing a remembered remote kernel on open (" .. tostring(case.answer) .. ")", function()
 			local remote = require("config.notebook_remote")
 			local start, started, prompt = remote.start, nil, nil
-			remote.start = function(_, choice, persist, import_outputs)
-				started = { choice.name, persist, import_outputs }
+			remote.start = function(_, choice, attach)
+				started = { choice.name, type(attach) }
 			end
 			vim.ui.select = function(items, opts, callback)
 				prompt = opts.prompt
@@ -328,7 +329,7 @@ command! MoltenImportOutput call add(g:kernel_calls, ['import'])
 			assert.equals("Connect to venv on beta?", prompt)
 			assert.same({}, vim.g.kernel_calls)
 			if case.started then
-				assert.same({ "remote:beta/venv", false, true }, started)
+				assert.same({ "remote:beta/venv", "function" }, started)
 			else
 				assert.is_nil(started)
 			end

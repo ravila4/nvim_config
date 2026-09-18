@@ -54,7 +54,7 @@ describe("Remote kernel command assembly", function()
 			"/run/k.json"
 		)
 		local expected = {
-			"cd '/home/j/repo' && ",
+			"cd '/home/j/repo' || exit 1; ",
 			"export B='x y'; export JUPYTER_CONFIG_DIR='/tmp/empty'; ",
 			"'/env/bin/python' '-m' 'ipykernel_launcher' '-f' '/run/k.json' & pid=$!; ",
 			"echo NVIM_KERNEL_PID=$pid; ",
@@ -68,6 +68,39 @@ describe("Remote kernel command assembly", function()
 		assert.is_nil(command:find("cd ", 1, true))
 		assert.is_nil(command:find("export", 1, true))
 		assert.matches("^'/bin/R' & pid=%$!;", command)
+	end)
+	it("runs the wrapper in a real shell: launches, reports the pid, and cleans up on stdin EOF", function()
+		local temp = vim.fn.tempname()
+		vim.fn.mkdir(temp, "p")
+		vim.fn.writefile({ "{}" }, temp .. "/k.json")
+		local command = remote.remote_command({ cwd = temp, env = { NVIM_TEST_VAR = "it's" } }, {
+			"sh",
+			"-c",
+			'echo "LAUNCHED in $(pwd -P) with $NVIM_TEST_VAR"; exec sleep 30',
+		}, temp .. "/k.json")
+		local proc = vim.system({ "sh", "-c", command }, { text = true, stdin = true })
+		proc:write("\n") -- a heartbeat keeps the wrapper waiting while the kernel stand-in prints
+		vim.wait(500)
+		proc:write(nil)
+		local result = proc:wait(10000)
+		local real, removed = vim.uv.fs_realpath(temp), vim.fn.filereadable(temp .. "/k.json") == 0
+		vim.fn.delete(temp, "rf")
+		assert.equals(0, result.code)
+		assert.matches("NVIM_KERNEL_PID=%d+", result.stdout)
+		assert.is_truthy(result.stdout:find("NVIM_KERNEL_DONE", 1, true))
+		assert.is_truthy(result.stdout:find("LAUNCHED in " .. real .. " with it's", 1, true))
+		assert.is_true(removed)
+	end)
+	it("aborts before launching when the working directory is missing", function()
+		local command = remote.remote_command(
+			{ cwd = "/nonexistent/notebook/dir" },
+			{ "sh", "-c", "echo LAUNCHED" },
+			"/tmp/x.json"
+		)
+		local result = vim.system({ "sh", "-c", command }, { text = true, stdin = "" }):wait(10000)
+		assert.are_not.equal(0, result.code)
+		assert.is_nil(result.stdout:find("NVIM_KERNEL_PID", 1, true))
+		assert.is_nil(result.stdout:find("LAUNCHED", 1, true))
 	end)
 	it("forwards the five ports on one non-interactive ssh", function()
 		local argv = remote.ssh_command("host", { 1, 2, 3, 4, 5 }, "true")
@@ -306,7 +339,7 @@ describe("Remote kernel sessions", function()
 			local command = argv[#argv]
 			if command:find("kernelspec list", 1, true) then
 				on_exit({ code = 0, stdout = listing, stderr = "Notice: scheduled maintenance\n" })
-			elseif command:find("cat >", 1, true) or command:find("kill -INT", 1, true) then
+			elseif command:find("cat >", 1, true) or command:find("kill -INT", 1, true) or command:match("^rm %-f") then
 				on_exit({ code = 0, stdout = "", stderr = "" })
 			end
 			return proc
@@ -365,7 +398,7 @@ command! MoltenImportOutput call add(g:kernel_calls, ['import'])
 			{ pushed.shell_port, pushed.iopub_port, pushed.stdin_port, pushed.control_port, pushed.hb_port }
 		)
 		local command = launch.argv[#launch.argv]
-		assert.is_truthy(command:find("cd '/home/j/repo' && export JUPYTER_CONFIG_DIR='/tmp/e'; ", 1, true))
+		assert.is_truthy(command:find("cd '/home/j/repo' || exit 1; export JUPYTER_CONFIG_DIR='/tmp/e'; ", 1, true))
 		assert.is_truthy(
 			command:find(
 				"'/home/j/repo/.venv/bin/python' '-m' 'ipykernel_launcher' '-f' '" .. remote_path .. "' & pid=$!",
@@ -403,6 +436,13 @@ command! MoltenImportOutput call add(g:kernel_calls, ['import'])
 		end)
 		local second = launches()[2]
 		assert.are_not.same(forwarded(first), forwarded(second))
+		local first_remote = first.argv[#first.argv]:match("rm %-f '([^']+)'")
+		assert.is_truthy(
+			vim.iter(procs):any(function(p)
+				return p.argv[#p.argv] == "rm -f '" .. first_remote .. "'"
+			end),
+			"first attempt's connection file was not removed"
+		)
 		assert.equals(2, #(vim.tbl_filter(function(p)
 			return p.argv[#p.argv]:find("cat >", 1, true)
 		end, procs)))
@@ -416,6 +456,24 @@ command! MoltenImportOutput call add(g:kernel_calls, ['import'])
 		assert.is_nil(messages[#messages].message:find("maintenance", 1, true))
 		assert.same({}, remote.sessions)
 		assert.same({}, vim.fn.glob(temp .. "/state/beta/*.json", false, true))
+	end)
+
+	it("keeps only the latest of overlapping starts for one buffer", function()
+		start()
+		start()
+		local first, second = launches()[1], launches()[2]
+		assert.is_truthy(second)
+		first.opts.stdout(nil, "NVIM_KERNEL_PID=11\n")
+		second.opts.stdout(nil, "NVIM_KERNEL_PID=22\n")
+		vim.wait(500, function()
+			return #vim.g.kernel_calls > 0
+		end)
+		vim.wait(100)
+		assert.equals(1, #vim.g.kernel_calls)
+		assert.is_true(first.closed)
+		assert.is_false(second.closed)
+		assert.equals(22, remote.sessions[vim.g.kernel_calls[1][2]].pid)
+		assert.equals(1, vim.tbl_count(remote.paths))
 	end)
 
 	it("stops the session when Molten deinitializes the kernel", function()

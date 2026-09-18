@@ -73,7 +73,7 @@ end
 function M.remote_command(entry, argv, remote_path)
 	local parts = {}
 	if entry.cwd then
-		parts[#parts + 1] = "cd " .. M.quote(entry.cwd) .. " && "
+		parts[#parts + 1] = "cd " .. M.quote(entry.cwd) .. " || exit 1; "
 	end
 	parts[#parts + 1] = exports(entry.env)
 	parts[#parts + 1] = table.concat(vim.tbl_map(M.quote, argv), " ") .. " & pid=$!; "
@@ -200,8 +200,10 @@ M.sessions = {}
 local cache = {} -- host -> { specs = parsed kernelspecs, home = remote $HOME }
 local counter = 0
 
+local requests = {} -- buffer -> latest start request, so an older launch cannot win
+
 function M.reset()
-	M.sessions, M.paths, cache, counter = {}, {}, {}, 0
+	M.sessions, M.paths, cache, counter, requests = {}, {}, {}, 0, {}
 end
 
 local function state_dir()
@@ -274,7 +276,7 @@ function M.kernelspecs(host, callback)
 	run(host, nil, M.list_command(entry), { text = true, timeout = 60000 }, function(result)
 		vim.schedule(function()
 			local home, json = M.split_listing(result.stdout or "")
-			local specs, err = require("config.notebook_kernels").parse_kernelspecs(json)
+			local specs, err = require("config.kernelspecs").parse(json)
 			if result.code ~= 0 or not specs then
 				local detail = stderr_message(result.stderr, entry)
 				if detail == "" then
@@ -409,6 +411,14 @@ local function spawn(host, kernel, listed, attempt, callback)
 					return
 				end
 				close_session(session)
+				-- The wrapper never ran its own cleanup, so remove the pushed file.
+				run(
+					host,
+					nil,
+					"rm -f " .. M.quote(session.remote_path),
+					{ text = true, timeout = 30000 },
+					function() end
+				)
 				if attempt == 1 then
 					spawn(host, kernel, listed, 2, callback)
 				else
@@ -455,7 +465,7 @@ function M.session_for(buf)
 	return id and M.sessions[id], id
 end
 
-local function pick_kernel(buf, host, persist, import_outputs)
+local function pick_kernel(buf, host, attach)
 	M.kernelspecs(host, function(listed, err)
 		if not listed then
 			vim.notify(err, vim.log.levels.ERROR)
@@ -470,18 +480,23 @@ local function pick_kernel(buf, host, persist, import_outputs)
 			end,
 		}, function(name)
 			if name then
-				M.start(buf, M.choice(host, listed.specs[name], listed.home), persist, import_outputs)
+				M.start(buf, M.choice(host, listed.specs[name], listed.home), attach)
 			end
 		end)
 	end)
 end
 
-function M.start(buf, choice, persist, import_outputs)
+-- Start `choice.remote` for `buf`; `attach(file, choice)` connects Molten
+-- to the connection file and returns whether it did. A host-only choice
+-- first asks which of the host's kernels to run.
+function M.start(buf, choice, attach)
 	local target = choice.remote
 	if not target.kernel then
-		pick_kernel(buf, target.host, persist, import_outputs)
+		pick_kernel(buf, target.host, attach)
 		return
 	end
+	requests[buf] = (requests[buf] or 0) + 1
+	local request = requests[buf]
 	local done = progress("Starting " .. M.render(target, "sentence"))
 	M.launch(target.host, target.kernel, function(session, err)
 		if not session then
@@ -489,8 +504,7 @@ function M.start(buf, choice, persist, import_outputs)
 			return
 		end
 		done()
-		local kernels = require("config.notebook_kernels")
-		if not kernels.attach(buf, session.file, choice, persist, import_outputs) then
+		if requests[buf] ~= request or not attach(session.file, choice) then
 			M.stop_session(session)
 			return
 		end
