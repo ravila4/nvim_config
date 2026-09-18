@@ -23,9 +23,11 @@ return {
 		},
 		config = function()
 			require("config.notebook_kernels").setup_prompts()
+			require("config.notebook_remote").setup()
 			-- Global configuration
 			vim.g.molten_image_provider = "snacks.nvim"
 			vim.g.molten_output_win_max_height = 20 -- Reasonable output window height
+			-- Remote kernel hosts (vim.g.notebook_remotes) are configured in lua/config/local.lua.
 			vim.g.molten_auto_open_output = false -- Manual control over output
 			vim.g.molten_wrap_output = true -- Wrap long outputs
 			vim.g.molten_virt_text_output = true -- Show outputs as virtual text
@@ -217,7 +219,11 @@ return {
 					map("n", "<leader>mo", function()
 						require("config.notebook_copy").copy_output_at_cursor()
 					end, "[Molten] Copy output text to clipboard")
-					map("n", "<leader>x", ":MoltenInterrupt<CR>", "[Molten] Interrupt execution")
+					map("n", "<leader>x", function()
+						if not require("config.notebook_remote").interrupt(vim.api.nvim_get_current_buf()) then
+							vim.cmd.MoltenInterrupt()
+						end
+					end, "[Molten] Interrupt execution")
 					map("n", "<leader>mq", ":MoltenDeinit<CR>", "[Molten] Quit kernel")
 
 					-- Smart cell execution - detects markdown code blocks

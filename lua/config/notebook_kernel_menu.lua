@@ -19,9 +19,14 @@ function M.items(win, buf)
 					vim.notify("Document window changed; reopen the context menu.", vim.log.levels.WARN)
 					return
 				end
+				local remote = require("config.notebook_remote")
 				if command == "MoltenInit" then
 					vim.api.nvim_set_current_win(win)
 					require("config.notebook_kernels").pick(buf)
+				elseif command == "MoltenInterrupt" and remote.interrupt(buf) then
+					return
+				elseif command == "MoltenRestart" and remote.restart(buf) then
+					return
 				else
 					vim.api.nvim_win_call(win, function()
 						vim.cmd(command)

@@ -298,12 +298,35 @@ Inline plots and output display, similar to VSCode notebooks.
 | `<leader>mo` | Copy the output text under the cursor to the clipboard (also in the right-click menu on an output) |
 | `<leader>jv` | Enter full output view |
 | `<leader>x` | Interrupt the running cell |
-| `<leader>md` | Delete cell output |
+| `<leader>md` | Open the debug menu |
 | `<leader>mq` | Quit kernel |
 
 Opening a notebook with saved outputs uses its remembered kernel choice, then the nearest project's `.venv`, then the global notebook environment. The picker opens if no suitable kernel exists. An unavailable remembered choice or recorded Databricks kernel prompts for a replacement instead of falling back automatically. Choices are stored locally under Neovim's state directory, keyed by notebook path.
 
 Switching kernels preserves displayed outputs and starts a fresh execution session. Interrupt running work before switching. Local kernel startup checks do not block input and stop after a failure or a 30-second timeout.
+
+#### Remote kernels over ssh
+
+The editor and the notebook stay local while the kernel runs on any machine you can ssh into that has Jupyter kernels installed. One `ssh` process forwards the kernel's five ports and owns the kernel's lifetime; Molten attaches to it through a local connection file. Hosts are declared by ssh alias in the gitignored `lua/config/local.lua`, so user, hostname, and keys come from `~/.ssh/config`. Commands run through a non-interactive shell, which skips `.bashrc` and conda activation, so give absolute paths and any variables the host's Jupyter needs:
+
+```lua
+-- lua/config/local.lua (gitignored)
+vim.g.notebook_remotes = {
+  ["hpc-login"] = {
+    label = "Cluster login node",                -- picker text; default: the alias
+    cwd = "/home/me/project",                   -- kernel working directory; default: login home
+    jupyter = "/opt/conda/bin/jupyter",         -- lists kernelspecs; default: `jupyter` on the login PATH
+    env = { JUPYTER_CONFIG_DIR = "/tmp/jcfg" }, -- exported before listing and launching
+    ignore = { "scheduled maintenance" },       -- banner lines to drop from error messages
+  },
+}
+```
+
+The kernel picker lists each host after the local kernels. Choosing a host fetches its kernelspecs (once per session) and offers them as `󰒍 <kernel> — <host>:<path>`; `(ssh)` replaces the glyph when `vim.g.have_nerd_font` is false. The chosen pair is remembered for the notebook like a local kernel and listed first next time. Opening such a notebook asks `Connect to <kernel> on <host>?` before dialing out. The statusline shows remote kernels as `󰒍 <kernel>@<host>`.
+
+Interrupt sends `SIGINT` to the kernel on the host. Restart launches a fresh session and switches Molten to it, keeping the outputs; interrupt a running cell first. Quitting the kernel, switching to a local one, or leaving Neovim closes the tunnel and the remote wrapper kills the kernel. Neovim also writes a heartbeat every 15 s; if the host hears nothing for 90 s (laptop asleep, network gone) the wrapper kills the kernel on its own, so nothing is left running. Every ssh call is non-interactive with a 10 s connect timeout: hosts that need a password or 2FA are not supported, and the remote login shell must be bash or zsh (`read -t`).
+
+Known gaps: Molten's own "Kernel ... is ready" notification names the local connection file, and `:MoltenInfo` reports `NoSuchKernel` for a remote kernel. The notebook file and its saved outputs stay on the Mac.
 
 #### Set up the global notebook environment
 
