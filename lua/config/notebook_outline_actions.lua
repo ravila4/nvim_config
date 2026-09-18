@@ -238,13 +238,17 @@ function M.attach()
 		return
 	end
 	vim.api.nvim_win_call(view.view.win, function()
-		local pattern = [[✗\ze Cell \d\+]]
+		local groups = { ["✗"] = "DiagnosticError", ["✓"] = "NotebookCellDone" }
 		for _, match in ipairs(vim.fn.getmatches()) do
-			if match.group == "DiagnosticError" and match.pattern == pattern then
-				return
+			for icon, group in pairs(groups) do
+				if match.group == group and match.pattern == icon .. [[\ze Cell \d\+]] then
+					groups[icon] = nil
+				end
 			end
 		end
-		vim.fn.matchadd("DiagnosticError", pattern, 20)
+		for icon, group in pairs(groups) do
+			vim.fn.matchadd(group, icon .. [[\ze Cell \d\+]], 20)
+		end
 	end)
 	local function map(mode, key, fn, desc, expr)
 		vim.keymap.set(mode, key, fn, { buffer = view.view.buf, silent = true, desc = desc, expr = expr })

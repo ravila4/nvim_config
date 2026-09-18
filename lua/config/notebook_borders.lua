@@ -1,4 +1,7 @@
-local M = { ns = vim.api.nvim_create_namespace("notebook-cell-borders") }
+local M = {
+	ns = vim.api.nvim_create_namespace("notebook-cell-borders"),
+	status_highlights = { done = "NotebookCellDone", error = "NotebookCellError" },
+}
 local cells = {}
 local runtime = require("config.notebook_runtime")
 local indicator, timer, frame = "spinner", nil, 0
@@ -129,7 +132,7 @@ local function draw(win, buf, top, bottom)
 			return
 		end
 		vim.api.nvim_buf_set_extmark(buf, M.ns, row, col, {
-			virt_text = { { text, "NotebookCellBorder" } },
+			virt_text = type(text) == "table" and text or { { text, "NotebookCellBorder" } },
 			virt_text_pos = position,
 			virt_text_win_col = screen_col,
 			priority = 200,
@@ -147,13 +150,17 @@ local function draw(win, buf, top, bottom)
 		if vim.fn.strdisplaywidth(label) > width - 2 then
 			label = ""
 		end
-		mark(
-			first,
-			0,
-			"╭" .. label .. string.rep("─", width - 2 - vim.fn.strdisplaywidth(label)) .. "╮",
-			"overlay",
-			0
-		)
+		local rule = string.rep("─", width - 2 - vim.fn.strdisplaywidth(label))
+		local icon = label:match("^ (✓) ") or label:match("^ (✗) ")
+		local header = { { "╭" .. label .. rule .. "╮", "NotebookCellBorder" } }
+		if icon then
+			header = {
+				{ "╭ ", "NotebookCellBorder" },
+				{ icon, M.status_highlights[cell.execution.status] },
+				{ label:sub(#icon + 2) .. rule .. "╮", "NotebookCellBorder" },
+			}
+		end
+		mark(first, 0, header, "overlay", 0)
 		for row = math.max(first + 1, top), math.min(last - 1, bottom) do
 			mark(row, 0, "│", "overlay", width - 1)
 		end
@@ -174,6 +181,8 @@ function M.setup(opts)
 		end,
 	})
 	vim.api.nvim_set_hl(0, "NotebookCellBorder", { default = true, link = "Comment" })
+	vim.api.nvim_set_hl(0, "NotebookCellDone", { default = true, link = "DiagnosticOk" })
+	vim.api.nvim_set_hl(0, "NotebookCellError", { default = true, link = "DiagnosticError" })
 	local group = vim.api.nvim_create_augroup("NotebookCellBorders", { clear = true })
 	vim.api.nvim_create_autocmd("User", {
 		group = group,
