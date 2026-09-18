@@ -20,6 +20,30 @@ describe("Notebook kernel selection", function()
 	end)
 end)
 
+describe("Kernelspec parsing", function()
+	it("keeps the full argv so a launcher can run the kernel itself", function()
+		local choices = kernels.parse_kernelspecs(vim.json.encode({
+			kernelspecs = {
+				venv = {
+					spec = {
+						display_name = "Venv",
+						argv = { "/env/bin/python", "-m", "ipykernel_launcher", "-f", "{connection_file}" },
+					},
+				},
+			},
+		}))
+		assert.same({ "/env/bin/python", "-m", "ipykernel_launcher", "-f", "{connection_file}" }, choices.venv.argv)
+		assert.are.equal("/env/bin/python", choices.venv.executable)
+	end)
+	it("reports unparseable output instead of returning choices", function()
+		for _, stdout in ipairs({ nil, "", "not json", '{"kernelspecs":true}' }) do
+			local choices, err = kernels.parse_kernelspecs(stdout)
+			assert.is_nil(choices)
+			assert.are.equal("invalid Jupyter response", err)
+		end
+	end)
+end)
+
 describe("Installed kernel discovery failures", function()
 	local system, notify, schedule, response, messages, finished, failure
 	before_each(function()
@@ -71,7 +95,7 @@ describe("Installed kernel discovery failures", function()
 				},
 			}),
 		}
-		assert.same({ good = { name = "good", label = "R", executable = "/bin/R" } }, discover())
+		assert.same({ good = { name = "good", label = "R", executable = "/bin/R", argv = { "/bin/R" } } }, discover())
 	end)
 	for _, case in ipairs({
 		{ name = "failed command", result = { code = 1, stderr = "no module named jupyter" } },
@@ -260,6 +284,56 @@ command! MoltenImportOutput call add(g:kernel_calls, ['import'])
 		kernels.open(buf, { kernelspec = { name = "databricks-work-cluster" } })
 		assert.are.equal("databricks-work-cluster", vim.g.kernel_calls[1][2])
 	end)
+	it("lists a remembered remote kernel first and configured hosts last", function()
+		local nerd, remotes = vim.g.have_nerd_font, vim.g.notebook_remotes
+		vim.g.have_nerd_font = false
+		vim.g.notebook_remotes = { beta = { label = "Beta VM" } }
+		kernels.save_choice(vim.api.nvim_buf_get_name(buf), {
+			name = "remote:beta/venv",
+			label = "venv on beta",
+			remote = { host = "beta", kernel = "venv", path = "~/repo/.venv" },
+		})
+		local shown
+		vim.ui.select = function(names, opts, callback)
+			shown = vim.tbl_map(opts.format_item, names)
+			callback(nil)
+		end
+		kernels.pick(buf)
+		vim.g.have_nerd_font, vim.g.notebook_remotes = nerd, remotes
+		assert.equals("(ssh) venv — beta:~/repo/.venv", shown[1])
+		assert.equals("(ssh) Beta VM", shown[#shown])
+		assert.is_true(#shown > 2)
+	end)
+	for _, case in ipairs({
+		{ answer = "Yes", started = true },
+		{ answer = "No", started = false },
+		{ answer = nil, started = false },
+	}) do
+		it("asks before dialing a remembered remote kernel on open (" .. tostring(case.answer) .. ")", function()
+			local remote = require("config.notebook_remote")
+			local start, started, prompt = remote.start, nil, nil
+			remote.start = function(_, choice, persist, import_outputs)
+				started = { choice.name, persist, import_outputs }
+			end
+			vim.ui.select = function(items, opts, callback)
+				prompt = opts.prompt
+				assert.same({ "Yes", "No" }, items)
+				callback(case.answer)
+			end
+			local choice =
+				{ name = "remote:beta/venv", label = "venv on beta", remote = { host = "beta", kernel = "venv" } }
+			kernels.save_choice(vim.api.nvim_buf_get_name(buf), choice)
+			kernels.open(buf, {})
+			remote.start = start
+			assert.equals("Connect to venv on beta?", prompt)
+			assert.same({}, vim.g.kernel_calls)
+			if case.started then
+				assert.same({ "remote:beta/venv", false, true }, started)
+			else
+				assert.is_nil(started)
+			end
+		end)
+	end
 	it("cancelling the picker does not launch or save a kernel", function()
 		vim.ui.select = function(_, _, callback)
 			callback(nil)

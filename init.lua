@@ -4,6 +4,12 @@
 -- Basic vim settings
 require("config.settings")
 
+-- Machine-specific settings such as remote kernel hosts live in
+-- lua/config/local.lua, which is not committed.
+if vim.uv.fs_stat(vim.fn.stdpath("config") .. "/lua/config/local.lua") then
+	require("config.local")
+end
+
 -- Dependency installation is explicit: run make setup from this checkout.
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.uv.fs_stat(lazypath) then

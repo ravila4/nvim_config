@@ -65,19 +65,21 @@ function M.prepare(candidate, callback)
 	end)
 end
 
-function M.start(buf, choice, persist, import_outputs)
+-- Attach Molten to `target` (a kernelspec name or a connection file) and
+-- record `choice` as the notebook's kernel once Molten reports it running.
+function M.attach(buf, target, choice, persist, import_outputs)
 	if not vim.api.nvim_buf_is_valid(buf) then
-		return
+		return false
 	end
-	vim.api.nvim_buf_call(buf, function()
+	return vim.api.nvim_buf_call(buf, function()
 		local running = vim.fn.MoltenRunningKernels(true)
 		if #running > 0 then
-			vim.cmd.MoltenSwitchKernel(choice.name)
+			vim.cmd.MoltenSwitchKernel(target)
 		else
-			vim.cmd.MoltenInit(choice.name)
+			vim.cmd.MoltenInit(target)
 		end
-		if vim.fn.MoltenKernelName() ~= choice.name then
-			return
+		if vim.fn.MoltenKernelName() ~= target then
+			return false
 		end
 		if #running == 0 and import_outputs then
 			vim.cmd.MoltenImportOutput()
@@ -86,10 +88,46 @@ function M.start(buf, choice, persist, import_outputs)
 			M.save_choice(vim.api.nvim_buf_get_name(buf), choice)
 		end
 		vim.notify("Notebook kernel: " .. (choice.label or choice.name), vim.log.levels.INFO)
+		return true
 	end)
 end
 
+function M.start(buf, choice, persist, import_outputs)
+	if choice.remote then
+		require("config.notebook_remote").start(buf, choice, persist, import_outputs)
+	else
+		M.attach(buf, choice.name, choice, persist, import_outputs)
+	end
+end
+
 local requests = {}
+
+-- Turn `jupyter kernelspec list --json` output into picker choices keyed by
+-- kernelspec name. Entries without a usable argv are dropped.
+function M.parse_kernelspecs(stdout)
+	local ok, data = pcall(vim.json.decode, stdout or "")
+	if not ok or type(data) ~= "table" or type(data.kernelspecs) ~= "table" then
+		return nil, "invalid Jupyter response"
+	end
+	local choices = {}
+	for name, entry in pairs(data.kernelspecs) do
+		local spec = type(entry) == "table" and entry.spec
+		if
+			type(spec) == "table"
+			and type(spec.argv) == "table"
+			and type(spec.argv[1]) == "string"
+			and spec.argv[1] ~= ""
+		then
+			choices[name] = {
+				name = name,
+				label = type(spec.display_name) == "string" and spec.display_name or name,
+				executable = spec.argv[1],
+				argv = spec.argv,
+			}
+		end
+	end
+	return choices
+end
 
 function M.installed(callback)
 	local function failed(message)
@@ -102,26 +140,10 @@ function M.installed(callback)
 		{ text = true, timeout = 10000 },
 		function(result)
 			vim.schedule(function()
-				local ok, data = pcall(vim.json.decode, result.stdout or "")
-				if result.code ~= 0 or not ok or type(data) ~= "table" or type(data.kernelspecs) ~= "table" then
-					failed(result.stderr and result.stderr ~= "" and result.stderr or "invalid Jupyter response")
+				local choices, err = M.parse_kernelspecs(result.stdout)
+				if result.code ~= 0 or not choices then
+					failed(result.stderr and result.stderr ~= "" and result.stderr or err)
 					return
-				end
-				local choices = {}
-				for name, entry in pairs(data.kernelspecs) do
-					local spec = type(entry) == "table" and entry.spec
-					if
-						type(spec) == "table"
-						and type(spec.argv) == "table"
-						and type(spec.argv[1]) == "string"
-						and spec.argv[1] ~= ""
-					then
-						choices[name] = {
-							name = name,
-							label = type(spec.display_name) == "string" and spec.display_name or name,
-							executable = spec.argv[1],
-						}
-					end
 				end
 				callback(choices)
 			end)
@@ -195,6 +217,10 @@ local function collect(buf, saved, callback)
 				end
 				return a < b
 			end)
+			for _, choice in ipairs(require("config.notebook_remote").choices(vim.g.notebook_remotes, saved)) do
+				choices[choice.name] = choice
+				table.insert(names, choice.remote.kernel and 1 or #names + 1, choice.name)
+			end
 			callback(
 				choices,
 				names,
@@ -218,6 +244,12 @@ local function picker(buf, choices, names, import_outputs, execution)
 		prompt = "Select notebook kernel (remembered for this file):",
 		format_item = function(name)
 			local choice = choices[name]
+			if choice.remote then
+				return require("config.notebook_remote").render(
+					vim.tbl_extend("force", choice.remote, { label = choice.label }),
+					"picker"
+				)
+			end
 			local path = choice.python or choice.executable or "unknown launch path"
 			path = path:match("^(.*)/bin/python[^/]*$") or path
 			local label = (choice.label or name):gsub("^Project %(.+%)$", "Project")
@@ -315,6 +347,19 @@ function M.open(buf, metadata)
 	local recorded = vim.tbl_get(metadata, "kernelspec", "name")
 	if not saved and recorded and recorded:match("^databricks%-") then
 		saved = { name = recorded, label = recorded }
+	end
+	if saved and saved.remote then
+		-- Showing saved outputs needs a kernel, but dialing out on open would
+		-- turn browsing into a network side effect, so ask first.
+		local remote = require("config.notebook_remote")
+		vim.ui.select({ "Yes", "No" }, {
+			prompt = "Connect to " .. remote.render(saved.remote, "sentence") .. "?",
+		}, function(answer)
+			if answer == "Yes" then
+				M.start(buf, saved, false, true)
+			end
+		end)
+		return
 	end
 	collect(buf, saved, function(choices, names, project, default)
 		local name, reason = M.select(saved and saved.name, names, project, default)
